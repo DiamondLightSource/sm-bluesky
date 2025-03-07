@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: sm_bluesky
+  title: sm-bluesky
+  description: Bluesky code for Diamond's surface and magnetic materials beamline.
+spec:
+  type: library
+  lifecycle: production
+  owner: 
