@@ -7,7 +7,6 @@ name = "sm_bluesky"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
@@ -17,10 +16,10 @@ dependencies = [
     # If a constraint is not set here or if the dependency is pinned to a hash
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
-    "daq-config-server >= 0.1.1",
-    "ophyd-async >= 0.9.0a2",
-    "bluesky == 1.13",
+    "bluesky",
     "dls-dodal @ git+https://github.com/DiamondLightSource/dodal.git",
+    "ophyd-async >= 0.9.0a2",
+    "scanspec"
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
