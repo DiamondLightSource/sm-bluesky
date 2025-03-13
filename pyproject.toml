@@ -17,31 +17,6 @@ dependencies = [
     # If a constraint is not set here or if the dependency is pinned to a hash
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
-    "annotated_types",
-    "caproto",
-    "fastapi[all]",
-    "flask-restful",
-    "ispyb",
-    "jupyterlab",
-    "matplotlib",
-    "nexgen",
-    "numpy",
-    "opencv-python",                  # Needed for I24 ssx moveonclick. To be changed to headless once this is moved to separate ui.
-    "opentelemetry-distro",
-    "opentelemetry-exporter-otlp",
-    "pydantic",
-    "pydantic-extra-types >= 2.10.1",
-    "pyepics",
-    "pyzmq",
-    "requests",
-    "scanspec",
-    "scipy",
-    "semver",
-    "matplotlib",
-    #
-    # These dependencies may be issued as pre-release versions and should have a pin constraint
-    # as by default pip-install will not upgrade to a pre-release.
-    #
     "blueapi >= 0.5.0",
     "daq-config-server >= 0.1.1",
     "ophyd == 1.9.0",
