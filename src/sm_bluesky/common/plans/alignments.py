@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from enum import Enum
+from functools import wraps
 from typing import TypeVar, cast
 
 from bluesky import preprocessors as bpp
@@ -59,6 +60,7 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
         Other keyword arguments the wrapped scan need to function.
     """
 
+    @wraps(funcs)
     def inner(
         det: StandardReadable,
         motor: Motor,

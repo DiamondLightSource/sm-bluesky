@@ -11,6 +11,8 @@ from sm_bluesky.log import LOGGER
 
 
 class MotorTable(RootModel):
+    """RootModel for motor tables"""
+
     root: dict[str, float]
 
 

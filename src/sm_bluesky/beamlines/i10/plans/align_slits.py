@@ -70,6 +70,7 @@ def move_dsd(
 
 
 def align_dsu(size: float, det: StandardReadable | None = None) -> MsgGenerator:
+    """Align the up stream detector slit"""
     if det is None:
         det = get_rasor_default_det()
     yield from align_slit_with_look_up(
@@ -85,7 +86,7 @@ def align_dsd(
     size: float,
     det: StandardReadable | None = None,
 ) -> MsgGenerator:
-    """Align the up stream detector slit"""
+    """Align the down stream detector slit"""
     if det is None:
         det = get_rasor_default_det()
     yield from align_slit_with_look_up(

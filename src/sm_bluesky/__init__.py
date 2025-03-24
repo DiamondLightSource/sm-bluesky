@@ -6,6 +6,7 @@
     Version number as calculated by https://github.com/pypa/setuptools_scm
 """
 
+from . import beamlines, common
 from ._version import __version__
 
-__all__ = ["__version__"]
+__all__ = ["__version__", "beamlines", "common"]
