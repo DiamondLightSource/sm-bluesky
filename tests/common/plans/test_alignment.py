@@ -7,7 +7,7 @@ from bluesky.run_engine import RunEngine
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
 from p99_bluesky.devices.stages import ThreeAxisStage
 
-from sm_bluesky.common.helper_functions import cal_range_num
+from sm_bluesky.common.math_functions import cal_range_num
 from sm_bluesky.common.plans import (
     StatPosition,
     align_slit_with_look_up,

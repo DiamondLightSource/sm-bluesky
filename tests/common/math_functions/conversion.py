@@ -1,6 +1,6 @@
 import pytest
 
-from sm_bluesky.common.helper_functions import cal_range_num
+from sm_bluesky.common.math_functions import cal_range_num
 
 
 @pytest.mark.parametrize(

@@ -12,7 +12,7 @@ from ophyd_async.core import StandardReadable
 from ophyd_async.epics.motor import Motor
 from p99_bluesky.plans.fast_scan import fast_scan_1d
 
-from sm_bluesky.common.helper_functions import cal_range_num
+from sm_bluesky.common.math_functions import cal_range_num
 from sm_bluesky.common.plans_stubs import MotorTable
 from sm_bluesky.log import LOGGER
 

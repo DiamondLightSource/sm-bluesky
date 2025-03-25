@@ -11,7 +11,7 @@ from dodal.common.types import MsgGenerator
 from dodal.devices.slits import Slits
 from ophyd_async.core import StandardReadable
 
-from sm_bluesky.common.helper_functions import cal_range_num
+from sm_bluesky.common.math_functions import cal_range_num
 from sm_bluesky.common.plans import (
     StatPosition,
     align_slit_with_look_up,
