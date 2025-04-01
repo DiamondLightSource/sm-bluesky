@@ -70,7 +70,7 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
         **kwargs,
     ):
         ps = PeakStats(
-            f"{motor.name}-user_readback",
+            f"{motor.name}",
             f"{det.name}-{detname_suffix}",
             calc_derivative_and_stats=True,
         )
@@ -216,4 +216,4 @@ def align_slit_with_look_up(
         num=num,
     )
     temp = yield from read(motor.user_readback)
-    slit_table[str(size)] = temp[motor.name + "-user_readback"]["value"]
+    slit_table[str(size)] = temp[motor.name]["value"]

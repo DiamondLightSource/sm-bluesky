@@ -154,22 +154,22 @@ async def test_scan_and_move_cen_success_with_step(
 
 async def test_scan_and_move_cen_fail_to_with_wrong_name(
     RE: RunEngine,
-    sim_motor_step: ThreeAxisStage,
+    sim_motor: ThreeAxisStage,
     fake_detector: sim_detector,
 ):
     rbv_mocks = Mock()
     y_data = range(0, 19999, 1)
     rbv_mocks.get.side_effect = y_data
     callback_on_mock_put(
-        sim_motor_step.x.user_setpoint,
+        sim_motor.x.user_setpoint,
         lambda *_, **__: set_mock_value(fake_detector.value, value=rbv_mocks.get()),
     )
-    sim_motor_step.x._name = " "
+    sim_motor.x._name = " "
     with pytest.raises(ValueError) as e:
         RE(
             fast_scan_and_move_fit(
                 det=fake_detector,
-                motor=sim_motor_step.x,
+                motor=sim_motor.x,
                 detname_suffix="dsdfs",
                 start=-5,
                 end=5,

@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 from bluesky.run_engine import RunEngine
+from dodal.devices.motors import XYZPositioner
 from dodal.utils import make_all_devices
 from ophyd_async.core import (
     FilenameProvider,
@@ -13,11 +14,9 @@ from ophyd_async.core import (
     init_devices,
 )
 from ophyd_async.testing import set_mock_value
-from p99_bluesky.devices.stages import ThreeAxisStage
-from p99_bluesky.sim.sim_stages import SimThreeAxisStage
 from super_state_machine.errors import TransitionError
 
-from .sim_devices import sim_detector
+from .sim_devices import SimStage, sim_detector
 
 RECORD = str(Path(__file__).parent / "panda" / "db" / "panda.db")
 INCOMPLETE_BLOCK_RECORD = str(
@@ -93,14 +92,14 @@ def static_path_provider(
 @pytest.fixture
 async def sim_motor():
     async with init_devices(mock=True):
-        sim_motor = ThreeAxisStage("BLxxI-MO-TABLE-01:X", name="sim_motor")
+        sim_motor = XYZPositioner("BLxxI-MO-TABLE-01:X", name="sim_motor")
     set_mock_value(sim_motor.x.velocity, 2.78)
     set_mock_value(sim_motor.x.high_limit_travel, 8.168)
     set_mock_value(sim_motor.x.low_limit_travel, -8.888)
     set_mock_value(sim_motor.x.user_readback, 1)
     set_mock_value(sim_motor.x.motor_egu, "mm")
     set_mock_value(sim_motor.x.motor_done_move, True)
-    set_mock_value(sim_motor.x.max_velocity, 10)
+    set_mock_value(sim_motor.x.max_velocity, 100)
 
     set_mock_value(sim_motor.y.motor_egu, "mm")
     set_mock_value(sim_motor.y.high_limit_travel, 5.168)
@@ -109,7 +108,7 @@ async def sim_motor():
     set_mock_value(sim_motor.y.motor_egu, "mm")
     set_mock_value(sim_motor.y.velocity, 2.88)
     set_mock_value(sim_motor.y.motor_done_move, True)
-    set_mock_value(sim_motor.y.max_velocity, 10)
+    set_mock_value(sim_motor.y.max_velocity, 100)
 
     set_mock_value(sim_motor.z.motor_egu, "mm")
     set_mock_value(sim_motor.z.high_limit_travel, 5.168)
@@ -118,7 +117,7 @@ async def sim_motor():
     set_mock_value(sim_motor.z.motor_egu, "mm")
     set_mock_value(sim_motor.z.velocity, 2.88)
     set_mock_value(sim_motor.z.motor_done_move, True)
-    set_mock_value(sim_motor.z.max_velocity, 10)
+    set_mock_value(sim_motor.z.max_velocity, 100)
 
     yield sim_motor
 
@@ -126,7 +125,7 @@ async def sim_motor():
 @pytest.fixture
 async def sim_motor_step():
     async with init_devices(mock=True):
-        sim_motor_step = SimThreeAxisStage(name="sim_motor_step", instant=True)
+        sim_motor_step = SimStage(name="sim_motor_step", instant=True)
 
     yield sim_motor_step
 
