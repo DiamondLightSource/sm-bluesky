@@ -131,6 +131,14 @@ async def sim_motor_step():
 
 
 @pytest.fixture
+async def sim_motor_delay():
+    async with init_devices(mock=True):
+        sim_motor_step = SimStage(name="sim_motor_step", instant=False)
+
+    yield sim_motor_step
+
+
+@pytest.fixture
 async def fake_detector():
     async with init_devices(mock=True):
         fake_detector = sim_detector(prefix="fake_Pv", name="fake_detector")

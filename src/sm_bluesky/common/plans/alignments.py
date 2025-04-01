@@ -10,11 +10,12 @@ from bluesky.plans import scan
 from dodal.common.types import MsgGenerator
 from ophyd_async.core import StandardReadable
 from ophyd_async.epics.motor import Motor
-from p99_bluesky.plans.fast_scan import fast_scan_1d
 
 from sm_bluesky.common.math_functions import cal_range_num
 from sm_bluesky.common.plans_stubs import MotorTable
 from sm_bluesky.log import LOGGER
+
+from .fast_scan import fast_scan_1d
 
 
 class StatPosition(tuple, Enum):
@@ -70,7 +71,7 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
         **kwargs,
     ):
         ps = PeakStats(
-            f"{motor.name}",
+            f"{motor.name}-user_readback",
             f"{det.name}-{detname_suffix}",
             calc_derivative_and_stats=True,
         )
@@ -216,4 +217,4 @@ def align_slit_with_look_up(
         num=num,
     )
     temp = yield from read(motor.user_readback)
-    slit_table[str(size)] = temp[motor.name]["value"]
+    slit_table[str(size)] = temp[f"{motor.name}-user_readback"]["value"]

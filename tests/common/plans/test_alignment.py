@@ -4,8 +4,8 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 from bluesky.run_engine import RunEngine
+from dodal.devices.motors import XYZPositioner
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
-from p99_bluesky.devices.stages import ThreeAxisStage
 
 from sm_bluesky.common.math_functions import cal_range_num
 from sm_bluesky.common.plans import (
@@ -44,7 +44,7 @@ def capture_emitted(name, doc):
 )
 async def test_scan_and_move_cen_success_with_gaussian(
     RE: RunEngine,
-    sim_motor_step: ThreeAxisStage,
+    sim_motor_step: XYZPositioner,
     fake_detector: sim_detector,
     test_input,
     expected_centre,
@@ -108,7 +108,7 @@ def step_function(x_data, step_centre):
 )
 async def test_scan_and_move_cen_success_with_step(
     RE: RunEngine,
-    sim_motor_step: ThreeAxisStage,
+    sim_motor_step: XYZPositioner,
     fake_detector: sim_detector,
     test_input,
     expected_centre,
@@ -154,7 +154,7 @@ async def test_scan_and_move_cen_success_with_step(
 
 async def test_scan_and_move_cen_fail_to_with_wrong_name(
     RE: RunEngine,
-    sim_motor: ThreeAxisStage,
+    sim_motor: XYZPositioner,
     fake_detector: sim_detector,
 ):
     rbv_mocks = Mock()
@@ -193,7 +193,7 @@ async def test_scan_and_move_cen_fail_to_with_wrong_name(
 )
 async def test_scan_and_move_cen_failed_with_no_peak_in_range(
     RE: RunEngine,
-    sim_motor_step: ThreeAxisStage,
+    sim_motor_step: XYZPositioner,
     fake_detector: sim_detector,
     test_input,
     expected_centre,
@@ -243,7 +243,7 @@ FAKEDSU = {"5000": 16.7, "1000": 21.7, "500": 25.674, "100": 31.7, "50": 36.7}
 )
 async def test_align_slit_with_look_up(
     RE: RunEngine,
-    sim_motor_step: ThreeAxisStage,
+    sim_motor_step: XYZPositioner,
     fake_detector: sim_detector,
     size,
     expected_centre,
@@ -279,6 +279,7 @@ async def test_align_slit_with_look_up(
     )
     y_data1 = np.array([])
     x_data1 = np.array([])
+    print(docs)
     for i in docs["event"]:
         y_data1 = np.append(y_data1, i["data"]["fake_detector-value"])
         x_data1 = np.append(x_data1, i["data"]["sim_motor_step-y-user_readback"])
@@ -287,7 +288,7 @@ async def test_align_slit_with_look_up(
 
 async def test_align_slit_with_look_up_fail_wrong_key(
     RE: RunEngine,
-    sim_motor_step: ThreeAxisStage,
+    sim_motor_step: XYZPositioner,
     fake_detector: sim_detector,
 ):
     size = 555

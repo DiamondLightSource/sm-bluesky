@@ -91,3 +91,15 @@ def set_slit_size(
     if wait:
         LOGGER.info(f"Waiting for {xy_slit.name} to finish move.")
         yield from bps.wait(group=group)
+
+
+def check_within_limit(values: list, motor: Motor):
+    LOGGER.info(f"Check {motor.name} limits.")
+    lower_limit = yield from bps.rd(motor.low_limit_travel)
+    high_limit = yield from bps.rd(motor.high_limit_travel)
+    for value in values:
+        if not lower_limit < value < high_limit:
+            raise ValueError(
+                f"{motor.name} move request of {value} is beyond limits:"
+                f"{lower_limit} < {high_limit}"
+            )
