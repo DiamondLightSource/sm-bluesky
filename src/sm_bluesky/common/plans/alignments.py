@@ -182,7 +182,7 @@ def align_slit_with_look_up(
     det: StandardReadable,
     centre_type: StatPosition,
 ) -> MsgGenerator:
-    """Perform a step scan with the the range and starting motor position
+    """Perform a step scan with therange and starting motor position
       given/calculated by using a look up table(dictionary).
       Move to the peak position after the scan and update the lookup table.
 
