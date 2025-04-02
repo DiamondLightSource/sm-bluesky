@@ -113,10 +113,8 @@ def align_s5s6(det: StandardReadable | None = None) -> MsgGenerator:
 
     Parameters
     ----------
-    det: (Optional)
+    det (optional): StandardReadable
         Detector that use for the alignments, default is rasor photodiode.
-    det_name: (Optional)
-        Name of the detector for fitting only requires.
     """
 
     if det is None:
