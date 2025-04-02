@@ -145,7 +145,7 @@ async def test_fast_scan_2d_success(sim_motor: XYZPositioner, RE: RunEngine, det
     assert_emitted(docs, start=1, descriptor=1, event=num_step, stop=1)
 
 
-async def test_fast_scan_2d_Snake_success(sim_motor: XYZPositioner, RE: RunEngine, det):
+async def test_fast_scan_2d_snake_success(sim_motor: XYZPositioner, RE: RunEngine, det):
     docs = defaultdict(list)
 
     def capture_emitted(name, doc):
