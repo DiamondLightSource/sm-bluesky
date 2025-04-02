@@ -25,7 +25,7 @@ def open_s5s6(
     wait: bool
         If this is true it will set both slits to move and wait until it get to position
         .
-    group: Hashable
+    group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
     """
@@ -52,7 +52,7 @@ def open_dsd_dsu(
         The position of the opening.
     wait: bool
         If this is true it will wait until all motions are done.
-    group: Hashable
+    group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
     """
@@ -80,7 +80,7 @@ def remove_pin_hole(
         The position of the opening.
     wait: bool
         If this is true it will wait until all motions are done.
-    group: Hashable
+    group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
     """
@@ -100,7 +100,7 @@ def direct_beam_polan(wait: bool = True, group: Hashable | None = None) -> MsgGe
     ----------
     wait: bool
         If this is true it will wait until all motions are done.
-    group: Hashable
+    group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
     """
@@ -123,7 +123,7 @@ def clear_beam_path(wait: bool = True, group: Hashable | None = None) -> MsgGene
     ----------
     wait: bool
         If this is true it will wait until all motions are done.
-    group: Hashable
+    group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
 

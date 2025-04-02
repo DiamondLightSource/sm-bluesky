@@ -24,7 +24,7 @@ def move_motor_with_look_up(
     wait: bool = True,
     group: Hashable | None = None,
 ) -> MsgGenerator:
-    """Perform a step scan with the the range and starting motor position
+    """Perform a step scan with the range and starting motor position
       given/calculated by using a look up table(dictionary).
       Move to the peak position after the scan and update the lookup table.
 
@@ -76,7 +76,7 @@ def set_slit_size(
         The y opening size.
     wait: bool
         If this is true it will wait for all motions to finish.
-    group: Hashable
+    group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
     """
