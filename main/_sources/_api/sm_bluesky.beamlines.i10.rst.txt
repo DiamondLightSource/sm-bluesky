@@ -1,7 +1,7 @@
-﻿``sm_bluesky``
-==============
+``sm_bluesky.beamlines.i10``
+============================
 
-.. automodule:: sm_bluesky
+.. automodule:: sm_bluesky.beamlines.i10
     :members:
 
     
@@ -13,8 +13,7 @@
         :template: custom-module-template.rst
         :recursive:
     
-        beamlines
-        common
+        plans
     
     
 

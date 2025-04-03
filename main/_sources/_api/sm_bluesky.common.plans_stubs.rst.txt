@@ -1,0 +1,27 @@
+``sm_bluesky.common.plans_stubs``
+=================================
+        
+        
+        
+        
+
+.. automodule:: sm_bluesky.common.plans_stubs
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        MotorTable
+        move_motor_with_look_up
+        set_slit_size
+        check_within_limit
+    
+    

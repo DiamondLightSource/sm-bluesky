@@ -1,0 +1,21 @@
+``sm_bluesky.common.math_functions``
+====================================
+        
+
+.. automodule:: sm_bluesky.common.math_functions
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        cal_range_num
+    
+    

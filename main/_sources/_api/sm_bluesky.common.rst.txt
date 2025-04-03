@@ -1,7 +1,7 @@
-﻿``sm_bluesky``
-==============
+``sm_bluesky.common``
+=====================
 
-.. automodule:: sm_bluesky
+.. automodule:: sm_bluesky.common
     :members:
 
     
@@ -13,8 +13,9 @@
         :template: custom-module-template.rst
         :recursive:
     
-        beamlines
-        common
+        math_functions
+        plans
+        plans_stubs
     
     
 

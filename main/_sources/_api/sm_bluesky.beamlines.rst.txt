@@ -1,7 +1,7 @@
-﻿``sm_bluesky``
-==============
+``sm_bluesky.beamlines``
+========================
 
-.. automodule:: sm_bluesky
+.. automodule:: sm_bluesky.beamlines
     :members:
 
     
@@ -13,8 +13,8 @@
         :template: custom-module-template.rst
         :recursive:
     
-        beamlines
-        common
+        i10
+        p99
     
     
 
