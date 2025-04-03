@@ -17,9 +17,9 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal @ git+https://github.com/DiamondLightSource/dodal.git",
+    "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git@949-make-ophyd-devices-for-the-diagonstics-for-i10", #remove when merged.
     "ophyd-async >= 0.9.0a2",
-    "scanspec"
+    "scanspec",
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
@@ -42,6 +42,16 @@ dev = [
     "sphinx-design",
     "tox-direct",
     "types-mock",
+    "pytest-asyncio",
+
+    #usefull stuff for testing
+    "jupyter",
+    "ipython",
+    "matplotlib",
+    "numpy",
+    "pyepics",
+    "blueapi",
+
 ]
 
 [project.scripts]
@@ -60,7 +70,7 @@ version_file = "src/sm_bluesky/_version.py"
 
 [tool.pyright]
 typeCheckingMode = "standard"
-reportMissingImports = false # Ignore missing stubs in imported modules
+reportMissingImports = false  # Ignore missing stubs in imported modules
 
 [tool.pytest.ini_options]
 # Run pytest with all our checkers, and don't spam us with massive tracebacks on error
@@ -71,6 +81,8 @@ addopts = """
 filterwarnings = "error"
 # Doctest python code in docs, python code in src docstrings, test functions in tests
 testpaths = "docs src tests"
+asyncio_mode = "auto"
+
 
 [tool.coverage.run]
 data_file = "/tmp/sm_bluesky.coverage"
