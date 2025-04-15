@@ -17,8 +17,8 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git@949-make-ophyd-devices-for-the-diagonstics-for-i10", #remove when merged.
-    "ophyd-async >= 0.9.0a2",
+    "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git", #now target the main branch 
+    "ophyd-async >= 0.10.0a2",
     "scanspec",
 ]
 dynamic = ["version"]
