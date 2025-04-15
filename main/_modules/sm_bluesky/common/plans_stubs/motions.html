@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans_stubs.motions &#8212; sm-bluesky 0.1.dev30+g6d1a51b documentation</title>
+    <title>sm_bluesky.common.plans_stubs.motions &#8212; sm-bluesky 0.1.dev32+g18c192c documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=5e380445"></script>
+    <script src="../../../../_static/documentation_options.js?v=ee142f2d"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -482,18 +482,16 @@
 <span class="sd">    motor: Motor</span>
 <span class="sd">        Motor devices that is being centre.</span>
 <span class="sd">    size: float</span>
-<span class="sd">        The size/name in the motor_table.</span>
-<span class="sd">    slit_table: dict[str, float],</span>
-<span class="sd">        Look up table for motor position, the str part should be the size of</span>
-<span class="sd">        the slit in um.</span>
-<span class="sd">    det: StandardReadable,</span>
-<span class="sd">        Detector to be use for alignment.</span>
-<span class="sd">    det_name: str | None</span>
-<span class="sd">        Name extension for the det.</span>
-<span class="sd">    motor_name: str | None</span>
-<span class="sd">        Name extension for the motor.</span>
-<span class="sd">    centre_type: StatPosition | None = None,</span>
-<span class="sd">        Which fitted position to move to see StatPosition.</span>
+<span class="sd">        The motor position or name in the motor_table.</span>
+<span class="sd">    motor_table: dict[str, float],</span>
+<span class="sd">        Look up table for motor position,</span>
+<span class="sd">    use_motor_position: bool = False,</span>
+<span class="sd">        If ture it will take motor position as size.</span>
+<span class="sd">    wait: bool = True,</span>
+<span class="sd">        If ture, it will wait until position is reached.</span>
+<span class="sd">    group: Hashable | None = None,</span>
+<span class="sd">        Bluesky group identifier used by ‘wait’.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">MotorTable</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">motor_table</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">use_motor_position</span><span class="p">:</span>
@@ -529,8 +527,7 @@
 <span class="sd">    wait: bool</span>
 <span class="sd">        If this is true it will wait for all motions to finish.</span>
 <span class="sd">    group (optional): Hashable</span>
-<span class="sd">        If given this will be the group name that pass along to bluesky, which</span>
-<span class="sd">        can be use at a later time.</span>
+<span class="sd">        Bluesky group identifier used by ‘wait’.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">wait</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

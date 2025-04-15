@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sm_bluesky.common.plans_stubs &#8212; sm-bluesky 0.1.dev30+g6d1a51b documentation</title>
+    <title>sm_bluesky.common.plans_stubs &#8212; sm-bluesky 0.1.dev32+g18c192c documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=5e380445"></script>
+    <script src="../_static/documentation_options.js?v=ee142f2d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -520,13 +520,11 @@ Move to the peak position after the scan and update the lookup table.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>motor</strong> (<em>Motor</em>) – Motor devices that is being centre.</p></li>
-<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – The size/name in the motor_table.</p></li>
-<li><p><strong>slit_table</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em><em>,</em>) – Look up table for motor position, the str part should be the size of
-the slit in um.</p></li>
-<li><p><strong>det</strong> (<em>StandardReadable</em><em>,</em>) – Detector to be use for alignment.</p></li>
-<li><p><strong>det_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name extension for the det.</p></li>
-<li><p><strong>motor_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name extension for the motor.</p></li>
-<li><p><strong>centre_type</strong> (<a class="reference internal" href="sm_bluesky.common.plans.html#sm_bluesky.common.plans.StatPosition" title="sm_bluesky.common.plans.StatPosition"><em>StatPosition</em></a><em> | </em><em>None = None</em><em>,</em>) – Which fitted position to move to see StatPosition.</p></li>
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – The motor position or name in the motor_table.</p></li>
+<li><p><strong>motor_table</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em><em>,</em>) – Look up table for motor position,</p></li>
+<li><p><strong>use_motor_position</strong> (<em>bool = False</em><em>,</em>) – If ture it will take motor position as size.</p></li>
+<li><p><strong>wait</strong> (<em>bool = True</em><em>,</em>) – If ture, it will wait until position is reached.</p></li>
+<li><p><strong>group</strong> (<em>Hashable</em><em> | </em><em>None = None</em><em>,</em>) – Bluesky group identifier used by ‘wait’.</p></li>
 </ul>
 </dd>
 </dl>
@@ -543,8 +541,7 @@ the slit in um.</p></li>
 <li><p><strong>x_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – The x opening size.</p></li>
 <li><p><strong>y_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – The y opening size.</p></li>
 <li><p><strong>wait</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – If this is true it will wait for all motions to finish.</p></li>
-<li><p><strong>(</strong><strong>optional</strong><strong>)</strong> (<em>group</em>) – If given this will be the group name that pass along to bluesky, which
-can be use at a later time.</p></li>
+<li><p><strong>(</strong><strong>optional</strong><strong>)</strong> (<em>group</em>) – Bluesky group identifier used by ‘wait’.</p></li>
 </ul>
 </dd>
 </dl>
