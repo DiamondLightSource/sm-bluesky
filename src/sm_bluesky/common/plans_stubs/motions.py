@@ -33,18 +33,16 @@ def move_motor_with_look_up(
     motor: Motor
         Motor devices that is being centre.
     size: float
-        The size/name in the motor_table.
-    slit_table: dict[str, float],
-        Look up table for motor position, the str part should be the size of
-        the slit in um.
-    det: StandardReadable,
-        Detector to be use for alignment.
-    det_name: str | None
-        Name extension for the det.
-    motor_name: str | None
-        Name extension for the motor.
-    centre_type: StatPosition | None = None,
-        Which fitted position to move to see StatPosition.
+        The motor position or name in the motor_table.
+    motor_table: dict[str, float],
+        Look up table for motor position,
+    use_motor_position: bool = False,
+        If ture it will take motor position as size.
+    wait: bool = True,
+        If ture, it will wait until position is reached.
+    group: Hashable | None = None,
+        Bluesky group identifier used by ‘wait’.
+
     """
     MotorTable.model_validate(motor_table)
     if use_motor_position:
@@ -77,8 +75,7 @@ def set_slit_size(
     wait: bool
         If this is true it will wait for all motions to finish.
     group (optional): Hashable
-        If given this will be the group name that pass along to bluesky, which
-        can be use at a later time.
+        Bluesky group identifier used by ‘wait’.
     """
 
     if wait and group is None:
