@@ -5,13 +5,10 @@ from blueapi.core.bluesky_types import DataEvent
 from blueapi.worker.event import TaskStatus, WorkerEvent, WorkerState
 from blueapi.worker.task import Task
 
-# System Test Instructions:
-# 1. Set username, password, and beamline settings in conftest.py
-#   (e.g., P46 beamline config provided).
-# 2. Use the BEAMLINE variable to select the configuration:
-#   - Export as an environment variable, or
-#   - Define in pyproject.toml.
-# 3. Login if BlueAPI server authentication is enabled.
+"""
+1. Set username, password, and beamline settings in conftest.py
+2. Login if BlueAPI server authentication is enabled.
+"""
 
 
 def _check_all_events(all_events: list[AnyEvent]):
