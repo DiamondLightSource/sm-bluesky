@@ -81,6 +81,6 @@ This will start blueAPI with the p99 configuration. To modify the configuration,
 
     Plans must have a return type of ``MsgGenerator`` from the ``bluesky.protocols`` library and complete type hints for blueAPI to recognize them. For example:
 
-    .. literalinclude:: ../../src/p99_bluesky/plans/stxm.py
+    .. literalinclude:: ../../src/sm_bluesky/beamlines/p99/plans/stxm.py
         :start-at: def stxm_fast
         :end-at: -> MsgGenerator:

@@ -2,10 +2,13 @@ import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZPositioner
 from dodal.devices.slits import Slits
+from ophyd_async.core import init_devices
+from ophyd_async.epics.motor import Motor
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
 
 from sm_bluesky.common.plans_stubs import (
     check_within_limit,
+    get_velocity_and_step_size,
     move_motor_with_look_up,
     set_slit_size,
 )
@@ -114,3 +117,21 @@ async def test_set_slit_size_(RE: RunEngine, fake_slit: Slits):
         == await fake_slit.y_gap.user_readback.get_value()
         == set_value
     )
+
+
+@pytest.fixture
+async def mock_motor():
+    async with init_devices(mock=True):
+        mock_motor = Motor("BLxx-MO-xx-01:", "mock_motor")
+    yield mock_motor
+
+
+def test_get_velocity_and_step_size_speed_too_low_failed(
+    mock_motor: Motor, RE: RunEngine
+):
+    with pytest.raises(ValueError):
+        RE(
+            get_velocity_and_step_size(
+                scan_motor=mock_motor, ideal_velocity=-1, ideal_step_size=0.1
+            )
+        )
