@@ -6,6 +6,13 @@ from unittest.mock import Mock
 
 import pytest
 from bluesky.run_engine import RunEngine
+from dodal.common.beamlines.beamline_utils import (
+    set_path_provider,
+)
+from dodal.common.visit import (
+    LocalDirectoryServiceClient,
+    StaticVisitPathProvider,
+)
 from dodal.devices.motors import XYZPositioner
 from dodal.utils import make_all_devices
 from ophyd_async.core import (
@@ -28,6 +35,16 @@ INCOMPLETE_RECORD = str(Path(__file__).parent / "panda" / "db" / "incomplete_pan
 EXTRA_BLOCKS_RECORD = str(
     Path(__file__).parent / "panda" / "db" / "extra_blocks_panda.db"
 )
+
+
+set_path_provider(
+    StaticVisitPathProvider(
+        "p99",
+        Path("/dls/p99/data/2024/cm37284-2/processing/writenData"),
+        client=LocalDirectoryServiceClient(),  # RemoteDirectoryServiceClient("http://p99-control:8088/api"),
+    )
+)
+
 
 # Prevent pytest from catching exceptions when debugging in vscode so that break on
 # exception works correctly (see: https://github.com/pytest-dev/pytest/issues/7409)
