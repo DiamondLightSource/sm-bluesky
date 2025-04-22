@@ -1,0 +1,16 @@
+---
+stomp:
+  host: "localhost"
+  port: 61613
+  auth:
+    username: "guest"
+    password: "guest"
+
+env:
+  sources:
+    - kind: deviceFunctions
+      module: "dodal.beamlines.p99"
+    - kind: planFunctions
+      module: "p99_bluesky.plans"
+  events:
+    broadcast_status_events: True
