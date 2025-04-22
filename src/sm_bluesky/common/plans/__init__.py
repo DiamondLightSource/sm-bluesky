@@ -1,4 +1,9 @@
-"""Bluesky plans common for S&M beamline."""
+"""
+
+Bluesky plans common for S&M beamline.
+
+
+"""
 
 from .ad_plans import takeImg, tiggerImg
 from .alignments import (

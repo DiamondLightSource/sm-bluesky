@@ -51,7 +51,7 @@ Once RabbitMQ is running, execute the following command from the project root di
 
     blueapi --config ./src/yaml_config/blueapi_config.yaml serve
 
-This will start blueAPI with the p99 configuration. To modify the configuration, edit the ``/workspaces/p99-bluesky/src/yaml_config/blueapi_config.yaml`` file.
+This will start blueAPI with the p99 configuration. To modify the configuration, edit the ``/workspaces/sm-bluesky/src/yaml_config/blueapi_config.yaml`` file.
 
 .. literalinclude:: ../../src/yaml_config/blueapi_config.yaml
 
@@ -81,6 +81,6 @@ This will start blueAPI with the p99 configuration. To modify the configuration,
 
     Plans must have a return type of ``MsgGenerator`` from the ``bluesky.protocols`` library and complete type hints for blueAPI to recognize them. For example:
 
-    .. literalinclude:: ../../src/sm_bluesky/beamlines/p99/plans/stxm.py
+    .. literalinclude:: ../../src/sm_bluesky/common/plans/stxm.py
         :start-at: def stxm_fast
         :end-at: -> MsgGenerator:

@@ -74,13 +74,13 @@ def fast_scan_grid(
     """
     Same as fast_scan_1d with an extra axis to step through forming a grid.
 
-     Parameters
-     ----------
-     detectors : list
+    Parameters
+    ----------
+    detectors : list
         list of 'readable' objects
-     step_motor :
+    step_motor :
         Motor (moveable, readable)
-     step_start :
+    step_start :
         Starting position for slow/stepping motor.
     step_end :
         Ending position for step motro.
@@ -99,6 +99,7 @@ def fast_scan_grid(
         If Ture. Scan motor will start an other line where it ended.
     md:
         place holder for meta data for future.
+
     """
 
     @bpp.stage_decorator(dets)

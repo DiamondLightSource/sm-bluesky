@@ -40,8 +40,7 @@ def stxm_step(
     md: dict | None = None,
 ) -> MsgGenerator:
     """Effectively the standard Bluesky grid scan adapted to use step size.
-     Added a centre option where it will move back to
-      where it was before scan start.
+    Added a centre option where it will move back to where it was before scan start.
 
     Parameters
     ----------
@@ -69,8 +68,8 @@ def stxm_step(
         If true move back to position before it scan
     snake_axes: bool = True,
         If true, do grid scan without moving scan axis back to start position.
-    md=None,
-
+    md:  dict | None = None,
+        Meta data
     """
 
     # check limit before doing anything
@@ -138,12 +137,12 @@ def stxm_fast(
 ) -> MsgGenerator:
     """
     This initiates an STXM scan, targeting a maximum scan speed of around 10Hz.
-     It calculates the number of data points achievable based on the detector's count
-     time. If no step size is provided, the software aims for a uniform distribution
-     of points across the scan area. The scanning motor's speed is then determined using
-      the calculated point density. If the desired speed exceeds the motor's limit,
-     the maximum speed is used. In this case, the step size is automatically adjusted
-     to ensure the scan finishes close to the intended duration.
+    It calculates the number of data points achievable based on the detector's count
+    time. If no step size is provided, the software aims for a uniform distribution
+    of points across the scan area. The scanning motor's speed is then determined using
+    the calculated point density. If the desired speed exceeds the motor's limit,
+    the maximum speed is used. In this case, the step size is automatically adjusted
+    to ensure the scan finishes close to the intended duration.
 
     Parameters
     ----------
@@ -174,7 +173,8 @@ def stxm_fast(
         If true move back to position before it scan
     snake_axes: bool = True,
         If true, do grid scan without moving scan axis back to start position.
-    md=None,
+    md:  dict | None = None,
+        Meta data
 
     """
     clean_up_arg: dict = {}
