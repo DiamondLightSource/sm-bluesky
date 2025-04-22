@@ -7,7 +7,7 @@ from ophyd_async.core import (
 from ophyd_async.epics.adcore import ADBaseIO, AreaDetector, SingleTriggerDetector
 from ophyd_async.testing import get_mock_put
 
-from sm_bluesky.common.plans_stubs import set_area_detector_acquire_time
+from sm_bluesky.common.plan_stubs import set_area_detector_acquire_time
 
 
 @pytest.fixture

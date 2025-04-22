@@ -9,7 +9,7 @@ from sm_bluesky.beamlines.i10.configuration.default_setting import (
     PIN_HOLE_OPEING_POS,
     S5S6_OPENING_SIZE,
 )
-from sm_bluesky.common.plans_stubs import set_slit_size
+from sm_bluesky.common.plan_stubs import set_slit_size
 from sm_bluesky.log import LOGGER
 
 

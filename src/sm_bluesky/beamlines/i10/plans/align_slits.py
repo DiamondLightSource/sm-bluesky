@@ -12,12 +12,12 @@ from dodal.devices.slits import Slits
 from ophyd_async.core import StandardReadable
 
 from sm_bluesky.common.math_functions import cal_range_num
+from sm_bluesky.common.plan_stubs import move_motor_with_look_up
 from sm_bluesky.common.plans import (
     StatPosition,
     align_slit_with_look_up,
     step_scan_and_move_fit,
 )
-from sm_bluesky.common.plans_stubs import move_motor_with_look_up
 from sm_bluesky.log import LOGGER
 
 from ..configuration.default_setting import (

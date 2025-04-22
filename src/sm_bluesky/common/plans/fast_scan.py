@@ -6,11 +6,12 @@ from blueapi.core import MsgGenerator
 from bluesky.preprocessors import (
     finalize_wrapper,
 )
+from bluesky.protocols import Readable
 from bluesky.utils import short_uid
 from numpy import linspace
 from ophyd_async.epics.motor import FlyMotorInfo, Motor
 
-from sm_bluesky.common.plans_stubs.motions import check_within_limit
+from sm_bluesky.common.plan_stubs import check_within_limit
 from sm_bluesky.log import LOGGER
 
 
@@ -58,7 +59,7 @@ def fast_scan_1d(
 
 
 def fast_scan_grid(
-    dets: list[Any],
+    dets: list[Readable],
     step_motor: Motor,
     step_start: float,
     step_end: float,
@@ -73,13 +74,13 @@ def fast_scan_grid(
     """
     Same as fast_scan_1d with an extra axis to step through forming a grid.
 
-    Parameters
-    ----------
-    detectors : list
+     Parameters
+     ----------
+     detectors : list
         list of 'readable' objects
-    step_motor :
+     step_motor :
         Motor (moveable, readable)
-    step_start :
+     step_start :
         Starting position for slow/stepping motor.
     step_end :
         Ending position for step motro.

@@ -6,7 +6,7 @@ from ophyd_async.core import init_devices
 from ophyd_async.epics.motor import Motor
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
 
-from sm_bluesky.common.plans_stubs import (
+from sm_bluesky.common.plan_stubs import (
     check_within_limit,
     get_velocity_and_step_size,
     move_motor_with_look_up,
