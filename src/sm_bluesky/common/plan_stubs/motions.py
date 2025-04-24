@@ -94,18 +94,19 @@ def set_slit_size(
 
 
 @plan
-def check_within_limit(values: list, motor: Motor):
+def check_within_limit(values: list[float], motor: Motor):
     """Check if the given values are within the limits of the motor.
     Parameters
     ----------
-    values: list
+    values : List[float]
         The values to check.
-    motor: Motor
+    motor : Motor
         The motor to check the limits of.
+
     Raises
     ------
     ValueError
-        If the values are not within the limits of the motor.
+        If any value is outside the motor's limits.
     """
     LOGGER.info(f"Check {motor.name} limits.")
     lower_limit = yield from bps.rd(motor.low_limit_travel)
@@ -118,47 +119,53 @@ def check_within_limit(values: list, motor: Motor):
             )
 
 
-def get_motor_positions(*arg: Motor) -> Iterator[Any]:
-    """Get the motor positions of the given motors and store them in a list.
-    This is used to store the motor positions before a scan and
-    restore them after the scan.
+def get_motor_positions(*arg: Motor) -> Iterator[tuple[str, float]]:
+    """
+    Get the motor positions of the given motors and store them in a list.
+
     Parameters
     ----------
-    arg: Motor
+    arg : Motor
         The motors to get the positions of.
+
     Returns
     -------
-    -------
-    list
-        A list of tuples containing the motor name and its position."""
+    Iterator[Tuple[str, float]]
+        An iterator of tuples containing the motor name and its position.
+    """
     motor_position = []
     for motor in arg:
         motor_position.append(motor)
-        position = yield from bps.rd(motor)
+        position = yield from bps.rd(motor)  # type: ignore
         motor_position.append(position)
 
     LOGGER.info(f"Stored motor, position  = {motor_position}.")
     return motor_position
 
 
-@plan
 def get_velocity_and_step_size(
     scan_motor: Motor, ideal_velocity: float, ideal_step_size: float
 ) -> Iterator[Any]:
-    """Adjust the step size if the required velocity is higher than max value.
+    """
+    Adjust the step size if the required velocity is higher than the max value.
 
     Parameters
     ----------
-    scan_motor: Motor,
+    scan_motor : Motor
         The motor which will move continuously.
-    ideal_velocity: float
-        The velocity wanted.
-    ideal_step_size: float(),
+    ideal_velocity : float
+        The desired velocity.
+    ideal_step_size : float
         The non-scanning motor step size.
+
+    Returns
+    -------
+    Iterator[Tuple[float, float]]
+        An iterator containing the adjusted velocity and step size.
     """
     if ideal_velocity <= 0.0:
         raise ValueError(f"{scan_motor.name} speed: {ideal_velocity} <= 0")
-    max_velocity = yield from bps.rd(scan_motor.max_velocity)
+    max_velocity = yield from bps.rd(scan_motor.max_velocity)  # type: ignore
     # if motor does not move fast enough increase step_motor step size
     if ideal_velocity > max_velocity:
         ideal_step_size = ideal_step_size / (ideal_velocity / max_velocity)

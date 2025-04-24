@@ -42,23 +42,19 @@ TCallable = TypeVar("TCallable", bound=Callable)
 
 
 def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
-    """Wrapper to add PeakStats call back before performing scan
-    and move to the fitted position after scan.
+    """
+    Wrapper to add a PeakStats callback before performing a scan
+    and move to the fitted position after the scan.
 
     Parameters
     ----------
-    det: StandardReadable,
-        Detector to be use for alignment.
-    motor: Motor
-        Motor devices that is being centre.
-    fitted_loc: StatPosition | None = None,
-        Which fitted position to move to see StatPosition
-    detname_suffix: Str
-        Name of the fitted axis within the detector
-    args:
-        Other arguments the wrapped scan need to function.
-    kwargs:
-        Other keyword arguments the wrapped scan need to function.
+    funcs : TCallable
+        The scan function to wrap.
+
+    Returns
+    -------
+    TCallable
+        The wrapped scan function.
     """
 
     @wraps(funcs)
@@ -98,23 +94,30 @@ def step_scan_and_move_fit(
     end: float,
     num: int,
 ) -> MsgGenerator:
-    """Does a step scan and move to the fitted position
+    """
+    Perform a step scan and move to the fitted position.
+
     Parameters
     ----------
-    det: StandardReadable
-        Detector to be use for alignment.
-    motor: Motor
-        Motor devices that is being centre.
-    fitted_loc: StatPosition | None = None,
-        Which fitted position to move to see StatPosition
-    detname_suffix: Str
-        Name of the fitted axis within the detector
-    start: float,
-        Starting position for the scan.
-    end: float
-        Ending position for the scan.
-    num:int
-        Number of step.
+    det : StandardReadable
+        The detector to use for alignment.
+    motor : Motor
+        The motor to center.
+    fitted_loc : StatPosition
+        The fitted position to move to (see StatPosition).
+    detname_suffix : str
+        The suffix for the detector name.
+    start : float
+        The starting position for the scan.
+    end : float
+        The ending position for the scan.
+    num : int
+        The number of steps in the scan.
+
+    Returns
+    -------
+    MsgGenerator
+        A Bluesky generator for the scan.
     """
     LOGGER.info(
         f"Step scanning {motor.name} with {det.name}-{detname_suffix}\
@@ -150,7 +153,7 @@ def fast_scan_and_move_fit(
         Starting position for the scan.
     end: float,
         Ending position for the scan.
-    motor_speed: float | None = None,
+    motor_speed: Optional[float] = None,
         Speed of the motor.
     """
     LOGGER.info(

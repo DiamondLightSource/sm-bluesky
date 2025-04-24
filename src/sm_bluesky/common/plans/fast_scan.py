@@ -17,28 +17,33 @@ from sm_bluesky.log import LOGGER
 
 @plan
 def fast_scan_1d(
-    dets: list[Any],
+    dets: list[Readable],
     motor: Motor,
     start: float,
     end: float,
     motor_speed: float | None = None,
 ) -> MsgGenerator:
     """
-    One axis fast scan, using _fast_scan_1d.
+    Perform a fast scan along one axis.
 
     Parameters
     ----------
-    detectors : list
-        list of 'readable',triggerable  objects
-    motor : Motor (moveable, readable)
+    dets : list[Readable]
+        List of readable objects (e.g., detectors).
+    motor : Motor
+        The motor to move during the scan.
+    start : float
+        The starting position of the motor.
+    end : float
+        The ending position of the motor.
+    motor_speed : Optional[float], optional
+        The speed of the motor during the scan. If None,
+        the motor's current speed is used.
 
-    start: float
-        starting position.
-    end: float,
-        ending position
-
-    motor_speed: Optional[float] = None,
-        The speed of the motor during scan
+    Returns
+    -------
+    MsgGenerator
+        A Bluesky generator for the scan.
     """
 
     @bpp.stage_decorator(dets)

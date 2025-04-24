@@ -12,10 +12,26 @@ def take_img(
     exposure: float,
     n_img: int = 1,
     det_trig: DetectorTrigger = DetectorTrigger.INTERNAL,
-) -> MsgGenerator:
+) -> MsgGenerator[None]:
     """
-    Bare minimum to take an image using prepare plan with full detector control
-    e.g. Able to change tigger_info unlike tigger
+    Take an image using the specified detector with full control
+    over the trigger settings.
+
+    Parameters
+    ----------
+    det : Andor2Detector
+        The detector to use for image acquisition.
+    exposure : float
+        The exposure time for the image.
+    n_img : int, optional
+        The number of images to acquire, by default 1.
+    det_trig : DetectorTrigger, optional
+        The trigger mode for the detector, by default DetectorTrigger.INTERNAL.
+
+    Returns
+    -------
+    MsgGenerator[None]
+        A Bluesky generator for taking the image.
     """
     grp = short_uid("prepare")
     deadtime: float = det._controller.get_deadtime(exposure)  # noqa: SLF001
@@ -37,7 +53,22 @@ def take_img(
 
 
 @plan
-def tigger_img(dets: Andor2Detector, value: int) -> MsgGenerator:
+def tigger_img(dets: Andor2Detector, value: int) -> MsgGenerator[None]:
+    """
+    Set the acquire time and trigger the detector to read data.
+
+    Parameters
+    ----------
+    dets : Andor2Detector
+        The detector to trigger.
+    value : int
+        The acquire time to set on the detector.
+
+    Returns
+    -------
+    MsgGenerator[None]
+        A Bluesky generator for triggering the detector.
+    """
     yield Msg("set", dets.driver.acquire_time, value)
 
     @bpp.stage_decorator([dets])
