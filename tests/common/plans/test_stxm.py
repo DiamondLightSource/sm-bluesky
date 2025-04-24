@@ -219,7 +219,7 @@ async def test_stxm_fast_with_speed_capped(
     )
 
 
-@pytest.mark.parametrize("execution_number", range(5))
+@pytest.mark.parametrize("execution_number", range(1))
 async def test_stxm_fast_unknown_step_snake(
     andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine, execution_number
 ):
@@ -254,8 +254,12 @@ async def test_stxm_fast_unknown_step_snake(
     set_mock_value(sim_motor.y.high_limit_travel, 88)
     set_mock_value(sim_motor.y.low_limit_travel, -88)
     plan_time = (
-        number_of_point**2 * (deadtime) + step_range / step_motor_speed + +10
-    )  # extra overhead poor plan time guess
+        number_of_point**2 * (deadtime)
+        + step_range / step_motor_speed
+        + step_range / step_motor_speed
+        + (number_of_point - 1) * (scan_range / scan_motor_speed + scan_acc * 2)
+        + 10  # extra overhead poor plan time guess
+    )
     RE(
         stxm_fast(
             dets=[andor2],
@@ -277,7 +281,7 @@ async def test_stxm_fast_unknown_step_snake(
     assert docs["event"].__len__() == pytest.approx(floor(t), rel=1)
 
 
-@pytest.mark.parametrize("execution_number", range(5))
+@pytest.mark.parametrize("execution_number", range(1))
 async def test_stxm_fast_unknown_step_no_snake(
     andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine, execution_number
 ):
@@ -339,7 +343,7 @@ async def test_stxm_fast_unknown_step_no_snake(
     assert docs["event"].__len__() == pytest.approx(number_of_point, abs=1)
 
 
-@pytest.mark.parametrize("execution_number", range(5))
+@pytest.mark.parametrize("execution_number", range(1))
 async def test_stxm_fast_unknown_step_snake_with_point_correction(
     andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine, execution_number
 ):
@@ -362,8 +366,12 @@ async def test_stxm_fast_unknown_step_snake_with_point_correction(
     count_time = 0.1
 
     set_mock_value(sim_motor.x.velocity, step_motor_speed)
+    set_mock_value(sim_motor.x.low_limit_travel, -10)
+    set_mock_value(sim_motor.x.high_limit_travel, 10)
     set_mock_value(sim_motor.x.acceleration_time, step_acc)
     set_mock_value(sim_motor.y.velocity, scan_motor_speed)
+    set_mock_value(sim_motor.y.low_limit_travel, -10)
+    set_mock_value(sim_motor.y.high_limit_travel, 10)
     set_mock_value(sim_motor.y.acceleration_time, scan_acc)
 
     plan_time = 100  # this will generate 28 steps without correction

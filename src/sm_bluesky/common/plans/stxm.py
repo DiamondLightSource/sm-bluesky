@@ -341,7 +341,6 @@ def estimate_axis_points(
     num_points_per_axis=None,
 ):
     if num_points_per_axis is None:
-        print("-------------")
         num_points_per_axis = (
             (plan_time / deadtime) / (scan_range * step_range)
         ) ** 0.5
@@ -372,7 +371,7 @@ def estimate_axis_points(
         raise (ValueError("Plan time too short for the area and count time required."))
     point_per_axis = ((corrected_num_points) / (scan_range * step_range)) ** 0.5
 
-    if abs(point_per_axis - old_num_points_per_axis) > 0.4:
+    if abs(point_per_axis - old_num_points_per_axis) >= 0.49:
         print(corrected_num_points, point_step_axis, old_num_points_per_axis)
         point_step_axis = estimate_axis_points(
             plan_time=plan_time,
