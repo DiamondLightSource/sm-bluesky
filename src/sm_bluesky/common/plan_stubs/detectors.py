@@ -25,13 +25,5 @@ def set_area_detector_acquire_time(
     MsgGenerator[None]
         A Bluesky generator for setting the acquire time.
     """
-    drv = (
-        getattr(det, "drv", None)
-        if isinstance(det, SingleTriggerDetector)
-        else getattr(det, "driver", None)
-    )
-    if drv is None:
-        raise AttributeError(
-            f"The detector {det} does not have a valid driver attribute."
-        )
+    drv = det.drv if isinstance(det, SingleTriggerDetector) else det.driver
     yield from abs_set(drv.acquire_time, acquire_time, wait=wait)

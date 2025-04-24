@@ -156,36 +156,39 @@ def stxm_fast(
 
     Parameters
     ----------
-    dets: list [Andor2Detector | Readable,]
-        Area detector or any readable, the first dets is consider the main detector and
-        the count time is set for this detector.
-    count_time: float
-        detector count time.
-    step_motor: Motor,
-        Motor for the slow axis
-    step_start: float,
-        Starting position for step axis
-    step_end: float,
-        Ending position for step axis
-    scan_motor: Motor,
-        Motor for the continuously moving axis
-    scan_start: float,
-        Start for scanning axis
-    scan_end: float,
-        End for scanning axis
-    plan_time: float,
-        How long it should take in second
-    point_correction: float
-        Scaling factor to allow adjustment of how many total points.
-    step_size: float | None = None,
-        Optional step size for the slow axis
-    home: bool = False,
-        If True move back to position before it scan
-    snake_axes: bool = True,
-        If True, do grid scan without moving scan axis back to start position.
-    md:  dict | None = None,
-        Meta data
+    dets : list[AreaDetector | Readable]
+        List of detectors to use for the scan.
+    count_time : float
+        Detector count time.
+    step_motor : Motor
+        Motor for the slow axis.
+    step_start : float
+        Starting position for the step motor.
+    step_end : float
+        Ending position for the step motor.
+    scan_motor : Motor
+        Motor for the continuously moving axis.
+    scan_start : float
+        Starting position for the scan motor.
+    scan_end : float
+        Ending position for the scan motor.
+    plan_time : float
+        Desired duration of the scan in seconds.
+    point_correction : float, optional
+        Scaling factor for the number of points, by default 1.
+    step_size : Optional[float], optional
+        Step size for the slow axis, by default None.
+    home : bool, optional
+        If True, move back to the original position after the scan, by default False.
+    snake_axes : bool, optional
+        If True, perform a snake scan, by default True.
+    md : Optional[dict], optional
+        Metadata for the scan, by default None.
 
+    Returns
+    -------
+    MsgGenerator
+        A Bluesky generator for the scan.
     """
     clean_up_arg: dict = {}
     clean_up_arg["Home"] = home
