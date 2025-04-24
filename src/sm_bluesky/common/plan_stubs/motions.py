@@ -38,9 +38,9 @@ def move_motor_with_look_up(
     motor_table: dict[str, float],
         Look up table for motor position,
     use_motor_position: bool = False,
-        If ture it will take motor position as size.
+        If Ture it will take motor position as size.
     wait: bool = True,
-        If ture, it will wait until position is reached.
+        If Ture, it will wait until position is reached.
     group: Hashable | None = None,
         Bluesky group identifier used by ‘wait’.
 
@@ -91,7 +91,19 @@ def set_slit_size(
         yield from bps.wait(group=group)
 
 
-def check_within_limit(values: list, motor: Motor):
+def check_within_limit(values: list, motor: Motor) -> MsgGenerator[None]:
+    """Check if the given values are within the limits of the motor.
+    Parameters
+    ----------
+    values: list
+        The values to check.
+    motor: Motor
+        The motor to check the limits of.
+    Raises
+    ------
+    ValueError
+        If the values are not within the limits of the motor.
+    """
     LOGGER.info(f"Check {motor.name} limits.")
     lower_limit = yield from bps.rd(motor.low_limit_travel)
     high_limit = yield from bps.rd(motor.high_limit_travel)
@@ -103,8 +115,19 @@ def check_within_limit(values: list, motor: Motor):
             )
 
 
-def get_motor_positions(*arg):
-    """store motor position in an list so it can be pass to move later"""
+def get_motor_positions(*arg: Motor) -> Iterator[Any]:
+    """Get the motor positions of the given motors and store them in a list.
+    This is used to store the motor positions before a scan and
+    restore them after the scan.
+    Parameters
+    ----------
+    arg: Motor
+        The motors to get the positions of.
+    Returns
+    -------
+    -------
+    list
+        A list of tuples containing the motor name and its position."""
     motor_position = []
     for motor in arg:
         motor_position.append(motor)

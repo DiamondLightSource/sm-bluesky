@@ -94,7 +94,7 @@ def stxm_step(
         # Add move back  positon to origin
         clean_up_arg["Origin"] = yield from get_motor_positions(
             x_step_motor, y_step_motor
-        )
+        )  # type: ignore
     main_det = dets[0]
     if isinstance(main_det, AreaDetector):
         # Set count time on detector
@@ -195,7 +195,7 @@ def stxm_fast(
     )
     # Add move back position to origin
     if home:
-        clean_up_arg["Origin"] = yield from get_motor_positions(scan_motor, step_motor)
+        clean_up_arg["Origin"] = yield from get_motor_positions(scan_motor, step_motor)  # type: ignore
 
     scan_acc = yield from bps.rd(scan_motor.acceleration_time)
     scan_motor_speed = yield from bps.rd(scan_motor.velocity)

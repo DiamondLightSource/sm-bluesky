@@ -10,10 +10,10 @@ from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.epics.adcore import ADState
 from ophyd_async.testing import assert_emitted, set_mock_value
 
-from sm_bluesky.common.plans import takeImg, tiggerImg
+from sm_bluesky.common.plans import take_img, tigger_img
 
 
-async def test_Andor2_tiggerImg(
+async def test_Andor2_tigger_img(
     RE: RunEngine, andor2: Andor2Detector, static_path_provider: StaticPathProvider
 ):
     docs = defaultdict(list)
@@ -25,7 +25,7 @@ async def test_Andor2_tiggerImg(
 
     set_mock_value(andor2.driver.detector_state, ADState.IDLE)
 
-    RE(tiggerImg(andor2, 4))
+    RE(tigger_img(andor2, 4))
 
     assert (
         str(static_path_provider._directory_path)
@@ -40,7 +40,7 @@ async def test_Andor2_tiggerImg(
     )
 
 
-async def test_Andor2_takeImg(
+async def test_Andor2_take_img(
     RE: RunEngine, andor2: Andor2Detector, static_path_provider: StaticPathProvider
 ):
     docs = defaultdict(list)
@@ -52,7 +52,7 @@ async def test_Andor2_takeImg(
 
     set_mock_value(andor2.driver.detector_state, ADState.IDLE)
 
-    RE(takeImg(andor2, 1, 4))
+    RE(take_img(andor2, 1, 4))
     assert (
         str(static_path_provider._directory_path)
         == await andor2.fileio.file_path.get_value()

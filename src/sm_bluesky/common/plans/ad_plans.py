@@ -6,7 +6,7 @@ from ophyd_async.core import DetectorTrigger, TriggerInfo
 from ophyd_async.epics.adandor import Andor2Detector
 
 
-def takeImg(
+def take_img(
     det: Andor2Detector,
     exposure: float,
     n_img: int = 1,
@@ -28,19 +28,19 @@ def takeImg(
 
     @bpp.stage_decorator([det])
     @bpp.run_decorator()
-    def innerTakeImg():
+    def innertake_img():
         yield from bps.prepare(det, tigger_info, group=grp, wait=True)
         yield from bps.trigger_and_read([det])
 
-    yield from innerTakeImg()
+    yield from innertake_img()
 
 
-def tiggerImg(dets: Andor2Detector, value: int) -> MsgGenerator:
+def tigger_img(dets: Andor2Detector, value: int) -> MsgGenerator:
     yield Msg("set", dets.driver.acquire_time, value)
 
     @bpp.stage_decorator([dets])
     @bpp.run_decorator()
-    def innerTiggerImg():
+    def innertigger_img():
         return (yield from bps.trigger_and_read([dets]))
 
-    yield from innerTiggerImg()
+    yield from innertigger_img()
