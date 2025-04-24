@@ -1,11 +1,12 @@
 from blueapi.core import MsgGenerator
 from bluesky import plan_stubs as bps
 from bluesky import preprocessors as bpp
-from bluesky.utils import Msg, short_uid
+from bluesky.utils import Msg, plan, short_uid
 from ophyd_async.core import DetectorTrigger, TriggerInfo
 from ophyd_async.epics.adandor import Andor2Detector
 
 
+@plan
 def take_img(
     det: Andor2Detector,
     exposure: float,
@@ -35,6 +36,7 @@ def take_img(
     yield from innertake_img()
 
 
+@plan
 def tigger_img(dets: Andor2Detector, value: int) -> MsgGenerator:
     yield Msg("set", dets.driver.acquire_time, value)
 

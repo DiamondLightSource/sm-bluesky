@@ -7,7 +7,7 @@ from bluesky import preprocessors as bpp
 from bluesky.callbacks.fitting import PeakStats
 from bluesky.plan_stubs import abs_set, read
 from bluesky.plans import scan
-from dodal.common.types import MsgGenerator
+from bluesky.utils import MsgGenerator, plan
 from ophyd_async.core import StandardReadable
 from ophyd_async.epics.motor import Motor
 
@@ -87,6 +87,7 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
     return cast(TCallable, inner)
 
 
+@plan
 @scan_and_move_to_fit_pos
 def step_scan_and_move_fit(
     det: StandardReadable,
@@ -122,6 +123,7 @@ def step_scan_and_move_fit(
     return scan([det], motor, start, end, num=num)
 
 
+@plan
 @scan_and_move_to_fit_pos
 def fast_scan_and_move_fit(
     det: StandardReadable,
@@ -175,6 +177,7 @@ def get_stat_loc(ps: PeakStats, loc: StatPosition) -> float:
     return stat_pos if isinstance(stat_pos, float) else stat_pos[0]
 
 
+@plan
 def align_slit_with_look_up(
     motor: Motor,
     size: float,

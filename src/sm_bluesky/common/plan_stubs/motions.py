@@ -3,7 +3,7 @@ from typing import Any
 
 import bluesky.plan_stubs as bps
 from bluesky.plan_stubs import abs_set
-from bluesky.utils import MsgGenerator
+from bluesky.utils import MsgGenerator, plan
 from dodal.devices.slits import Slits
 from ophyd_async.epics.motor import Motor
 from pydantic import RootModel
@@ -17,6 +17,7 @@ class MotorTable(RootModel):
     root: dict[str, float]
 
 
+@plan
 def move_motor_with_look_up(
     slit: Motor,
     size: float,
@@ -24,7 +25,7 @@ def move_motor_with_look_up(
     use_motor_position: bool = False,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator:
+) -> MsgGenerator[None]:
     """Perform a step scan with the range and starting motor position
       given/calculated by using a look up table(dictionary).
       Move to the peak position after the scan and update the lookup table.
@@ -56,13 +57,14 @@ def move_motor_with_look_up(
         )
 
 
+@plan
 def set_slit_size(
     xy_slit: Slits,
     x_size: float,
     y_size: float | None = None,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator:
+) -> MsgGenerator[None]:
     """Set opening of x-y slit.
 
     Parameters
@@ -74,7 +76,7 @@ def set_slit_size(
     y_size: float
         The y opening size.
     wait: bool
-        If this is true it will wait for all motions to finish.
+        If this is True it will wait for all motions to finish.
     group (optional): Hashable
         Bluesky group identifier used by ‘wait’.
     """
@@ -91,7 +93,8 @@ def set_slit_size(
         yield from bps.wait(group=group)
 
 
-def check_within_limit(values: list, motor: Motor) -> MsgGenerator[None]:
+@plan
+def check_within_limit(values: list, motor: Motor):
     """Check if the given values are within the limits of the motor.
     Parameters
     ----------
@@ -131,12 +134,14 @@ def get_motor_positions(*arg: Motor) -> Iterator[Any]:
     motor_position = []
     for motor in arg:
         motor_position.append(motor)
-        motor_position.append((yield from bps.rd(motor)))
+        position = yield from bps.rd(motor)
+        motor_position.append(position)
 
     LOGGER.info(f"Stored motor, position  = {motor_position}.")
     return motor_position
 
 
+@plan
 def get_velocity_and_step_size(
     scan_motor: Motor, ideal_velocity: float, ideal_step_size: float
 ) -> Iterator[Any]:

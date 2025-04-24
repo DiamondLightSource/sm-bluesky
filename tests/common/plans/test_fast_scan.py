@@ -60,7 +60,7 @@ async def test_fast_scan_1d_success(sim_motor: XYZPositioner, RE: RunEngine, det
         mock.call(2.78, wait=True),
     ] == get_mock_put(sim_motor.x.velocity).call_args_list
 
-    """Only 1 event as sim motor motor_done_move is set to true,
+    """Only 1 event as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
     assert_emitted(docs, start=1, descriptor=1, event=1, stop=1)
 
@@ -84,7 +84,7 @@ async def test_fast_scan_1d_success_without_speed(
         mock.call(pytest.approx(88.88), wait=True),
     ] == get_mock_put(sim_motor_delay.x.velocity).call_args_list
 
-    """Only 1 event as sim motor motor_done_move is set to true,
+    """Only 1 event as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""  #
     print(docs)
     assert_emitted(docs, start=1, descriptor=1, event=mock.ANY, stop=1)
@@ -140,7 +140,7 @@ async def test_fast_scan_2d_success(sim_motor: XYZPositioner, RE: RunEngine, det
             assert motor_y == mock.call(y_start, wait=True)
         else:
             assert motor_y == mock.call(y_end, wait=True)
-    """Only 1 event per step as sim motor motor_done_move is set to true,
+    """Only 1 event per step as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
     assert_emitted(docs, start=1, descriptor=1, event=num_step, stop=1)
 
@@ -203,6 +203,6 @@ async def test_fast_scan_2d_snake_success(sim_motor: XYZPositioner, RE: RunEngin
     ):
         assert motor_y == mock.call(y_position[cnt], wait=True)
 
-    """Only 1 event per step as sim motor motor_done_move is set to true,
+    """Only 1 event per step as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
     assert_emitted(docs, start=1, descriptor=1, event=num_step, stop=1)

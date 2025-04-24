@@ -1,5 +1,6 @@
 from collections.abc import Sequence
-from math import floor
+from math import floor, sqrt
+from typing import TypedDict
 
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
@@ -8,6 +9,7 @@ from bluesky.preprocessors import (
     finalize_wrapper,
 )
 from bluesky.protocols import Readable
+from bluesky.utils import plan
 from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
 from ophyd_async.epics.adcore import AreaDetector
 from ophyd_async.epics.motor import Motor
@@ -23,6 +25,13 @@ from sm_bluesky.common.plans.fast_scan import fast_scan_grid
 from sm_bluesky.log import LOGGER
 
 
+class CleanUpArgs(TypedDict, total=False):
+    Home: bool
+    Origin: list[Motor | float]
+    """Dictionary to store clean up options."""
+
+
+@plan
 @attach_data_session_metadata_decorator()
 def stxm_step(
     dets: Sequence[AreaDetector | Readable],
@@ -65,9 +74,9 @@ def stxm_step(
     y_step_size: float
         Step size for y motor
     home: bool = False,
-        If true move back to position before it scan
+        If True move back to position before it scan
     snake_axes: bool = True,
-        If true, do grid scan without moving scan axis back to start position.
+        If True, do grid scan without moving scan axis back to start position.
     md:  dict | None = None,
         Meta data
     """
@@ -118,6 +127,7 @@ def stxm_step(
     )
 
 
+@plan
 @attach_data_session_metadata_decorator()
 def stxm_fast(
     dets: list[AreaDetector | Readable],
@@ -170,9 +180,9 @@ def stxm_fast(
     step_size: float | None = None,
         Optional step size for the slow axis
     home: bool = False,
-        If true move back to position before it scan
+        If True move back to position before it scan
     snake_axes: bool = True,
-        If true, do grid scan without moving scan axis back to start position.
+        If True, do grid scan without moving scan axis back to start position.
     md:  dict | None = None,
         Meta data
 
@@ -258,9 +268,9 @@ def stxm_fast(
     )
 
 
-def clean_up(**kwargs: dict):
+def clean_up(**kwargs: CleanUpArgs) -> MsgGenerator:
     LOGGER.info(f"Clean up: {list(kwargs)}")
-    if kwargs["Home"]:
+    if kwargs.get("Home"):
         # move motor back to stored position
         yield from bps.mov(*kwargs["Origin"])
 
@@ -281,6 +291,9 @@ def estimate_speed_steps(
     snake_axes: bool,
     correction: float,
 ) -> tuple[float, float]:
+    """
+    Estimate the speed and step size for a scan.
+    """
     step_range = abs(step_start - step_end)
     scan_range = abs(scan_start - scan_end)
 
@@ -293,9 +306,7 @@ def estimate_speed_steps(
         scan_range=scan_range,
         scan_acceleration=scan_acceleration,
         scan_speed=scan_speed,
-        scan_max_vel=scan_max_vel,
         snake_axes=snake_axes,
-        step_size=step_size,
     )
 
     point_per_step_axis = floor(point_per_axis * correction * step_range)
@@ -334,59 +345,46 @@ def estimate_axis_points(
     scan_range: float,
     scan_acceleration: float,
     scan_speed: float,
-    scan_max_vel: float,
     snake_axes: bool = True,
-    step_size: float | None = None,
-    correction: float = 1,
-    num_points_per_axis=None,
-):
+    num_points_per_axis: float | None = None,
+) -> int:
+    """
+    Estimate the number of points per axis for a scan..
+    """
+    iteration_limit = 10  # Prevent infinite recursion
+    iteration_count = 0
+
     if num_points_per_axis is None:
-        num_points_per_axis = (
-            (plan_time / deadtime) / (scan_range * step_range)
-        ) ** 0.5
-    print(num_points_per_axis)
+        num_points_per_axis = sqrt((plan_time / deadtime) / (scan_range * step_range))
     old_num_points_per_axis = num_points_per_axis
 
-    point_step_axis = floor(num_points_per_axis * step_range)
+    while (
+        iteration_count <= iteration_limit
+        and abs(num_points_per_axis - old_num_points_per_axis) <= 0.49
+    ):
+        old_num_points_per_axis = num_points_per_axis
 
-    point_step_axis = floor(num_points_per_axis * step_range)
+        point_step_axis = floor(num_points_per_axis * step_range)
 
-    if point_step_axis < 1:
-        point_step_axis = 1
-    step_mv_time = point_step_axis * step_acceleration * 2 + step_range / step_speed
+        if point_step_axis < 1:
+            point_step_axis = 1
+        step_mv_time = point_step_axis * step_acceleration * 2 + step_range / step_speed
 
-    if snake_axes:
-        scan_mv_time = point_step_axis * (scan_acceleration * 2)
-    else:
-        point_scan_axis = floor(num_points_per_axis * (scan_range))
-        scan_mv_time = point_scan_axis * (scan_acceleration * 2) + (
-            point_scan_axis - 1
-        ) * (scan_range / scan_speed + scan_acceleration * 2)
-        # Non-snake requires extra movement time
-    """
-    Rough adjustment of the num of data point possible, This is an under estimation.
-    """
-    corrected_num_points = (plan_time - step_mv_time - scan_mv_time) / deadtime
-    if corrected_num_points <= 0:
-        raise (ValueError("Plan time too short for the area and count time required."))
-    point_per_axis = ((corrected_num_points) / (scan_range * step_range)) ** 0.5
+        if snake_axes:
+            scan_mv_time = point_step_axis * (scan_acceleration * 2)
+        else:
+            point_scan_axis = floor(num_points_per_axis * (scan_range))
+            scan_mv_time = point_scan_axis * (scan_acceleration * 2) + (
+                point_scan_axis - 1
+            ) * (scan_range / scan_speed + scan_acceleration * 2)
 
-    if abs(point_per_axis - old_num_points_per_axis) >= 0.49:
-        print(corrected_num_points, point_step_axis, old_num_points_per_axis)
-        point_step_axis = estimate_axis_points(
-            plan_time=plan_time,
-            deadtime=deadtime,
-            step_range=step_range,
-            step_acceleration=step_acceleration,
-            step_speed=step_speed,
-            scan_range=scan_range,
-            scan_acceleration=scan_acceleration,
-            scan_speed=scan_speed,
-            scan_max_vel=scan_max_vel,
-            snake_axes=snake_axes,
-            step_size=step_size,
-            correction=correction,
-            num_points_per_axis=point_per_axis,
-        )
-
+        corrected_num_points = (plan_time - step_mv_time - scan_mv_time) / deadtime
+        if corrected_num_points <= 0:
+            raise ValueError(
+                f"Plan time too short for the area and count time required. "
+                f"Plan time: {plan_time}, Step move time: {step_mv_time}, "
+                f"Scan move time: {scan_mv_time}, Deadtime: {deadtime}"
+            )
+        num_points_per_axis = corrected_num_points
+    point_per_axis = sqrt((num_points_per_axis) / (scan_range * step_range))
     return floor(point_per_axis)

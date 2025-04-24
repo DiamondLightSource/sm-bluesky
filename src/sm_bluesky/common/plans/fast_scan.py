@@ -7,7 +7,7 @@ from bluesky.preprocessors import (
     finalize_wrapper,
 )
 from bluesky.protocols import Readable
-from bluesky.utils import short_uid
+from bluesky.utils import plan, short_uid
 from numpy import linspace
 from ophyd_async.epics.motor import FlyMotorInfo, Motor
 
@@ -15,6 +15,7 @@ from sm_bluesky.common.plan_stubs import check_within_limit
 from sm_bluesky.log import LOGGER
 
 
+@plan
 def fast_scan_1d(
     dets: list[Any],
     motor: Motor,
@@ -58,6 +59,7 @@ def fast_scan_1d(
     )
 
 
+@plan
 def fast_scan_grid(
     dets: list[Readable],
     step_motor: Motor,
@@ -162,7 +164,8 @@ def fast_scan_grid(
     )
 
 
-def reset_speed(old_speed, motor: Motor):
+@plan
+def reset_speed(old_speed, motor: Motor) -> MsgGenerator:
     LOGGER.info(f"Clean up: setting motor speed to {old_speed}.")
     if old_speed:
         yield from bps.abs_set(motor.velocity, old_speed)
@@ -174,6 +177,7 @@ def clean_up():
     yield from bps.null()
 
 
+@plan
 def _fast_scan_1d(
     dets: list[Any],
     motor: Motor,
