@@ -5,7 +5,7 @@ Bluesky plans common for S&M beamline.
 
 """
 
-from .ad_plans import take_img, tigger_img
+from .ad_plans import tigger_img
 from .alignments import (
     StatPosition,
     align_slit_with_look_up,
@@ -24,6 +24,5 @@ __all__ = [
     "fast_scan_grid",
     "stxm_fast",
     "stxm_step",
-    "take_img",
     "tigger_img",
 ]

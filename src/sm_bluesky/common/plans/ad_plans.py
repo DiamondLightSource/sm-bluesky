@@ -1,55 +1,8 @@
 from blueapi.core import MsgGenerator
 from bluesky import plan_stubs as bps
 from bluesky import preprocessors as bpp
-from bluesky.utils import Msg, plan, short_uid
-from ophyd_async.core import DetectorTrigger, TriggerInfo
+from bluesky.utils import Msg, plan
 from ophyd_async.epics.adandor import Andor2Detector
-
-
-@plan
-def take_img(
-    det: Andor2Detector,
-    exposure: float,
-    n_img: int = 1,
-    det_trig: DetectorTrigger = DetectorTrigger.INTERNAL,
-) -> MsgGenerator[None]:
-    """
-    Take an image using the specified detector with full control
-    over the trigger settings.
-
-    Parameters
-    ----------
-    det : Andor2Detector
-        The detector to use for image acquisition.
-    exposure : float
-        The exposure time for the image.
-    n_img : int, optional
-        The number of images to acquire, by default 1.
-    det_trig : DetectorTrigger, optional
-        The trigger mode for the detector, by default DetectorTrigger.INTERNAL.
-
-    Returns
-    -------
-    MsgGenerator[None]
-        A Bluesky generator for taking the image.
-    """
-    grp = short_uid("prepare")
-    deadtime: float = det._controller.get_deadtime(exposure)  # noqa: SLF001
-    tigger_info = TriggerInfo(
-        number_of_triggers=n_img,
-        trigger=det_trig,
-        deadtime=deadtime,
-        livetime=exposure,
-        frame_timeout=None,
-    )
-
-    @bpp.stage_decorator([det])
-    @bpp.run_decorator()
-    def innertake_img():
-        yield from bps.prepare(det, tigger_info, group=grp, wait=True)
-        yield from bps.trigger_and_read([det])
-
-    yield from innertake_img()
 
 
 @plan
