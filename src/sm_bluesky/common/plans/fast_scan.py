@@ -6,37 +6,44 @@ from blueapi.core import MsgGenerator
 from bluesky.preprocessors import (
     finalize_wrapper,
 )
-from bluesky.utils import short_uid
+from bluesky.protocols import Readable
+from bluesky.utils import plan, short_uid
 from numpy import linspace
 from ophyd_async.epics.motor import FlyMotorInfo, Motor
 
-from sm_bluesky.common.plans_stubs.motions import check_within_limit
+from sm_bluesky.common.plan_stubs import check_within_limit
 from sm_bluesky.log import LOGGER
 
 
+@plan
 def fast_scan_1d(
-    dets: list[Any],
+    dets: list[Readable],
     motor: Motor,
     start: float,
     end: float,
     motor_speed: float | None = None,
 ) -> MsgGenerator:
     """
-    One axis fast scan, using _fast_scan_1d.
+    Perform a fast scan along one axis.
 
     Parameters
     ----------
-    detectors : list
-        list of 'readable',triggerable  objects
-    motor : Motor (moveable, readable)
+    dets : list[Readable]
+        List of readable objects (e.g., detectors).
+    motor : Motor
+        The motor to move during the scan.
+    start : float
+        The starting position of the motor.
+    end : float
+        The ending position of the motor.
+    motor_speed : Optional[float], optional
+        The speed of the motor during the scan. If None,
+        the motor's current speed is used.
 
-    start: float
-        starting position.
-    end: float,
-        ending position
-
-    motor_speed: Optional[float] = None,
-        The speed of the motor during scan
+    Returns
+    -------
+    MsgGenerator
+        A Bluesky generator for the scan.
     """
 
     @bpp.stage_decorator(dets)
@@ -57,8 +64,9 @@ def fast_scan_1d(
     )
 
 
+@plan
 def fast_scan_grid(
-    dets: list[Any],
+    dets: list[Readable],
     step_motor: Motor,
     step_start: float,
     step_end: float,
@@ -98,6 +106,7 @@ def fast_scan_grid(
         If Ture. Scan motor will start an other line where it ended.
     md:
         place holder for meta data for future.
+
     """
 
     @bpp.stage_decorator(dets)
@@ -160,7 +169,8 @@ def fast_scan_grid(
     )
 
 
-def reset_speed(old_speed, motor: Motor):
+@plan
+def reset_speed(old_speed, motor: Motor) -> MsgGenerator:
     LOGGER.info(f"Clean up: setting motor speed to {old_speed}.")
     if old_speed:
         yield from bps.abs_set(motor.velocity, old_speed)
@@ -172,6 +182,7 @@ def clean_up():
     yield from bps.null()
 
 
+@plan
 def _fast_scan_1d(
     dets: list[Any],
     motor: Motor,

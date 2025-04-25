@@ -2,9 +2,17 @@ import asyncio
 import os
 from pathlib import Path
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 from bluesky.run_engine import RunEngine
+from dodal.common.beamlines.beamline_utils import (
+    set_path_provider,
+)
+from dodal.common.visit import (
+    LocalDirectoryServiceClient,
+    StaticVisitPathProvider,
+)
 from dodal.devices.motors import XYZPositioner
 from dodal.utils import make_all_devices
 from ophyd_async.core import (
@@ -13,7 +21,8 @@ from ophyd_async.core import (
     StaticPathProvider,
     init_devices,
 )
-from ophyd_async.testing import set_mock_value
+from ophyd_async.epics.adandor import Andor2Detector
+from ophyd_async.testing import callback_on_mock_put, set_mock_value
 from super_state_machine.errors import TransitionError
 
 from .sim_devices import SimStage, sim_detector
@@ -26,6 +35,16 @@ INCOMPLETE_RECORD = str(Path(__file__).parent / "panda" / "db" / "incomplete_pan
 EXTRA_BLOCKS_RECORD = str(
     Path(__file__).parent / "panda" / "db" / "extra_blocks_panda.db"
 )
+
+
+set_path_provider(
+    StaticVisitPathProvider(
+        "p99",
+        Path("/dls/p99/data/2024/cm37284-2/processing/writenData"),
+        client=LocalDirectoryServiceClient(),  # RemoteDirectoryServiceClient("http://p99-control:8088/api"),
+    )
+)
+
 
 # Prevent pytest from catching exceptions when debugging in vscode so that break on
 # exception works correctly (see: https://github.com/pytest-dev/pytest/issues/7409)
@@ -152,3 +171,34 @@ async def fake_i10():
         "dodal.beamlines.i10", connect_immediately=True, mock=True
     )
     yield fake_i10
+
+
+# area detector that is use for testing
+@pytest.fixture
+async def andor2(static_path_provider: StaticPathProvider) -> Andor2Detector:
+    async with init_devices(mock=True):
+        andor2 = Andor2Detector("p99", static_path_provider)
+
+    set_mock_value(andor2.driver.array_size_x, 10)
+    set_mock_value(andor2.driver.array_size_y, 20)
+    set_mock_value(andor2.fileio.file_path_exists, True)
+    set_mock_value(andor2.fileio.num_captured, 0)
+    set_mock_value(andor2.fileio.file_path, str(static_path_provider._directory_path))
+    set_mock_value(
+        andor2.fileio.full_file_name,
+        str(static_path_provider._directory_path) + "/test-andor2-hdf0",
+    )
+
+    rbv_mocks = Mock()
+    rbv_mocks.get.side_effect = range(0, 10000)
+    callback_on_mock_put(
+        andor2.fileio.capture,
+        lambda *_, **__: set_mock_value(andor2.fileio.capture, value=True),
+    )
+
+    callback_on_mock_put(
+        andor2.driver.acquire,
+        lambda *_, **__: set_mock_value(andor2.fileio.num_captured, rbv_mocks.get()),
+    )
+
+    return andor2

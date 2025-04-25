@@ -1,8 +1,9 @@
-from collections.abc import Hashable
+from collections.abc import Hashable, Iterator
+from typing import Any
 
 import bluesky.plan_stubs as bps
 from bluesky.plan_stubs import abs_set
-from dodal.common.types import MsgGenerator
+from bluesky.utils import MsgGenerator, plan
 from dodal.devices.slits import Slits
 from ophyd_async.epics.motor import Motor
 from pydantic import RootModel
@@ -16,6 +17,7 @@ class MotorTable(RootModel):
     root: dict[str, float]
 
 
+@plan
 def move_motor_with_look_up(
     slit: Motor,
     size: float,
@@ -23,7 +25,7 @@ def move_motor_with_look_up(
     use_motor_position: bool = False,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator:
+) -> MsgGenerator[None]:
     """Perform a step scan with the range and starting motor position
       given/calculated by using a look up table(dictionary).
       Move to the peak position after the scan and update the lookup table.
@@ -37,9 +39,9 @@ def move_motor_with_look_up(
     motor_table: dict[str, float],
         Look up table for motor position,
     use_motor_position: bool = False,
-        If ture it will take motor position as size.
+        If Ture it will take motor position as size.
     wait: bool = True,
-        If ture, it will wait until position is reached.
+        If Ture, it will wait until position is reached.
     group: Hashable | None = None,
         Bluesky group identifier used by ‘wait’.
 
@@ -55,13 +57,14 @@ def move_motor_with_look_up(
         )
 
 
+@plan
 def set_slit_size(
     xy_slit: Slits,
     x_size: float,
     y_size: float | None = None,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator:
+) -> MsgGenerator[None]:
     """Set opening of x-y slit.
 
     Parameters
@@ -73,7 +76,7 @@ def set_slit_size(
     y_size: float
         The y opening size.
     wait: bool
-        If this is true it will wait for all motions to finish.
+        If this is True it will wait for all motions to finish.
     group (optional): Hashable
         Bluesky group identifier used by ‘wait’.
     """
@@ -90,7 +93,21 @@ def set_slit_size(
         yield from bps.wait(group=group)
 
 
-def check_within_limit(values: list, motor: Motor):
+@plan
+def check_within_limit(values: list[float], motor: Motor):
+    """Check if the given values are within the limits of the motor.
+    Parameters
+    ----------
+    values : List[float]
+        The values to check.
+    motor : Motor
+        The motor to check the limits of.
+
+    Raises
+    ------
+    ValueError
+        If any value is outside the motor's limits.
+    """
     LOGGER.info(f"Check {motor.name} limits.")
     lower_limit = yield from bps.rd(motor.low_limit_travel)
     high_limit = yield from bps.rd(motor.high_limit_travel)
@@ -100,3 +117,58 @@ def check_within_limit(values: list, motor: Motor):
                 f"{motor.name} move request of {value} is beyond limits:"
                 f"{lower_limit} < {high_limit}"
             )
+
+
+def get_motor_positions(*arg: Motor) -> Iterator[tuple[str, float]]:
+    """
+    Get the motor positions of the given motors and store them in a list.
+
+    Parameters
+    ----------
+    arg : Motor
+        The motors to get the positions of.
+
+    Returns
+    -------
+    Iterator[Tuple[str, float]]
+        An iterator of tuples containing the motor name and its position.
+    """
+    motor_position = []
+    for motor in arg:
+        motor_position.append(motor)
+        position = yield from bps.rd(motor)  # type: ignore
+        motor_position.append(position)
+
+    LOGGER.info(f"Stored motor, position  = {motor_position}.")
+    return motor_position
+
+
+def get_velocity_and_step_size(
+    scan_motor: Motor, ideal_velocity: float, ideal_step_size: float
+) -> Iterator[Any]:
+    """
+    Adjust the step size if the required velocity is higher than the max value.
+
+    Parameters
+    ----------
+    scan_motor : Motor
+        The motor which will move continuously.
+    ideal_velocity : float
+        The desired velocity.
+    ideal_step_size : float
+        The non-scanning motor step size.
+
+    Returns
+    -------
+    Iterator[Tuple[float, float]]
+        An iterator containing the adjusted velocity and step size.
+    """
+    if ideal_velocity <= 0.0:
+        raise ValueError(f"{scan_motor.name} speed: {ideal_velocity} <= 0")
+    max_velocity = yield from bps.rd(scan_motor.max_velocity)  # type: ignore
+    # if motor does not move fast enough increase step_motor step size
+    if ideal_velocity > max_velocity:
+        ideal_step_size = ideal_step_size / (ideal_velocity / max_velocity)
+        ideal_velocity = round(max_velocity, 3)
+
+    return ideal_velocity, ideal_step_size
