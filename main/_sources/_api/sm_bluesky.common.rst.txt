@@ -14,8 +14,8 @@
         :recursive:
     
         math_functions
+        plan_stubs
         plans
-        plans_stubs
     
     
 

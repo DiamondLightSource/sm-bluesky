@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans.fast_scan &#8212; sm-bluesky 0.1.dev34+g9a9b1ce documentation</title>
+    <title>sm_bluesky.common.plans.fast_scan &#8212; sm-bluesky 0.1.dev54+gf905ec6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=6d57a7bc"></script>
+    <script src="../../../../_static/documentation_options.js?v=8bd885a2"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -450,39 +450,46 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.preprocessors</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">finalize_wrapper</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">short_uid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">Readable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">plan</span><span class="p">,</span> <span class="n">short_uid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">linspace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.motor</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlyMotorInfo</span><span class="p">,</span> <span class="n">Motor</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plans_stubs.motions</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_within_limit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_within_limit</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
 
 
 <div class="viewcode-block" id="fast_scan_1d">
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.fast_scan_1d">[docs]</a>
+<span class="nd">@plan</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">fast_scan_1d</span><span class="p">(</span>
-    <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span>
     <span class="n">motor</span><span class="p">:</span> <span class="n">Motor</span><span class="p">,</span>
     <span class="n">start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">end</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">motor_speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    One axis fast scan, using _fast_scan_1d.</span>
+<span class="sd">    Perform a fast scan along one axis.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    detectors : list</span>
-<span class="sd">        list of &#39;readable&#39;,triggerable  objects</span>
-<span class="sd">    motor : Motor (moveable, readable)</span>
+<span class="sd">    dets : list[Readable]</span>
+<span class="sd">        List of readable objects (e.g., detectors).</span>
+<span class="sd">    motor : Motor</span>
+<span class="sd">        The motor to move during the scan.</span>
+<span class="sd">    start : float</span>
+<span class="sd">        The starting position of the motor.</span>
+<span class="sd">    end : float</span>
+<span class="sd">        The ending position of the motor.</span>
+<span class="sd">    motor_speed : Optional[float], optional</span>
+<span class="sd">        The speed of the motor during the scan. If None,</span>
+<span class="sd">        the motor&#39;s current speed is used.</span>
 
-<span class="sd">    start: float</span>
-<span class="sd">        starting position.</span>
-<span class="sd">    end: float,</span>
-<span class="sd">        ending position</span>
-
-<span class="sd">    motor_speed: Optional[float] = None,</span>
-<span class="sd">        The speed of the motor during scan</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MsgGenerator</span>
+<span class="sd">        A Bluesky generator for the scan.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@bpp</span><span class="o">.</span><span class="n">stage_decorator</span><span class="p">(</span><span class="n">dets</span><span class="p">)</span>
@@ -506,8 +513,9 @@
 
 <div class="viewcode-block" id="fast_scan_grid">
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.fast_scan_grid">[docs]</a>
+<span class="nd">@plan</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">fast_scan_grid</span><span class="p">(</span>
-    <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span>
     <span class="n">step_motor</span><span class="p">:</span> <span class="n">Motor</span><span class="p">,</span>
     <span class="n">step_start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">step_end</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -547,6 +555,7 @@
 <span class="sd">        If Ture. Scan motor will start an other line where it ended.</span>
 <span class="sd">    md:</span>
 <span class="sd">        place holder for meta data for future.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@bpp</span><span class="o">.</span><span class="n">stage_decorator</span><span class="p">(</span><span class="n">dets</span><span class="p">)</span>
@@ -610,7 +619,8 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">reset_speed</span><span class="p">(</span><span class="n">old_speed</span><span class="p">,</span> <span class="n">motor</span><span class="p">:</span> <span class="n">Motor</span><span class="p">):</span>
+<span class="nd">@plan</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">reset_speed</span><span class="p">(</span><span class="n">old_speed</span><span class="p">,</span> <span class="n">motor</span><span class="p">:</span> <span class="n">Motor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Clean up: setting motor speed to </span><span class="si">{</span><span class="n">old_speed</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">old_speed</span><span class="p">:</span>
         <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">motor</span><span class="o">.</span><span class="n">velocity</span><span class="p">,</span> <span class="n">old_speed</span><span class="p">)</span>
@@ -622,6 +632,7 @@
     <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">null</span><span class="p">()</span>
 
 
+<span class="nd">@plan</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_fast_scan_1d</span><span class="p">(</span>
     <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
     <span class="n">motor</span><span class="p">:</span> <span class="n">Motor</span><span class="p">,</span>

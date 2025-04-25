@@ -1,6 +1,7 @@
 ``sm_bluesky.common.math_functions``
 ====================================
         
+        
 
 .. automodule:: sm_bluesky.common.math_functions
     :members:
@@ -17,5 +18,6 @@
         :nosignatures:
     
         cal_range_num
+        step_size_to_step_num
     
     

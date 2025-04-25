@@ -6,6 +6,9 @@
         
         
         
+        
+        
+        
 
 .. automodule:: sm_bluesky.common.plans
     :members:
@@ -27,5 +30,8 @@
         align_slit_with_look_up
         fast_scan_1d
         fast_scan_grid
+        stxm_fast
+        stxm_step
+        tigger_img
     
     

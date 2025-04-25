@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.math_functions.conversion &#8212; sm-bluesky 0.1.dev54+gf905ec6 documentation</title>
+    <title>sm_bluesky.common.plan_stubs.detectors &#8212; sm-bluesky 0.1.dev54+gf905ec6 documentation</title>
   
   
   
@@ -46,7 +46,7 @@
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=30646c52"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/common/math_functions/conversion';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/common/plan_stubs/detectors';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
@@ -424,7 +424,7 @@
     
     <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">sm_bluesky.common.math_functions.conversion</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">sm_bluesky.common.plan_stubs.detectors</span></li>
   </ul>
 </nav>
 </div>
@@ -441,42 +441,38 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for sm_bluesky.common.math_functions.conversion</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">floor</span>
+  <h1>Source code for sm_bluesky.common.plan_stubs.detectors</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">blueapi.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">abs_set</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">plan</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.adcore</span><span class="w"> </span><span class="kn">import</span> <span class="n">AreaDetector</span><span class="p">,</span> <span class="n">SingleTriggerDetector</span>
 
 
-<div class="viewcode-block" id="cal_range_num">
-<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.math_functions.html#sm_bluesky.common.math_functions.cal_range_num">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">cal_range_num</span><span class="p">(</span><span class="n">cen</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">range</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the start, end and the number of steps for a scan.&quot;&quot;&quot;</span>
-    <span class="n">start_pos</span> <span class="o">=</span> <span class="n">cen</span> <span class="o">-</span> <span class="nb">range</span>
-    <span class="n">end_pos</span> <span class="o">=</span> <span class="n">cen</span> <span class="o">+</span> <span class="nb">range</span>
-    <span class="n">num</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">range</span> <span class="o">*</span> <span class="mf">4.0</span> <span class="o">/</span> <span class="n">size</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">start_pos</span><span class="p">,</span> <span class="n">end_pos</span><span class="p">,</span> <span class="n">num</span></div>
-
-
-
-<div class="viewcode-block" id="step_size_to_step_num">
-<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.math_functions.html#sm_bluesky.common.math_functions.step_size_to_step_num">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">step_size_to_step_num</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quick conversion to step from step size.</span>
+<div class="viewcode-block" id="set_area_detector_acquire_time">
+<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plan_stubs.html#sm_bluesky.common.plan_stubs.set_area_detector_acquire_time">[docs]</a>
+<span class="nd">@plan</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_area_detector_acquire_time</span><span class="p">(</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">AreaDetector</span> <span class="o">|</span> <span class="n">SingleTriggerDetector</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set the acquire time on an area detector.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    start : float</span>
-<span class="sd">        Starting position.</span>
-<span class="sd">    end : float</span>
-<span class="sd">        Ending position.</span>
-<span class="sd">    step_size : float</span>
-<span class="sd">        Step size.</span>
+<span class="sd">    det : AreaDetector | SingleTriggerDetector</span>
+<span class="sd">        The detector whose acquire time is to be set.</span>
+<span class="sd">    acquire_time : float</span>
+<span class="sd">        The desired acquire time.</span>
+<span class="sd">    wait : bool, optional</span>
+<span class="sd">        Whether to wait for the operation to complete, by default True.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    int</span>
-<span class="sd">        Number of steps.</span>
+<span class="sd">    MsgGenerator[None]</span>
+<span class="sd">        A Bluesky generator for setting the acquire time.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">step_range</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">end</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">floor</span><span class="p">(</span><span class="n">step_range</span> <span class="o">/</span> <span class="n">step_size</span><span class="p">)</span></div>
+    <span class="n">drv</span> <span class="o">=</span> <span class="n">det</span><span class="o">.</span><span class="n">drv</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">SingleTriggerDetector</span><span class="p">)</span> <span class="k">else</span> <span class="n">det</span><span class="o">.</span><span class="n">driver</span>
+    <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">drv</span><span class="o">.</span><span class="n">acquire_time</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">)</span></div>
 
 </pre></div>
 

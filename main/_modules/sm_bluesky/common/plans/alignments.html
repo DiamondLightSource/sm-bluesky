@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans.alignments &#8212; sm-bluesky 0.1.dev34+g9a9b1ce documentation</title>
+    <title>sm_bluesky.common.plans.alignments &#8212; sm-bluesky 0.1.dev54+gf905ec6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=6d57a7bc"></script>
+    <script src="../../../../_static/documentation_options.js?v=8bd885a2"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -451,12 +451,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.callbacks.fitting</span><span class="w"> </span><span class="kn">import</span> <span class="n">PeakStats</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">abs_set</span><span class="p">,</span> <span class="n">read</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plans</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.common.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span><span class="p">,</span> <span class="n">plan</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardReadable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.motor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Motor</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.math_functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">cal_range_num</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plans_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">MotorTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">MotorTable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.fast_scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">fast_scan_1d</span>
@@ -489,23 +489,19 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">scan_and_move_to_fit_pos</span><span class="p">(</span><span class="n">funcs</span><span class="p">:</span> <span class="n">TCallable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TCallable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper to add PeakStats call back before performing scan</span>
-<span class="sd">    and move to the fitted position after scan.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper to add a PeakStats callback before performing a scan</span>
+<span class="sd">    and move to the fitted position after the scan.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    det: StandardReadable,</span>
-<span class="sd">        Detector to be use for alignment.</span>
-<span class="sd">    motor: Motor</span>
-<span class="sd">        Motor devices that is being centre.</span>
-<span class="sd">    fitted_loc: StatPosition | None = None,</span>
-<span class="sd">        Which fitted position to move to see StatPosition</span>
-<span class="sd">    detname_suffix: Str</span>
-<span class="sd">        Name of the fitted axis within the detector</span>
-<span class="sd">    args:</span>
-<span class="sd">        Other arguments the wrapped scan need to function.</span>
-<span class="sd">    kwargs:</span>
-<span class="sd">        Other keyword arguments the wrapped scan need to function.</span>
+<span class="sd">    funcs : TCallable</span>
+<span class="sd">        The scan function to wrap.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TCallable</span>
+<span class="sd">        The wrapped scan function.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">funcs</span><span class="p">)</span>
@@ -536,6 +532,7 @@
 
 <div class="viewcode-block" id="step_scan_and_move_fit">
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.step_scan_and_move_fit">[docs]</a>
+<span class="nd">@plan</span>
 <span class="nd">@scan_and_move_to_fit_pos</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">step_scan_and_move_fit</span><span class="p">(</span>
     <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span><span class="p">,</span>
@@ -546,23 +543,30 @@
     <span class="n">end</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">num</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Does a step scan and move to the fitted position</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform a step scan and move to the fitted position.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    det: StandardReadable</span>
-<span class="sd">        Detector to be use for alignment.</span>
-<span class="sd">    motor: Motor</span>
-<span class="sd">        Motor devices that is being centre.</span>
-<span class="sd">    fitted_loc: StatPosition | None = None,</span>
-<span class="sd">        Which fitted position to move to see StatPosition</span>
-<span class="sd">    detname_suffix: Str</span>
-<span class="sd">        Name of the fitted axis within the detector</span>
-<span class="sd">    start: float,</span>
-<span class="sd">        Starting position for the scan.</span>
-<span class="sd">    end: float</span>
-<span class="sd">        Ending position for the scan.</span>
-<span class="sd">    num:int</span>
-<span class="sd">        Number of step.</span>
+<span class="sd">    det : StandardReadable</span>
+<span class="sd">        The detector to use for alignment.</span>
+<span class="sd">    motor : Motor</span>
+<span class="sd">        The motor to center.</span>
+<span class="sd">    fitted_loc : StatPosition</span>
+<span class="sd">        The fitted position to move to (see StatPosition).</span>
+<span class="sd">    detname_suffix : str</span>
+<span class="sd">        The suffix for the detector name.</span>
+<span class="sd">    start : float</span>
+<span class="sd">        The starting position for the scan.</span>
+<span class="sd">    end : float</span>
+<span class="sd">        The ending position for the scan.</span>
+<span class="sd">    num : int</span>
+<span class="sd">        The number of steps in the scan.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MsgGenerator</span>
+<span class="sd">        A Bluesky generator for the scan.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Step scanning </span><span class="si">{</span><span class="n">motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="n">det</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">detname_suffix</span><span class="si">}</span><span class="se">\</span>
@@ -574,6 +578,7 @@
 
 <div class="viewcode-block" id="fast_scan_and_move_fit">
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.fast_scan_and_move_fit">[docs]</a>
+<span class="nd">@plan</span>
 <span class="nd">@scan_and_move_to_fit_pos</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">fast_scan_and_move_fit</span><span class="p">(</span>
     <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span><span class="p">,</span>
@@ -600,7 +605,7 @@
 <span class="sd">        Starting position for the scan.</span>
 <span class="sd">    end: float,</span>
 <span class="sd">        Ending position for the scan.</span>
-<span class="sd">    motor_speed: float | None = None,</span>
+<span class="sd">    motor_speed: Optional[float] = None,</span>
 <span class="sd">        Speed of the motor.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
@@ -630,6 +635,7 @@
 
 <div class="viewcode-block" id="align_slit_with_look_up">
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.align_slit_with_look_up">[docs]</a>
+<span class="nd">@plan</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">align_slit_with_look_up</span><span class="p">(</span>
     <span class="n">motor</span><span class="p">:</span> <span class="n">Motor</span><span class="p">,</span>
     <span class="n">size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
