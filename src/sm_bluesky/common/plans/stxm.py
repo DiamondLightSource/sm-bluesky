@@ -388,6 +388,7 @@ def estimate_axis_points(
                 f"Plan time: {plan_time}, Step move time: {step_mv_time}, "
                 f"Scan move time: {scan_mv_time}, Deadtime: {deadtime}"
             )
+        iteration_count += 1
         num_points_per_axis = corrected_num_points
     point_per_axis = sqrt((num_points_per_axis) / (scan_range * step_range))
     return floor(point_per_axis)
