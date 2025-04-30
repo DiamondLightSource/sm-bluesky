@@ -120,7 +120,7 @@ linkcheck_ignore = [
     r"http://localhost:\d+/",
     r"https://dev-portal\.diamond\.ac\.uk[^\s]*",
     r"https://k8s-p99\.diamond\.ac\.uk[^\s]*",
-    r"https://p99-blueapi\.diamond\.ac\.uk/docs[^\s]*",
+    r"https://p99-blueapi\.diamond\.ac\.uk[^\s]*",
 ]
 
 # Set copy-button to ignore python and bash prompts
