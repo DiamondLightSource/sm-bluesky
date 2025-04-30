@@ -116,7 +116,12 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
 inheritance_graph_attrs = {"rankdir": "TB"}
 
 # Ignore localhost links for periodic check that links in docs are valid
-linkcheck_ignore = [r"http://localhost:\d+/"]
+linkcheck_ignore = [
+    r"http://localhost:\d+/",
+    r"https://dev-portal\.diamond\.ac\.uk[^\s]*",
+    r"https://k8s-p99\.diamond\.ac\.uk[^\s]*",
+    r"https://p99-blueapi\.diamond\.ac\.uk[^\s]*",
+]
 
 # Set copy-button to ignore python and bash prompts
 # https://sphinx-copybutton.readthedocs.io/en/latest/use.html#using-regexp-prompt-identifiers
