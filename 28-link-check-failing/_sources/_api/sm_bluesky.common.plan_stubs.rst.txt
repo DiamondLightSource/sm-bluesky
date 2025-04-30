@@ -1,0 +1,33 @@
+``sm_bluesky.common.plan_stubs``
+================================
+        
+        
+        
+        
+        
+        
+        
+
+.. automodule:: sm_bluesky.common.plan_stubs
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        set_area_detector_acquire_time
+        MotorTable
+        move_motor_with_look_up
+        set_slit_size
+        check_within_limit
+        get_motor_positions
+        get_velocity_and_step_size
+    
+    

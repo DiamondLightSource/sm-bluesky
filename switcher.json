@@ -2,5 +2,9 @@
   {
     "version": "main",
     "url": "https://DiamondLightSource.github.io/sm-bluesky/main/"
+  },
+  {
+    "version": "28-link-check-failing",
+    "url": "https://DiamondLightSource.github.io/sm-bluesky/28-link-check-failing/"
   }
 ]

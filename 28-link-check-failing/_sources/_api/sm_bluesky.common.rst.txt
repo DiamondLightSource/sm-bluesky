@@ -1,0 +1,24 @@
+``sm_bluesky.common``
+=====================
+
+.. automodule:: sm_bluesky.common
+    :members:
+
+    
+    
+    .. rubric:: Submodules
+
+    .. autosummary::
+        :toctree:
+        :template: custom-module-template.rst
+        :recursive:
+    
+        math_functions
+        plan_stubs
+        plans
+    
+    
+
+    
+    
+    
