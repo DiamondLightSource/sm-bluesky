@@ -55,7 +55,7 @@ def analyserscan(
         # ToDo - Add live excitation energy and shutter movement. Inside plan or device?
         # Use place holder for now
         exctiation_energy = 1000
-        # yield from bps.prepare(det)
+        # yield from bps.prepare(det) #Maybe need to make detector preparable with the excitation_energy?
         region_name = det.region.name
         LOGGER.info(f"Acquiring region {region_name}")
         yield from bps.trigger_and_read([det], name=region_name)
