@@ -1,12 +1,23 @@
 import bluesky.plan_stubs as bps
 from bluesky.utils import MsgGenerator, plan
-from dodal.devices.electron_analyser import TElectronAnalyserDetectorImpl
+from dodal.devices.electron_analyser.abstract import (
+    AbstractAnalyserDriverIO,
+    AbstractBaseRegion,
+    AbstractBaseSequence,
+    AbstractElectronAnalyserDetector,
+)
 from dodal.log import LOGGER
+
+GenericElectronAnalyserDetector = AbstractElectronAnalyserDetector[
+    AbstractAnalyserDriverIO,
+    AbstractBaseSequence[AbstractBaseRegion],
+    AbstractBaseRegion,
+]
 
 
 @plan
 def analyserscan(
-    analyser: TElectronAnalyserDetectorImpl,
+    analyser: GenericElectronAnalyserDetector,
     sequence_file: str,
 ) -> MsgGenerator:
     # ToDo - Add motor arguments to loop through and measure at
