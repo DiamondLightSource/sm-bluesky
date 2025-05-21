@@ -1,6 +1,6 @@
 [![CI](https://github.com/DiamondLightSource/sm-bluesky/actions/workflows/ci.yml/badge.svg)](https://github.com/DiamondLightSource/sm-bluesky/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/DiamondLightSource/sm-bluesky/branch/main/graph/badge.svg)](https://codecov.io/gh/DiamondLightSource/sm-bluesky)
-
+[![PyPI](https://img.shields.io/pypi/v/sm_bluesky.svg)](https://pypi.org/project/sm_bluesky)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 # sm_bluesky
@@ -12,6 +12,7 @@ how it does it, and why people should use it.
 
 Source          | <https://github.com/DiamondLightSource/sm-bluesky>
 :---:           | :---:
+PyPI            | `pip install sm_bluesky`
 Documentation   | <https://diamondlightsource.github.io/sm-bluesky>
 Releases        | <https://github.com/DiamondLightSource/sm-bluesky/releases>
 
