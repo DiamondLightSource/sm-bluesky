@@ -1,0 +1,37 @@
+``sm_bluesky.common.plans``
+===========================
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+.. automodule:: sm_bluesky.common.plans
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        fast_scan_and_move_fit
+        step_scan_and_move_fit
+        StatPosition
+        align_slit_with_look_up
+        fast_scan_1d
+        fast_scan_grid
+        stxm_fast
+        stxm_step
+        tigger_img
+    
+    
