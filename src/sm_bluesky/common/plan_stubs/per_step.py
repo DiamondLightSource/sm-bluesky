@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Sequence
-from typing import Any, Optional
+from typing import Any
 
-from bluesky.plan_stubs import TakeReading, abs_set, checkpoint, trigger_and_read, wait
+from bluesky.plan_stubs import move_per_step, stage_all, trigger_and_read
 from bluesky.protocols import (
     Movable,
     Readable,
@@ -9,7 +9,6 @@ from bluesky.protocols import (
 from bluesky.utils import (
     MsgGenerator,
     plan,
-    short_uid,
 )
 from dodal.devices.electron_analyser import ElectronAnalyserRegionDetector
 from dodal.devices.electron_analyser.abstract import (
@@ -24,12 +23,14 @@ def analyser_nd_step(
     detectors: Sequence[Readable],
     step: Mapping[Movable, Any],
     pos_cache: dict[Movable, Any],
-    take_reading: Optional[TakeReading] = None,
-) -> MsgGenerator[None]:
+    *args,
+) -> MsgGenerator:
     """
     Inner loop of an N-dimensional step scan
 
-    This is the default function for ``per_step`` param in ND plans.
+    Modified default function for ``per_step`` param in ND plans. Performs an extra for
+    loop for each ElectronAnalyserRegionDetector present so they can be collected one by
+    one.
 
     Parameters
     ----------
@@ -41,17 +42,6 @@ def analyser_nd_step(
         mapping motors to their last-set positions
     """
 
-    def move():
-        yield from checkpoint()
-        grp = short_uid("set")
-        for motor, pos in step.items():
-            if pos == pos_cache[motor]:
-                # This step does not move this motor.
-                continue
-            yield from abs_set(motor, pos, group=grp)
-            pos_cache[motor] = pos
-        yield from wait(group=grp)
-
     analyser_detectors: list[
         ElectronAnalyserRegionDetector[AbstractAnalyserDriverIO, AbstractBaseRegion]
     ] = []
@@ -62,8 +52,8 @@ def analyser_nd_step(
         else:
             other_detectors.append(det)
 
+    yield from move_per_step(step, pos_cache)
     motors: list[Readable] = [s for s in step.keys() if isinstance(s, Readable)]
-    yield from move()
 
     # To get energy sources and open paired shutters, they need to be given in this
     # plan. They could possibly come from step but we then have to extract them out.
@@ -71,6 +61,7 @@ def analyser_nd_step(
     # common methods.
     for analyser_det in analyser_detectors:
         LOGGER.info(f"Scanning region {analyser_det.region.name}.")
+        yield from stage_all(analyser_det)
         yield from trigger_and_read(
             [analyser_det] + list(other_detectors) + list(motors),
             name=analyser_det.region.name,

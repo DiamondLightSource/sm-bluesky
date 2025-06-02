@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 from bluesky.plans import PerStep, grid_scan, scan
 from bluesky.protocols import (
@@ -22,8 +22,23 @@ def process_detectors_for_analyserscan(
     detectors: Sequence[Readable],
     sequence_file: str,
 ) -> Sequence[Readable]:
-    # Check for analyser detector. Read in sequence file and replace it with the region
-    # detectors
+    """
+    Check for instance of ElectronAnalyserDetector in the detector list. Provide it with
+    sequence file to read and create list of ElectronAnalyserRegionDetector's. Replace
+    ElectronAnalyserDetector in list of detectors with the
+    list[ElectronAnalyserRegionDetector] and flatten.
+
+    Args:
+        detectors:
+            Devices to measure with for a scan.
+        sequence_file:
+            The file to read to create list[ElectronAnalyserRegionDetector].
+
+    Returns:
+        list of detectors, with any instances of ElectronAnalyserDetector replaced by
+        ElectronAnalyserRegionDetector by the number of regions in the sequence file.
+
+    """
     analyser_detector = None
     region_detectors = []
     for det in detectors:
@@ -42,10 +57,10 @@ def process_detectors_for_analyserscan(
 def analyserscan(
     detectors: Sequence[Readable],
     sequence_file: str,
-    *args: Union[Movable, Any],
-    num: Optional[int] = None,
-    per_step: Optional[PerStep] = None,
-    md: Optional[CustomPlanMetadata] = None,
+    *args: Movable | Any,
+    num: int | None = None,
+    per_step: PerStep | None = None,
+    md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
     yield from scan(
         process_detectors_for_analyserscan(detectors, sequence_file),
@@ -61,8 +76,8 @@ def grid_analyserscan(
     detectors: Sequence[Readable],
     sequence_file: str,
     *args,
-    snake_axes: Optional[Union[Iterable, bool]] = None,
-    md: Optional[CustomPlanMetadata] = None,
+    snake_axes: Iterable | bool | None = None,
+    md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
     yield from grid_scan(
         process_detectors_for_analyserscan(detectors, sequence_file),
