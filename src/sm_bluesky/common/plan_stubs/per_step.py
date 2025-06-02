@@ -57,8 +57,9 @@ def analyser_nd_step(
 
     # To get energy sources and open paired shutters, they need to be given in this
     # plan. They could possibly come from step but we then have to extract them out.
+    # It would also mean forcefully adding in the devices at the wrapper level.
     # It would easier if they are part of the detector and the plan just calls the
-    # common methods.
+    # common methods so it is more dynamic and configuration only for device.
     for analyser_det in analyser_detectors:
         LOGGER.info(f"Scanning region {analyser_det.region.name}.")
         yield from stage_all(analyser_det)
