@@ -16,8 +16,13 @@ from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
 from ophyd_async.core import init_devices
 from ophyd_async.epics.motor import Motor
+from ophyd_async.testing import set_mock_value
 
-from sm_bluesky.common.plans.analyserscan import process_detectors_for_analyserscan
+from sm_bluesky.common.plans.analyserscan import (
+    analyserscan,
+    grid_analyserscan,
+    process_detectors_for_analyserscan,
+)
 
 ElectronAnalyserDetectorImpl = VGScientaDetector | SpecsDetector
 
@@ -25,6 +30,14 @@ TEST_DATA_PATH = "tests/test_data/electron_analyser/"
 
 TEST_VGSCIENTA_SEQUENCE = os.path.join(TEST_DATA_PATH, "vgscienta_sequence.seq")
 TEST_SPECS_SEQUENCE = os.path.join(TEST_DATA_PATH, "specs_sequence.seq")
+
+
+async def create_motor(name: str) -> Motor:
+    async with init_devices(mock=True, connect=True):
+        sim_motor = Motor(prefix="TEST:", name=name)
+    # Needed so we don't get divide by zero errors when used in a scan.
+    set_mock_value(sim_motor.velocity, 1)
+    return sim_motor
 
 
 @pytest.fixture(params=[VGScientaDetector, SpecsDetector])
@@ -58,14 +71,7 @@ def sequence_file(sim_analyser: ElectronAnalyserDetectorImpl) -> str:
 async def extra_detectors(
     request: pytest.FixtureRequest,
 ) -> list[Readable]:
-    async def detector() -> Motor:
-        async with init_devices(mock=True, connect=True):
-            sim_driver = Motor(
-                prefix="TEST:",
-            )
-        return sim_driver
-
-    return [await detector() for i in range(request.param)]
+    return [await create_motor("det" + str(i + 1)) for i in range(request.param)]
 
 
 @pytest.fixture
@@ -107,3 +113,75 @@ async def test_process_detectors_for_analyserscan_func_correctly_replaces_detect
     # equals method. For now, just compare that region name is the same.
     for region_det in region_detectors:
         assert region_det.region.name in sequence.get_enabled_region_names()
+
+
+def analyser_setup_for_scan(sim_analyser: ElectronAnalyserDetectorImpl):
+    if isinstance(sim_analyser, SpecsDetector):
+        # Needed so we don't run into divide by zero errors on read and describe.
+        dummy_val = 10
+        set_mock_value(sim_analyser.driver.min_angle_axis, dummy_val)
+        set_mock_value(sim_analyser.driver.max_angle_axis, dummy_val)
+        set_mock_value(sim_analyser.driver.slices, dummy_val)
+        set_mock_value(sim_analyser.driver.low_energy, dummy_val)
+        set_mock_value(sim_analyser.driver.high_energy, dummy_val)
+
+
+async def test_analyserscan_with_1_motor(
+    RE: RunEngine,
+    sim_analyser: ElectronAnalyserDetectorImpl,
+    sequence_file: str,
+    all_detectors: Sequence[Readable],
+) -> None:
+    motor1 = await create_motor("motor1")
+    analyser_setup_for_scan(sim_analyser)
+    RE(analyserscan(all_detectors, sequence_file, motor1, -10, 10, num=10))
+
+
+@pytest.fixture
+async def args(
+    request: pytest.FixtureRequest,
+) -> list[Motor | int]:
+    args = request.param
+
+    return [
+        await create_motor("motor" + str(i)) if a == Motor else a
+        for i, a in enumerate(args)
+    ]
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        [Motor, -10, 10],
+        [Motor, -10, 10, Motor, -1, 1],
+    ],
+    indirect=True,
+)
+async def test_analyserscan(
+    RE: RunEngine,
+    sim_analyser: ElectronAnalyserDetectorImpl,
+    sequence_file: str,
+    all_detectors: Sequence[Readable],
+    args: list[Motor | int],
+) -> None:
+    analyser_setup_for_scan(sim_analyser)
+    RE(analyserscan(all_detectors, sequence_file, *args, num=10))
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        [Motor, 1, 10, 1],
+        [Motor, 1, 10, 1, Motor, 1, 5, 1],
+    ],
+    indirect=True,
+)
+async def test_grid_analyserscan(
+    RE: RunEngine,
+    sim_analyser: ElectronAnalyserDetectorImpl,
+    sequence_file: str,
+    all_detectors: Sequence[Readable],
+    args: list[Motor | int],
+) -> None:
+    analyser_setup_for_scan(sim_analyser)
+    RE(grid_analyserscan(all_detectors, sequence_file, *args))
