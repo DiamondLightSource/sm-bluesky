@@ -9,6 +9,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 description = "Bluesky code for Diamond's surface and magnetic materials beamline."
 dependencies = [
@@ -17,7 +18,7 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git", #now target the main branch 
+    "dls-dodal",
     "ophyd-async >= 0.10.0a2",
     "scanspec",
 ]
