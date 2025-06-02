@@ -1,7 +1,7 @@
 from collections.abc import Iterable, Sequence
 from typing import Any
 
-from bluesky.plans import PerStep, grid_scan, scan
+from bluesky.plans import PerShot, PerStep, count, grid_scan, scan
 from bluesky.protocols import (
     Movable,
     Readable,
@@ -9,13 +9,14 @@ from bluesky.protocols import (
 from bluesky.utils import (
     CustomPlanMetadata,
     MsgGenerator,
+    ScalarOrIterableFloat,
     plan,
 )
 from dodal.devices.electron_analyser import (
     ElectronAnalyserDetector,
 )
 
-from sm_bluesky.common.plan_stubs import analyser_nd_step
+from sm_bluesky.common.plan_stubs import analyser_nd_step, analyser_shot
 
 
 def process_detectors_for_analyserscan(
@@ -51,6 +52,24 @@ def process_detectors_for_analyserscan(
         region_detectors if e == analyser_detector else [e] for e in detectors
     )
     return [v for vals in expansions for v in vals]
+
+
+def analysercount(
+    detectors: Sequence[Readable],
+    sequence_file: str,
+    num: int = 1,
+    delay: ScalarOrIterableFloat = 0.0,
+    *,
+    per_shot: PerShot | None = None,
+    md: CustomPlanMetadata | None = None,
+) -> MsgGenerator:
+    yield from count(
+        process_detectors_for_analyserscan(detectors, sequence_file),
+        num,
+        delay,
+        per_shot=analyser_shot,
+        md=md,
+    )
 
 
 @plan

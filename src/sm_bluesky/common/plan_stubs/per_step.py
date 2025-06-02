@@ -19,6 +19,11 @@ from dodal.log import LOGGER
 
 
 @plan
+def analyser_shot(detectors: Sequence[Readable], *args):
+    yield from analyser_nd_step(detectors, {}, {}, *args)
+
+
+@plan
 def analyser_nd_step(
     detectors: Sequence[Readable],
     step: Mapping[Movable, Any],

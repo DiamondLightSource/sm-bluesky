@@ -18,7 +18,8 @@ from ophyd_async.core import init_devices
 from ophyd_async.epics.motor import Motor
 from ophyd_async.testing import set_mock_value
 
-from sm_bluesky.common.plans.analyserscan import (
+from sm_bluesky.common.plans.analyser_scans import (
+    analysercount,
     analyserscan,
     grid_analyserscan,
     process_detectors_for_analyserscan,
@@ -126,27 +127,26 @@ def analyser_setup_for_scan(sim_analyser: ElectronAnalyserDetectorImpl):
         set_mock_value(sim_analyser.driver.high_energy, dummy_val)
 
 
-async def test_analyserscan_with_1_motor(
-    RE: RunEngine,
-    sim_analyser: ElectronAnalyserDetectorImpl,
-    sequence_file: str,
-    all_detectors: Sequence[Readable],
-) -> None:
-    motor1 = await create_motor("motor1")
-    analyser_setup_for_scan(sim_analyser)
-    RE(analyserscan(all_detectors, sequence_file, motor1, -10, 10, num=10))
-
-
 @pytest.fixture
 async def args(
     request: pytest.FixtureRequest,
 ) -> list[Motor | int]:
     args = request.param
-
+    # Need to wrap here rather than directly creating the motor so it can support async.
     return [
         await create_motor("motor" + str(i)) if a == Motor else a
         for i, a in enumerate(args)
     ]
+
+
+async def test_analysercount(
+    RE: RunEngine,
+    sim_analyser: ElectronAnalyserDetectorImpl,
+    sequence_file: str,
+    all_detectors: Sequence[Readable],
+) -> None:
+    analyser_setup_for_scan(sim_analyser)
+    RE(analysercount(all_detectors, sequence_file))
 
 
 @pytest.mark.parametrize(
