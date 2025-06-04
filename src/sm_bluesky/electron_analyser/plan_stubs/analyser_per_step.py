@@ -1,11 +1,12 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from bluesky.plan_stubs import move_per_step, stage_all, trigger_and_read
-from bluesky.protocols import (
-    Movable,
-    Readable,
+from bluesky.plan_stubs import (
+    abs_set,
+    move_per_step,
+    trigger_and_read,
 )
+from bluesky.protocols import Movable, Readable
 from bluesky.utils import (
     MsgGenerator,
     plan,
@@ -66,9 +67,13 @@ def analyser_nd_step(
     # It would easier if they are part of the detector and the plan just calls the
     # common methods so it is more dynamic and configuration only for device.
     for analyser_det in analyser_detectors:
+        dets = [analyser_det] + list(other_detectors) + list(motors)
+
+        # This is a work around until we can find a way to get the energy souces to use
+        # the prepare method.
+        yield from abs_set(analyser_det.driver, analyser_det.region)
         LOGGER.info(f"Scanning region {analyser_det.region.name}.")
-        yield from stage_all(analyser_det)
         yield from trigger_and_read(
-            [analyser_det] + list(other_detectors) + list(motors),
+            dets,
             name=analyser_det.region.name,
         )

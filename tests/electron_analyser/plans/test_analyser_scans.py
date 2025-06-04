@@ -1,4 +1,3 @@
-import os
 from collections.abc import Sequence
 
 import pytest
@@ -14,31 +13,15 @@ from dodal.devices.electron_analyser.abstract import (
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
-from ophyd_async.core import init_devices
 from ophyd_async.epics.motor import Motor
-from ophyd_async.testing import set_mock_value
 
-from sm_bluesky.common.plans.analyser_scans import (
+from sm_bluesky.electron_analyser.plans.analyser_scans import (
     analysercount,
     analyserscan,
     grid_analyserscan,
     process_detectors_for_analyserscan,
 )
-
-ElectronAnalyserDetectorImpl = VGScientaDetector | SpecsDetector
-
-TEST_DATA_PATH = "tests/test_data/electron_analyser/"
-
-TEST_VGSCIENTA_SEQUENCE = os.path.join(TEST_DATA_PATH, "vgscienta_sequence.seq")
-TEST_SPECS_SEQUENCE = os.path.join(TEST_DATA_PATH, "specs_sequence.seq")
-
-
-async def create_motor(name: str) -> Motor:
-    async with init_devices(mock=True, connect=True):
-        sim_motor = Motor(prefix="TEST:", name=name)
-    # Needed so we don't get divide by zero errors when used in a scan.
-    set_mock_value(sim_motor.velocity, 1)
-    return sim_motor
+from tests.electron_analyser.util import analyser_setup_for_scan, create_motor
 
 
 @pytest.fixture(params=[VGScientaDetector, SpecsDetector])
@@ -46,26 +29,6 @@ def detector_class(
     request: pytest.FixtureRequest,
 ) -> type[ElectronAnalyserDetector]:
     return request.param
-
-
-@pytest.fixture
-async def sim_analyser(
-    detector_class: type[ElectronAnalyserDetectorImpl],
-) -> ElectronAnalyserDetectorImpl:
-    async with init_devices(mock=True, connect=True):
-        sim_detector = detector_class(
-            prefix="TEST:",
-        )
-    return sim_detector
-
-
-@pytest.fixture
-def sequence_file(sim_analyser: ElectronAnalyserDetectorImpl) -> str:
-    if isinstance(sim_analyser, VGScientaDetector):
-        return TEST_VGSCIENTA_SEQUENCE
-    elif isinstance(sim_analyser, SpecsDetector):
-        return TEST_SPECS_SEQUENCE
-    raise TypeError(f"Undefined sim_analyser type {type(sim_analyser)}")
 
 
 @pytest.fixture(params=[0, 1, 2])
@@ -77,14 +40,14 @@ async def extra_detectors(
 
 @pytest.fixture
 def all_detectors(
-    sim_analyser: ElectronAnalyserDetectorImpl, extra_detectors: list[Readable]
+    sim_analyser: ElectronAnalyserDetector, extra_detectors: list[Readable]
 ) -> Sequence[Readable]:
     return [sim_analyser] + extra_detectors
 
 
 async def test_process_detectors_for_analyserscan_func_correctly_replaces_detectors(
     sequence_file: str,
-    sim_analyser: ElectronAnalyserDetectorImpl,
+    sim_analyser: ElectronAnalyserDetector,
     extra_detectors: Sequence[Readable],
     all_detectors: Sequence[Readable],
 ):
@@ -116,17 +79,6 @@ async def test_process_detectors_for_analyserscan_func_correctly_replaces_detect
         assert region_det.region.name in sequence.get_enabled_region_names()
 
 
-def analyser_setup_for_scan(sim_analyser: ElectronAnalyserDetectorImpl):
-    if isinstance(sim_analyser, SpecsDetector):
-        # Needed so we don't run into divide by zero errors on read and describe.
-        dummy_val = 10
-        set_mock_value(sim_analyser.driver.min_angle_axis, dummy_val)
-        set_mock_value(sim_analyser.driver.max_angle_axis, dummy_val)
-        set_mock_value(sim_analyser.driver.slices, dummy_val)
-        set_mock_value(sim_analyser.driver.low_energy, dummy_val)
-        set_mock_value(sim_analyser.driver.high_energy, dummy_val)
-
-
 @pytest.fixture
 async def args(
     request: pytest.FixtureRequest,
@@ -141,7 +93,7 @@ async def args(
 
 async def test_analysercount(
     RE: RunEngine,
-    sim_analyser: ElectronAnalyserDetectorImpl,
+    sim_analyser: ElectronAnalyserDetector,
     sequence_file: str,
     all_detectors: Sequence[Readable],
 ) -> None:
@@ -159,7 +111,7 @@ async def test_analysercount(
 )
 async def test_analyserscan(
     RE: RunEngine,
-    sim_analyser: ElectronAnalyserDetectorImpl,
+    sim_analyser: ElectronAnalyserDetector,
     sequence_file: str,
     all_detectors: Sequence[Readable],
     args: list[Motor | int],
@@ -178,7 +130,7 @@ async def test_analyserscan(
 )
 async def test_grid_analyserscan(
     RE: RunEngine,
-    sim_analyser: ElectronAnalyserDetectorImpl,
+    sim_analyser: ElectronAnalyserDetector,
     sequence_file: str,
     all_detectors: Sequence[Readable],
     args: list[Motor | int],

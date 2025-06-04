@@ -16,7 +16,10 @@ from dodal.devices.electron_analyser import (
     ElectronAnalyserDetector,
 )
 
-from sm_bluesky.common.plan_stubs import analyser_nd_step, analyser_shot
+from sm_bluesky.electron_analyser.plan_stubs import (
+    analyser_nd_step,
+    analyser_shot,
+)
 
 
 def process_detectors_for_analyserscan(
