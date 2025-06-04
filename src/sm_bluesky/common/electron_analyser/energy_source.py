@@ -19,5 +19,5 @@ def get_energy_source_for_region(
         raise KeyError(
             f"Region {region.name} selected excitation energy"
             + f"{region.excitation_energy_source}. This isn't a "
-            + f"valid source. Valid sources are {energy_sources.keys()}."
+            + f"valid source. Valid sources are {list(energy_sources.keys())}."
         ) from e
