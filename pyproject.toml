@@ -17,7 +17,7 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git@move_region_setup_logic_to_region_detector", #remove when merged.
+    "dls-dodal",
     "ophyd-async >= 0.10.0a2",
     "scanspec",
 ]
