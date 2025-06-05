@@ -1,8 +1,10 @@
 import asyncio
-from collections.abc import Sequence
+from collections import defaultdict
+from collections.abc import Callable, Sequence
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
+import numpy as np
 import pytest
 from bluesky import RunEngine
 from bluesky import plan_stubs as bps
@@ -19,14 +21,15 @@ from dodal.devices.electron_analyser.abstract import (
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
 from ophyd.status import Status
+from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
-from tests.electron_analyser.util import analyser_setup_for_scan, create_motor
+from tests.electron_analyser.util import analyser_setup_for_scan
 
-ElectronAnalyserDetectorAlias = ElectronAnalyserDetector[
+GenericElectronAnalyserDetector = ElectronAnalyserDetector[
     AbstractAnalyserDriverIO, AbstractBaseSequence, AbstractBaseRegion
 ]
-ElectronAnalyserRegionDetectorAlias = ElectronAnalyserRegionDetector[
+GenericElectronAnalyserRegionDetector = ElectronAnalyserRegionDetector[
     AbstractAnalyserDriverIO, AbstractBaseRegion
 ]
 
@@ -47,10 +50,10 @@ def region_detectors(
 
 
 @pytest.fixture(params=[0, 1, 2])
-async def other_detectors(
+def other_detectors(
     request: pytest.FixtureRequest,
 ) -> list[Readable]:
-    return [await create_motor("det" + str(i + 1)) for i in range(request.param)]
+    return [SimMotor("det" + str(i + 1)) for i in range(request.param)]
 
 
 @pytest.fixture
@@ -62,12 +65,15 @@ def all_detectors(
 
 @pytest.fixture
 def step() -> dict[Movable, Any]:
-    return {}
+    return {
+        SimMotor("motor1"): np.float64(20),
+        SimMotor("motor2"): np.float64(10),
+    }
 
 
 @pytest.fixture
 def pos_cache() -> dict[Movable, Any]:
-    return {}
+    return defaultdict(lambda: 0)
 
 
 def run_engine_setup_decorator(func):
@@ -81,6 +87,11 @@ def run_engine_setup_decorator(func):
     return wrapper
 
 
+@pytest.fixture
+def analyser_nd_step() -> Callable:
+    return run_engine_setup_decorator(aps.analyser_nd_step)
+
+
 def fake_status(region=None):
     status = Status()
     status.set_finished()
@@ -88,9 +99,10 @@ def fake_status(region=None):
 
 
 def test_analyser_nd_step_func_has_expected_driver_set_calls(
+    analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
-    sim_analyser: ElectronAnalyserDetectorAlias,
-    region_detectors: Sequence[ElectronAnalyserRegionDetectorAlias],
+    sim_analyser: GenericElectronAnalyserDetector,
+    region_detectors: Sequence[GenericElectronAnalyserRegionDetector],
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
     RE: RunEngine,
@@ -100,9 +112,6 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     driver.set = MagicMock(side_effect=fake_status)
     expected_driver_set_calls = [call(r_det.region) for r_det in region_detectors]
 
-    # Wrap our function to test with RunEngine setup.
-    analyser_nd_step = run_engine_setup_decorator(aps.analyser_nd_step)
-
     RE(analyser_nd_step(all_detectors, step, pos_cache))
 
     # Our driver instance is shared between each region detector instance.
@@ -111,16 +120,14 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
 
 
 async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
+    analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
     other_detectors: Sequence[Readable],
-    region_detectors: Sequence[ElectronAnalyserRegionDetectorAlias],
+    region_detectors: Sequence[GenericElectronAnalyserRegionDetector],
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
     RE: RunEngine,
 ) -> None:
-    # Wrap our function to test with RunEngine setup.
-    analyser_nd_step = run_engine_setup_decorator(aps.analyser_nd_step)
-
     for det in other_detectors:
         if isinstance(det, Triggerable):
             det.trigger = MagicMock(side_effect=fake_status)
@@ -147,3 +154,43 @@ async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
         if isinstance(det, Triggerable):
             assert det.trigger.call_count == len(region_detectors)  # type: ignore
         assert det.read.call_count == len(region_detectors)  # type: ignore
+
+
+async def test_analyser_nd_step_func_moves_motors_before_detector_trigger(
+    analyser_nd_step: Callable,
+    all_detectors: Sequence[Readable],
+    step: dict[SimMotor, Any],
+    pos_cache: dict[SimMotor, Any],
+    RE: RunEngine,
+) -> None:
+    shared_mock = MagicMock(side_effect=fake_status)
+    for det in all_detectors:
+        det.trigger = shared_mock  # type: ignore
+
+    motors = list(step.keys())
+    for m in motors:
+        m.set = shared_mock
+
+    RE(analyser_nd_step(all_detectors, step, pos_cache))
+
+    # Check to see motor.set was called before any r_det.trigger was called.
+    for value in step.values():
+        assert shared_mock.mock_calls.index(
+            call.set(value)
+        ) < shared_mock.mock_calls.index(call.trigger())
+
+
+async def test_analyser_nd_step_func_moves_motors_correctly(
+    analyser_nd_step: Callable,
+    all_detectors: Sequence[Readable],
+    step: dict[SimMotor, Any],
+    pos_cache: dict[SimMotor, Any],
+    RE: RunEngine,
+) -> None:
+    motors = list(step.keys())
+
+    RE(analyser_nd_step(all_detectors, step, pos_cache))
+
+    # Check motors moved to correct position
+    for m in motors:
+        assert await m.user_readback.get_value() == step[m]

@@ -13,7 +13,7 @@ from dodal.devices.electron_analyser.abstract import (
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
-from ophyd_async.epics.motor import Motor
+from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plans.analyser_scans import (
     analysercount,
@@ -21,7 +21,7 @@ from sm_bluesky.electron_analyser.plans.analyser_scans import (
     grid_analyserscan,
     process_detectors_for_analyserscan,
 )
-from tests.electron_analyser.util import analyser_setup_for_scan, create_motor
+from tests.electron_analyser.util import analyser_setup_for_scan
 
 
 @pytest.fixture(params=[VGScientaDetector, SpecsDetector])
@@ -32,10 +32,10 @@ def detector_class(
 
 
 @pytest.fixture(params=[0, 1, 2])
-async def extra_detectors(
+def extra_detectors(
     request: pytest.FixtureRequest,
 ) -> list[Readable]:
-    return [await create_motor("det" + str(i + 1)) for i in range(request.param)]
+    return [SimMotor("det" + str(i + 1)) for i in range(request.param)]
 
 
 @pytest.fixture
@@ -79,18 +79,6 @@ async def test_process_detectors_for_analyserscan_func_correctly_replaces_detect
         assert region_det.region.name in sequence.get_enabled_region_names()
 
 
-@pytest.fixture
-async def args(
-    request: pytest.FixtureRequest,
-) -> list[Motor | int]:
-    args = request.param
-    # Need to wrap here rather than directly creating the motor so it can support async.
-    return [
-        await create_motor("motor" + str(i)) if a == Motor else a
-        for i, a in enumerate(args)
-    ]
-
-
 async def test_analysercount(
     RE: RunEngine,
     sim_analyser: ElectronAnalyserDetector,
@@ -104,17 +92,16 @@ async def test_analysercount(
 @pytest.mark.parametrize(
     "args",
     [
-        [Motor, -10, 10],
-        [Motor, -10, 10, Motor, -1, 1],
+        [SimMotor("motor1"), -10, 10],
+        [SimMotor("motor1"), -10, 10, SimMotor("motor2"), -1, 1],
     ],
-    indirect=True,
 )
 async def test_analyserscan(
     RE: RunEngine,
     sim_analyser: ElectronAnalyserDetector,
     sequence_file: str,
     all_detectors: Sequence[Readable],
-    args: list[Motor | int],
+    args: list[SimMotor | int],
 ) -> None:
     analyser_setup_for_scan(sim_analyser)
     RE(analyserscan(all_detectors, sequence_file, *args, num=10))
@@ -123,17 +110,16 @@ async def test_analyserscan(
 @pytest.mark.parametrize(
     "args",
     [
-        [Motor, 1, 10, 1],
-        [Motor, 1, 10, 1, Motor, 1, 5, 1],
+        [SimMotor("motor1"), 1, 10, 1],
+        [SimMotor("motor1"), 1, 10, 1, SimMotor("motor2"), 1, 5, 1],
     ],
-    indirect=True,
 )
 async def test_grid_analyserscan(
     RE: RunEngine,
     sim_analyser: ElectronAnalyserDetector,
     sequence_file: str,
     all_detectors: Sequence[Readable],
-    args: list[Motor | int],
+    args: list[SimMotor | int],
 ) -> None:
     analyser_setup_for_scan(sim_analyser)
     RE(grid_analyserscan(all_detectors, sequence_file, *args))
