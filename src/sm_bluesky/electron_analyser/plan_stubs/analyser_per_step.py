@@ -11,10 +11,9 @@ from bluesky.utils import (
     MsgGenerator,
     plan,
 )
-from dodal.devices.electron_analyser import ElectronAnalyserRegionDetector
-from dodal.devices.electron_analyser.abstract import (
-    AbstractAnalyserDriverIO,
-    AbstractBaseRegion,
+from dodal.devices.electron_analyser import (
+    ElectronAnalyserRegionDetector,
+    GenericElectronAnalyserRegionDetector,
 )
 from dodal.log import LOGGER
 
@@ -48,9 +47,7 @@ def analyser_nd_step(
         mapping motors to their last-set positions
     """
 
-    analyser_detectors: list[
-        ElectronAnalyserRegionDetector[AbstractAnalyserDriverIO, AbstractBaseRegion]
-    ] = []
+    analyser_detectors: list[GenericElectronAnalyserRegionDetector] = []
     other_detectors = []
     for det in detectors:
         if isinstance(det, ElectronAnalyserRegionDetector):

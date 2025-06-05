@@ -6,10 +6,8 @@ from bluesky.run_engine import RunEngine
 from dodal.devices.electron_analyser import (
     ElectronAnalyserDetector,
     ElectronAnalyserRegionDetector,
-)
-from dodal.devices.electron_analyser.abstract import (
-    AbstractAnalyserDriverIO,
-    AbstractBaseRegion,
+    GenericElectronAnalyserDetector,
+    GenericElectronAnalyserRegionDetector,
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
@@ -47,7 +45,7 @@ def all_detectors(
 
 async def test_process_detectors_for_analyserscan_func_correctly_replaces_detectors(
     sequence_file: str,
-    sim_analyser: ElectronAnalyserDetector,
+    sim_analyser: GenericElectronAnalyserDetector,
     extra_detectors: Sequence[Readable],
     all_detectors: Sequence[Readable],
 ):
@@ -62,9 +60,7 @@ async def test_process_detectors_for_analyserscan_func_correctly_replaces_detect
     for extra_det in extra_detectors:
         assert extra_det in analyserscan_detectors
 
-    region_detectors: list[
-        ElectronAnalyserRegionDetector[AbstractAnalyserDriverIO, AbstractBaseRegion]
-    ] = [
+    region_detectors: list[GenericElectronAnalyserRegionDetector] = [
         ad
         for ad in analyserscan_detectors
         if isinstance(ad, ElectronAnalyserRegionDetector)

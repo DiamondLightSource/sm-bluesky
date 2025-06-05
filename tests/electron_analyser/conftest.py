@@ -1,12 +1,11 @@
 import pytest
 from bluesky import RunEngine
+from dodal.devices.electron_analyser import ElectronAnalyserDetectorImpl
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
 from ophyd_async.core import init_devices
 
 from tests.electron_analyser.util import TEST_SPECS_SEQUENCE, TEST_VGSCIENTA_SEQUENCE
-
-ElectronAnalyserDetectorImpl = VGScientaDetector | SpecsDetector
 
 
 @pytest.fixture

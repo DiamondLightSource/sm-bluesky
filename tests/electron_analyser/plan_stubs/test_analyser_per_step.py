@@ -12,11 +12,8 @@ from bluesky.protocols import Movable, Readable, Triggerable
 from dodal.devices.electron_analyser import (
     ElectronAnalyserDetector,
     ElectronAnalyserRegionDetector,
-)
-from dodal.devices.electron_analyser.abstract import (
-    AbstractAnalyserDriverIO,
-    AbstractBaseRegion,
-    AbstractBaseSequence,
+    GenericElectronAnalyserDetector,
+    GenericElectronAnalyserRegionDetector,
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
@@ -25,13 +22,6 @@ from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
 from tests.electron_analyser.util import analyser_setup_for_scan
-
-GenericElectronAnalyserDetector = ElectronAnalyserDetector[
-    AbstractAnalyserDriverIO, AbstractBaseSequence, AbstractBaseRegion
-]
-GenericElectronAnalyserRegionDetector = ElectronAnalyserRegionDetector[
-    AbstractAnalyserDriverIO, AbstractBaseRegion
-]
 
 
 @pytest.fixture(params=[VGScientaDetector, SpecsDetector])
