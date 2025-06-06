@@ -3,7 +3,7 @@ from dodal.devices.electron_analyser.vgscienta import VGScientaRegion
 from ophyd_async.core import DeviceVector, init_devices
 from ophyd_async.epics.motor import Motor
 
-from sm_bluesky.common.electron_analyser.energy_source import (
+from sm_bluesky.electron_analyser.energy_source import (
     get_energy_source_for_region,
 )
 
