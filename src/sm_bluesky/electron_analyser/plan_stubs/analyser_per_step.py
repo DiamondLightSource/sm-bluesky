@@ -19,7 +19,7 @@ from dodal.log import LOGGER
 
 
 @plan
-def analyser_shot(detectors: Sequence[Readable], *args):
+def analyser_shot(detectors: Sequence[Readable], *args) -> MsgGenerator:
     yield from analyser_nd_step(detectors, {}, {}, *args)
 
 
@@ -66,7 +66,7 @@ def analyser_nd_step(
     for analyser_det in analyser_detectors:
         dets = [analyser_det] + list(other_detectors) + list(motors)
 
-        # This is a work around until we can find a way to get the energy souces to use
+        # This is a work around until we can find a way to get the energy sources to use
         # the prepare method.
         yield from abs_set(analyser_det.driver, analyser_det.region)
         LOGGER.info(f"Scanning region {analyser_det.region.name}.")
