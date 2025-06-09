@@ -1,0 +1,21 @@
+``sm_bluesky.electron_analyser.energy_source``
+==============================================
+        
+
+.. automodule:: sm_bluesky.electron_analyser.energy_source
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        get_energy_source_for_region
+    
+    

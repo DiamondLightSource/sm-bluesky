@@ -1,7 +1,7 @@
-﻿``sm_bluesky``
-==============
+``sm_bluesky.electron_analyser``
+================================
 
-.. automodule:: sm_bluesky
+.. automodule:: sm_bluesky.electron_analyser
     :members:
 
     
@@ -13,9 +13,9 @@
         :template: custom-module-template.rst
         :recursive:
     
-        beamlines
-        common
-        electron_analyser
+        energy_source
+        plan_stubs
+        plans
     
     
 

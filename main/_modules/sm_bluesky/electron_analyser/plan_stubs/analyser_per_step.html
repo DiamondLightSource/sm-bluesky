@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plan_stubs.detectors &#8212; sm-bluesky 0.0.2.dev33+g26a67c6 documentation</title>
+    <title>sm_bluesky.electron_analyser.plan_stubs.analyser_per_step &#8212; sm-bluesky 0.0.2.dev33+g26a67c6 documentation</title>
   
   
   
@@ -46,7 +46,7 @@
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=30646c52"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/common/plan_stubs/detectors';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/electron_analyser/plan_stubs/analyser_per_step';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
@@ -424,7 +424,7 @@
     
     <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">sm_bluesky.common.plan_stubs.detectors</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">sm_bluesky.electron_analyser.plan_stubs.analyser_per_step</span></li>
   </ul>
 </nav>
 </div>
@@ -441,38 +441,90 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for sm_bluesky.common.plan_stubs.detectors</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">blueapi.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">abs_set</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">plan</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.adcore</span><span class="w"> </span><span class="kn">import</span> <span class="n">AreaDetector</span><span class="p">,</span> <span class="n">SingleTriggerDetector</span>
+  <h1>Source code for sm_bluesky.electron_analyser.plan_stubs.analyser_per_step</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">abs_set</span><span class="p">,</span>
+    <span class="n">move_per_step</span><span class="p">,</span>
+    <span class="n">trigger_and_read</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">Movable</span><span class="p">,</span> <span class="n">Readable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MsgGenerator</span><span class="p">,</span>
+    <span class="n">plan</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.electron_analyser</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronAnalyserRegionDetector</span><span class="p">,</span>
+    <span class="n">GenericElectronAnalyserRegionDetector</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
 
 
-<div class="viewcode-block" id="set_area_detector_acquire_time">
-<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plan_stubs.html#sm_bluesky.common.plan_stubs.set_area_detector_acquire_time">[docs]</a>
 <span class="nd">@plan</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">set_area_detector_acquire_time</span><span class="p">(</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">AreaDetector</span> <span class="o">|</span> <span class="n">SingleTriggerDetector</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyser_shot</span><span class="p">(</span><span class="n">detectors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+    <span class="k">yield from</span> <span class="n">analyser_nd_step</span><span class="p">(</span><span class="n">detectors</span><span class="p">,</span> <span class="p">{},</span> <span class="p">{},</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="analyser_nd_step">
+<a class="viewcode-back" href="../../../../_api/sm_bluesky.electron_analyser.plan_stubs.html#sm_bluesky.electron_analyser.plan_stubs.analyser_nd_step">[docs]</a>
+<span class="nd">@plan</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyser_nd_step</span><span class="p">(</span>
+    <span class="n">detectors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span>
+    <span class="n">step</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Movable</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">pos_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Movable</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Set the acquire time on an area detector.</span>
+<span class="sd">    Inner loop of an N-dimensional step scan</span>
+
+<span class="sd">    Modified default function for ``per_step`` param in ND plans. Performs an extra for</span>
+<span class="sd">    loop for each ElectronAnalyserRegionDetector present so they can be collected one by</span>
+<span class="sd">    one.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    det : AreaDetector | SingleTriggerDetector</span>
-<span class="sd">        The detector whose acquire time is to be set.</span>
-<span class="sd">    acquire_time : float</span>
-<span class="sd">        The desired acquire time.</span>
-<span class="sd">    wait : bool, optional</span>
-<span class="sd">        Whether to wait for the operation to complete, by default True.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    MsgGenerator[None]</span>
-<span class="sd">        A Bluesky generator for setting the acquire time.</span>
+<span class="sd">    detectors : iterable</span>
+<span class="sd">        devices to read</span>
+<span class="sd">    step : dict</span>
+<span class="sd">        mapping motors to positions in this step</span>
+<span class="sd">    pos_cache : dict</span>
+<span class="sd">        mapping motors to their last-set positions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">drv</span> <span class="o">=</span> <span class="n">det</span><span class="o">.</span><span class="n">drv</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">SingleTriggerDetector</span><span class="p">)</span> <span class="k">else</span> <span class="n">det</span><span class="o">.</span><span class="n">driver</span>
-    <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">drv</span><span class="o">.</span><span class="n">acquire_time</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">)</span></div>
+
+    <span class="n">analyser_detectors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GenericElectronAnalyserRegionDetector</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">other_detectors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">det</span> <span class="ow">in</span> <span class="n">detectors</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">ElectronAnalyserRegionDetector</span><span class="p">):</span>
+            <span class="n">analyser_detectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">det</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">other_detectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">det</span><span class="p">)</span>
+
+    <span class="c1"># Step provides the map of motors to single position to move to. Move motors to</span>
+    <span class="c1"># required positions.</span>
+    <span class="k">yield from</span> <span class="n">move_per_step</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">pos_cache</span><span class="p">)</span>
+
+    <span class="c1"># This is to satisfy type checking. Motors are Moveable and Readable, so make</span>
+    <span class="c1"># them Readable so positions can be measured.</span>
+    <span class="n">motors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Readable</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Readable</span><span class="p">)]</span>
+
+    <span class="c1"># To get energy sources and open paired shutters, they need to be given in this</span>
+    <span class="c1"># plan. They could possibly come from step but we then have to extract them out.</span>
+    <span class="c1"># It would also mean forcefully adding in the devices at the wrapper level.</span>
+    <span class="c1"># It would easier if they are part of the detector and the plan just calls the</span>
+    <span class="c1"># common methods so it is more dynamic and configuration only for device.</span>
+    <span class="k">for</span> <span class="n">analyser_det</span> <span class="ow">in</span> <span class="n">analyser_detectors</span><span class="p">:</span>
+        <span class="n">dets</span> <span class="o">=</span> <span class="p">[</span><span class="n">analyser_det</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">other_detectors</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">motors</span><span class="p">)</span>
+
+        <span class="c1"># This is a work around until we can find a way to get the energy sources to use</span>
+        <span class="c1"># the prepare method.</span>
+        <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">analyser_det</span><span class="o">.</span><span class="n">driver</span><span class="p">,</span> <span class="n">analyser_det</span><span class="o">.</span><span class="n">region</span><span class="p">)</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Scanning region </span><span class="si">{</span><span class="n">analyser_det</span><span class="o">.</span><span class="n">region</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">trigger_and_read</span><span class="p">(</span>
+            <span class="n">dets</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">analyser_det</span><span class="o">.</span><span class="n">region</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 </pre></div>
 

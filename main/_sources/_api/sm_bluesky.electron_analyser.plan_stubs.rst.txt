@@ -1,0 +1,23 @@
+``sm_bluesky.electron_analyser.plan_stubs``
+===========================================
+        
+        
+
+.. automodule:: sm_bluesky.electron_analyser.plan_stubs
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        analyser_shot
+        analyser_nd_step
+    
+    
