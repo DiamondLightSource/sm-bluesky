@@ -69,7 +69,7 @@ class SimMotor(
         new_positions = np.interp(
             update_times, [0, move_time], [old_position, new_position]
         )
-        for update_time, new_position in zip(update_times, new_positions, strict=True):
+        for update_time, new_position in zip(update_times, new_positions, strict=True):  # type: ignore
             # Calculate how long to wait to get there
             relative_time = time.monotonic() - start
             await asyncio.sleep(update_time - relative_time)

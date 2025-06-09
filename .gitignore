@@ -73,3 +73,6 @@ lockfiles/
 
 # ruff cache
 .ruff_cache/
+
+# temp files
+tmp/
