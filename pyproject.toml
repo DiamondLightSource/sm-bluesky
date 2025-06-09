@@ -18,7 +18,7 @@ dependencies = [
     #
     "bluesky",
     "dls-dodal",
-    "ophyd-async >= 0.10.0a2",
+    "ophyd_async @ git+https://github.com/bluesky/ophyd-async@pmac-trajectory",
     "scanspec",
 ]
 dynamic = ["version"]
