@@ -55,7 +55,12 @@ def analyser_nd_step(
         else:
             other_detectors.append(det)
 
+    # Step provides the map of motors to single position to move to. Move motors to
+    # required positions.
     yield from move_per_step(step, pos_cache)
+
+    # This is to satisfy type checking. Motors are Moveable and Readable, so make
+    # them Readable so positions can be measured.
     motors: list[Readable] = [s for s in step.keys() if isinstance(s, Readable)]
 
     # To get energy sources and open paired shutters, they need to be given in this
