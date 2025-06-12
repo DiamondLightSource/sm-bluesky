@@ -42,21 +42,21 @@ You can choose to develop on your host machine using a ``venv`` (Python 3.10 or 
 
         Once VSCode is running:
 
-        1.  Press ```Ctrl+Shift+P``` (or ``Cmd+Shift+P`` on macOS) or open the command palette and type:
-
-            .. code:: bash
-
-                > Dev Containers: Rebuild Container
-
-            This will build the development container using Docker by default.
-
-        2.  To change the container runtime to Podman (recommended at DLS), press ```Ctrl+Shift+P``` again and type:
+        1.  Change the container runtime to Podman (recommended at DLS), press ```Ctrl+Shift+P```type:
 
             .. code:: bash
 
                 > Dev Containers: Settings
 
             In the settings, navigate to ``User > Dev > Containers: Docker Path`` and change the value to ``podman``.
+
+        2.  Press ```Ctrl+Shift+P``` (or ``Cmd+Shift+P`` on macOS) or open the command palette and type:
+
+            .. code:: bash
+
+                > Dev Containers: Rebuild Container
+
+            This will build the development container.
 
         .. tip::
 
