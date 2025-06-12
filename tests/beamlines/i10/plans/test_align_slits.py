@@ -7,7 +7,7 @@ from dodal.beamlines.i10 import (
     det_slits,
     diffractometer,
     rasor_femto_pa_scaler_det,
-    simple_stage,
+    sample_stage,
     slits,
 )
 
@@ -68,7 +68,7 @@ def test_align_s5s6(mock_align_slit: MagicMock):
     assert mock_align_slit.call_count == 2
     msgs = check_msg_set(msgs=msgs, obj=diffractometer().tth, value=0)
     msgs = check_msg_set(msgs=msgs, obj=diffractometer().th, value=0)
-    msgs = check_msg_set(msgs=msgs, obj=simple_stage().y, value=-3)
+    msgs = check_msg_set(msgs=msgs, obj=sample_stage().y, value=-3)
     msgs = check_msg_wait(msgs=msgs, wait_group="diff group A")
     assert len(msgs) == 1
 
