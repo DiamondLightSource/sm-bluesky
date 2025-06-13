@@ -152,9 +152,14 @@ async def sim_motor_step():
 @pytest.fixture
 async def sim_motor_delay():
     async with init_devices(mock=True):
-        sim_motor_step = SimStage(name="sim_motor_step", instant=False)
-
-    yield sim_motor_step
+        sim_motor_delay = SimStage(name="sim_motor_delay", instant=False)
+    set_mock_value(sim_motor_delay.x.velocity, 88.88)
+    set_mock_value(sim_motor_delay.x.acceleration_time, 0.01)
+    set_mock_value(sim_motor_delay.y.velocity, 88.88)
+    set_mock_value(sim_motor_delay.y.acceleration_time, 0.01)
+    set_mock_value(sim_motor_delay.z.velocity, 88.88)
+    set_mock_value(sim_motor_delay.z.acceleration_time, 0.01)
+    yield sim_motor_delay
 
 
 @pytest.fixture
