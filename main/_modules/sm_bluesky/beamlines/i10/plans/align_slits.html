@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.beamlines.i10.plans.align_slits &#8212; sm-bluesky 0.0.2.dev33+g26a67c6 documentation</title>
+    <title>sm_bluesky.beamlines.i10.plans.align_slits &#8212; sm-bluesky 0.0.2.dev37+g140b74c documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../../_static/documentation_options.js?v=0bb5d51f"></script>
+    <script src="../../../../../_static/documentation_options.js?v=160c8e52"></script>
     <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -448,7 +448,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.beamlines.i10</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">det_slits</span><span class="p">,</span>
     <span class="n">diffractometer</span><span class="p">,</span>
-    <span class="n">simple_stage</span><span class="p">,</span>
+    <span class="n">sample_stage</span><span class="p">,</span>
     <span class="n">slits</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.common.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
@@ -699,7 +699,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">move_to_direct_beam_position</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove everything in the way of the beam&quot;&quot;&quot;</span>
     <span class="n">diff</span> <span class="o">=</span> <span class="n">diffractometer</span><span class="p">()</span>
-    <span class="n">s_stage</span> <span class="o">=</span> <span class="n">simple_stage</span><span class="p">()</span>
+    <span class="n">s_stage</span> <span class="o">=</span> <span class="n">sample_stage</span><span class="p">()</span>
     <span class="n">group_wait</span> <span class="o">=</span> <span class="s2">&quot;diff group A&quot;</span>
     <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">tth</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">th</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>  <span class="c1"># type: ignore  # See: https://github.com/bluesky/bluesky/issues/1809</span>
