@@ -4,7 +4,7 @@ from bluesky.plan_stubs import abs_set, mv, wait
 from dodal.beamlines.i10 import (
     det_slits,
     diffractometer,
-    simple_stage,
+    sample_stage,
     slits,
 )
 from dodal.common.types import MsgGenerator
@@ -243,7 +243,7 @@ def align_slit(
 def move_to_direct_beam_position() -> MsgGenerator:
     """Remove everything in the way of the beam"""
     diff = diffractometer()
-    s_stage = simple_stage()
+    s_stage = sample_stage()
     group_wait = "diff group A"
     yield from abs_set(diff.tth, 0, group=group_wait)
     yield from abs_set(diff.th, 0, group=group_wait)  # type: ignore  # See: https://github.com/bluesky/bluesky/issues/1809

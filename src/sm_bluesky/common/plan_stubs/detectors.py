@@ -7,7 +7,7 @@ from ophyd_async.epics.adcore import AreaDetector, SingleTriggerDetector
 @plan
 def set_area_detector_acquire_time(
     det: AreaDetector | SingleTriggerDetector, acquire_time: float, wait: bool = True
-) -> MsgGenerator[None]:
+) -> MsgGenerator:
     """
     Set the acquire time on an area detector.
 
@@ -22,7 +22,7 @@ def set_area_detector_acquire_time(
 
     Returns
     -------
-    MsgGenerator[None]
+    MsgGenerator
         A Bluesky generator for setting the acquire time.
     """
     drv = det.drv if isinstance(det, SingleTriggerDetector) else det.driver
