@@ -6,7 +6,7 @@ from ophyd_async.epics.adandor import Andor2Detector
 
 
 @plan
-def tigger_img(dets: Andor2Detector, value: int) -> MsgGenerator[None]:
+def tigger_img(dets: Andor2Detector, value: int) -> MsgGenerator:
     """
     Set the acquire time and trigger the detector to read data.
 
@@ -19,7 +19,7 @@ def tigger_img(dets: Andor2Detector, value: int) -> MsgGenerator[None]:
 
     Returns
     -------
-    MsgGenerator[None]
+    MsgGenerator
         A Bluesky generator for triggering the detector.
     """
     yield Msg("set", dets.driver.acquire_time, value)
