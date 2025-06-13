@@ -25,7 +25,7 @@ def move_motor_with_look_up(
     use_motor_position: bool = False,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator[None]:
+) -> MsgGenerator:
     """Perform a step scan with the range and starting motor position
       given/calculated by using a look up table(dictionary).
       Move to the peak position after the scan and update the lookup table.
@@ -64,7 +64,7 @@ def set_slit_size(
     y_size: float | None = None,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator[None]:
+) -> MsgGenerator:
     """Set opening of x-y slit.
 
     Parameters
