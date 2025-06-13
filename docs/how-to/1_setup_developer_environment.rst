@@ -42,30 +42,30 @@ You can choose to develop on your host machine using a ``venv`` (Python 3.10 or 
 
         Once VSCode is running:
 
-        1.  Change the container runtime to Podman (recommended at DLS), press ```Ctrl+Shift+P```type:
+        1.  Change the container runtime to Podman (recommended at DLS). Press ``Ctrl+Shift+P`` (or ``Cmd+Shift+P`` on macOS) and type:
 
-            .. code:: bash
+            .. code:: none
 
-                > Dev Containers: Settings
+                Dev Containers: Settings
 
             In the settings, navigate to ``User > Dev > Containers: Docker Path`` and change the value to ``podman``.
 
-        2.  Press ```Ctrl+Shift+P``` (or ``Cmd+Shift+P`` on macOS) or open the command palette and type:
+        2.  Press ``Ctrl+Shift+P`` (or ``Cmd+Shift+P`` on macOS) to open the command palette and type:
 
-            .. code:: bash
+            .. code:: none
 
-                > Dev Containers: Rebuild Container
+                Dev Containers: Rebuild Container
 
             This will build the development container.
 
         .. tip::
 
-            * For development on Windows, you can use WSL and Docker Desktop. More details are available `here. <https://code.visualstudio.com/docs/devcontainers/containers>`__
-            * For setting up VSCode devcontainers outside of Diamond Light Source, refer to this `guide. <https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers>`__
+            * For development on Windows, you can use WSL and Docker Desktop. More details are available `here <https://code.visualstudio.com/docs/devcontainers/containers>`__.
+            * For setting up VSCode devcontainers outside of Diamond Light Source, refer to this `guide <https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers>`__.
 
         .. note::
 
-            If you are at DLS and Podman is not set up, follow these `instructions <https://dev-portal.diamond.ac.uk/guide/containers/tutorials/podman/#enable-use-of-vscode-features>`__ to install Podman and configure it for devcontainer features. Then, follow the general devcontainer setup `instructions. <https://dev-portal.diamond.ac.uk/guide/containers/tutorials/devcontainer/>`__.
+            If you are at DLS and Podman is not set up, follow these `instructions <https://dev-portal.diamond.ac.uk/guide/containers/tutorials/podman/#enable-use-of-vscode-features>`__ to install Podman and configure it for devcontainer features. Then, follow the general devcontainer setup `instructions <https://dev-portal.diamond.ac.uk/guide/containers/tutorials/devcontainer/>`__.
 
     .. tab-item:: Local Virtual Environment
 
