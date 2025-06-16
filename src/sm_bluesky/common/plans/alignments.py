@@ -8,7 +8,7 @@ from bluesky.callbacks.fitting import PeakStats
 from bluesky.plan_stubs import abs_set, read
 from bluesky.plans import scan
 from bluesky.utils import MsgGenerator, plan
-from ophyd_async.core import SignalRW, StandardReadable
+from ophyd_async.core import StandardReadable
 from ophyd_async.epics.motor import Motor
 
 from sm_bluesky.common.math_functions import cal_range_num
@@ -60,12 +60,13 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
     @wraps(funcs)
     def inner(
         det: StandardReadable,
-        motor: Motor | SignalRW,
+        motor: Motor,
         fitted_loc: StatPosition,
         detname_suffix: str,
         *args,
         **kwargs,
     ):
+        print(motor.name)
         ps = PeakStats(
             f"{motor.name}",
             f"{det.name}-{detname_suffix}",
@@ -87,7 +88,7 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
 @scan_and_move_to_fit_pos
 def step_scan_and_move_fit(
     det: StandardReadable,
-    motor: Motor | SignalRW,
+    motor: Motor,
     fitted_loc: StatPosition,
     detname_suffix: str,
     start: float,
