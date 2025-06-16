@@ -18,7 +18,7 @@ dependencies = [
     #
     "bluesky",
     "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git@main",
-    "ophyd-async[sim] >= 0.10.0a2",
+    "ophyd-async[sim] @git+https://github.com/bluesky/ophyd-async.git",
     "scanspec",
 ]
 dynamic = ["version"]
