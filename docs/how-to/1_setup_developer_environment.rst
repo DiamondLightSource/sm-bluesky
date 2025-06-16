@@ -17,7 +17,7 @@ To clone the repository locally, use `Git <https://git-scm.com/downloads>`__
 
 .. code:: bash
 
-    git clone ssh://git@github.com:DiamondLightSource/sm-bluesky
+    git clone ssh://git@github.com/DiamondLightSource/sm-bluesky
 
 **HTTPS:**
 
