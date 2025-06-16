@@ -21,7 +21,7 @@ from ophyd_async.core import StandardReadableFormat as Format
 from ophyd_async.epics.motor import FlyMotorInfo, MotorLimitsException
 
 
-class SimMotor(
+class SimRealMotor(
     StandardReadable,
     Stoppable,
     Flyable,
@@ -29,9 +29,13 @@ class SimMotor(
 ):
     def __init__(self, name="", instant=True) -> None:
         """
-        old version of the device that behave like a motor.
-        Simulated motor device
+        A simulated motor that mimics the behavior of a real motor. Unlike
+         ophyd_async.sim.SimMotor, this class takes FlyMotorInfo rather than
+         FlySimMotorInfo. This makes it better for testing plans, as it more
+         closely represents a real motor's configuration.
+        This only required for cases where plan supply motor speed.
 
+        Simulated motor device
         args:
         - prefix: str: Signal names prefix
         - name: str: name of device
@@ -56,7 +60,6 @@ class SimMotor(
         # Whether set() should complete successfully or not
         self._set_success = True
         self._move_status: AsyncStatus | None = None
-
         super().__init__(name=name)
 
     async def _move(self, old_position: float, new_position: float, move_time: float):
@@ -69,7 +72,7 @@ class SimMotor(
         new_positions = np.interp(
             update_times, [0, move_time], [old_position, new_position]
         )
-        for update_time, new_position in zip(update_times, new_positions, strict=True):
+        for update_time, new_position in zip(update_times, new_positions, strict=True):  # type: ignore
             # Calculate how long to wait to get there
             relative_time = time.monotonic() - start
             await asyncio.sleep(update_time - relative_time)
@@ -90,9 +93,7 @@ class SimMotor(
     async def prepare(self, value: FlyMotorInfo):
         """Calculate required velocity and run-up distance, then if motor limits aren't
         breached, move to start position minus run-up distance"""
-
         self._fly_timeout = value.timeout
-
         # Velocity, at which motor travels from start_position to end_position, in motor
         # egu/s.
         fly_velocity = await self._prepare_velocity(
@@ -100,12 +101,10 @@ class SimMotor(
             value.end_position,
             value.time_for_move,
         )
-
         # start_position with run_up_distance added on.
         fly_prepared_position = await self._prepare_motor_path(
             abs(fly_velocity), value.start_position, value.end_position
         )
-
         await self.set(fly_prepared_position)
 
     @AsyncStatus.wrap
@@ -114,7 +113,6 @@ class SimMotor(
         assert self._fly_completed_position, (
             "Motor must be prepared before attempting to kickoff"
         )
-
         self._fly_status = self.set(self._fly_completed_position)
 
     def complete(self) -> WatchableAsyncStatus:
@@ -146,16 +144,13 @@ class SimMotor(
             (await self.acceleration_time.get_value()) * fly_velocity * 0.5
         )
         self._fly_completed_position = end_position + run_up_distance
-
         # Prepared position not used after prepare, so no need to store in self
         fly_prepared_position = start_position - run_up_distance
-
         motor_lower_limit, motor_upper_limit, egu = await asyncio.gather(
             self.low_limit_travel.get_value(),
             self.high_limit_travel.get_value(),
             self.units.get_value(),
         )
-
         if (
             not motor_upper_limit >= fly_prepared_position >= motor_lower_limit
             or not motor_upper_limit
@@ -207,8 +202,8 @@ class SimStage(StandardReadable):
     def __init__(self, name="", instant=True) -> None:
         # Define some child Devices
         with self.add_children_as_readables():
-            self.x = SimMotor(instant=instant)
-            self.y = SimMotor(instant=instant)
-            self.z = SimMotor(instant=instant)
+            self.x = SimRealMotor(instant=instant)
+            self.y = SimRealMotor(instant=instant)
+            self.z = SimRealMotor(instant=instant)
         # Set name of device and child devices
         super().__init__(name=name)
