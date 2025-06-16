@@ -66,7 +66,7 @@ def test_device_present(client: BlueapiClient, device: str):
     assert client.get_device(device), f"{device} is not available"
 
 
-@pytest.mark.parametrize("plan", ["count", "stxm_step"])
+@pytest.mark.parametrize("plan", ["count", "grid_step_scan"])
 def test_spec_scan_task(
     client: BlueapiClient, task_definition: dict[str, Task], plan: str
 ):

@@ -9,8 +9,8 @@ from bluesky_stomp.models import BasicAuthentication
 def task_definition() -> dict[str, Task]:
     return {
         "count": Task(name="count", params={"detectors": ["andor2_point"]}),
-        "stxm_step": Task(
-            name="stxm_step",
+        "grid_step_scan": Task(
+            name="grid_step_scan",
             params={
                 "dets": ["andor2_point"],
                 "count_time": 0.1,
@@ -24,8 +24,8 @@ def task_definition() -> dict[str, Task]:
                 "y_step_size": 0.05,
             },
         ),
-        "stxm_fast": Task(
-            name="stxm_fast",
+        "grid_fast_scan": Task(
+            name="grid_fast_scan",
             params={
                 "dets": ["andor2_point"],
                 "count_time": 0.1,

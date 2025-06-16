@@ -2,12 +2,10 @@ from collections.abc import Callable
 from functools import wraps
 from typing import TypeVar, cast
 
-from bluesky import preprocessors as bpp
-
 TCallable = TypeVar("TCallable", bound=Callable)
 
 
-P99_DEFAULT_METADATA = {"energy": 2, "detector_dist": 100}
+P99_DEFAULT_METADATA = {"energy": 1.8, "detector_dist": 88}
 
 
 def add_default_metadata(funcs: TCallable) -> TCallable:
@@ -16,9 +14,10 @@ def add_default_metadata(funcs: TCallable) -> TCallable:
         *args,
         **kwargs,
     ):
-        yield from bpp.subs_wrapper(
-            funcs(*args, **kwargs),
-            P99_DEFAULT_METADATA,
-        )
+        if "md" in kwargs:
+            kwargs["md"].update(P99_DEFAULT_METADATA)
+        else:
+            kwargs["md"] = P99_DEFAULT_METADATA
+        yield from (funcs(*args, **kwargs))
 
     return cast(TCallable, inner)
