@@ -4,13 +4,15 @@ from typing import TypeVar, cast
 
 from blueapi.core import MsgGenerator
 
-TCallable = TypeVar("TCallable", bound=Callable)
+TCallable = TypeVar("TCallable", bound=Callable[..., MsgGenerator])
 
 
 P99_DEFAULT_METADATA = {"energy": 1.8, "detector_dist": 88}
 
 
-def add_default_metadata(funcs: TCallable) -> TCallable:
+def add_default_metadata(
+    funcs: TCallable,
+) -> TCallable:
     @wraps(funcs)
     def inner(
         *args,
