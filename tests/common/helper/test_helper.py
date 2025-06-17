@@ -6,7 +6,10 @@ from dodal.devices.motors import XYZPositioner
 
 from sm_bluesky.common.helper.add_meta import add_default_metadata
 
-DEFAULT_METADATA = {"energy": 1.8, "detector_dist": 88}
+DEFAULT_METADATA = {
+    "energy": {"value": 1.8, "unit": "eV"},
+    "detector_dist": {"value": 88, "unit": "mm"},
+}
 
 
 async def test_add_meta_success_with_no_meta(
