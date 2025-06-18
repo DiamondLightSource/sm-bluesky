@@ -3,7 +3,7 @@ from collections.abc import Hashable
 import bluesky.plan_stubs as bps
 from dodal.beamlines.i10 import (
     diffractometer,
-    simple_stage,
+    sample_stage,
 )
 from dodal.common.types import MsgGenerator
 from ophyd_async.core import StandardReadable
@@ -68,8 +68,8 @@ def move_pin_origin(wait: bool = True, group: Hashable | None = None) -> MsgGene
 
     if wait and group is None:
         group = "move_pin_origin"
-    yield from bps.abs_set(simple_stage().x, 0, wait=False, group=group)
-    yield from bps.abs_set(simple_stage().y, 0, wait=False, group=group)
-    yield from bps.abs_set(simple_stage().z, 0, wait=False, group=group)
+    yield from bps.abs_set(sample_stage().x, 0, wait=False, group=group)
+    yield from bps.abs_set(sample_stage().y, 0, wait=False, group=group)
+    yield from bps.abs_set(sample_stage().z, 0, wait=False, group=group)
     if wait:
         yield from bps.wait(group=group)
