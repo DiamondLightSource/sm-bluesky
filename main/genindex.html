@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; sm-bluesky 0.0.2.dev56+g58b4597 documentation</title>
+    <title>Index &#8212; sm-bluesky 0.0.2.dev70+ga21725f documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=ca07a543"></script>
+    <script src="_static/documentation_options.js?v=2fee5022"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -396,10 +396,15 @@
 <li class="toctree-l4"><a class="reference internal" href="_api/sm_bluesky.beamlines.i10.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.i10.plans</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l3"><a class="reference internal" href="_api/sm_bluesky.beamlines.p99.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.p99</span></code></a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="_api/sm_bluesky.beamlines.p99.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.p99</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="_api/sm_bluesky.beamlines.p99.helper.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.p99.helper</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="_api/sm_bluesky.beamlines.p99.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.p99.plans</span></code></a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/sm_bluesky.common.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/sm_bluesky.common.helper.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.helper</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/sm_bluesky.common.math_functions.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.math_functions</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/sm_bluesky.common.plan_stubs.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.plan_stubs</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/sm_bluesky.common.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.plans</span></code></a></li>
@@ -536,9 +541,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_api/sm_bluesky.common.plan_stubs.html#sm_bluesky.common.plan_stubs.get_motor_positions">get_motor_positions() (in module sm_bluesky.common.plan_stubs)</a>
 </li>
+      <li><a href="_api/sm_bluesky.common.plan_stubs.html#sm_bluesky.common.plan_stubs.get_velocity_and_step_size">get_velocity_and_step_size() (in module sm_bluesky.common.plan_stubs)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_api/sm_bluesky.common.plan_stubs.html#sm_bluesky.common.plan_stubs.get_velocity_and_step_size">get_velocity_and_step_size() (in module sm_bluesky.common.plan_stubs)</a>
+      <li><a href="_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.grid_fast_scan">grid_fast_scan() (in module sm_bluesky.common.plans)</a>
+</li>
+      <li><a href="_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.grid_step_scan">grid_step_scan() (in module sm_bluesky.common.plans)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -560,7 +569,13 @@
 </li>
         <li><a href="_api/sm_bluesky.beamlines.p99.html#module-sm_bluesky.beamlines.p99">sm_bluesky.beamlines.p99</a>
 </li>
+        <li><a href="_api/sm_bluesky.beamlines.p99.helper.html#module-sm_bluesky.beamlines.p99.helper">sm_bluesky.beamlines.p99.helper</a>
+</li>
+        <li><a href="_api/sm_bluesky.beamlines.p99.plans.html#module-sm_bluesky.beamlines.p99.plans">sm_bluesky.beamlines.p99.plans</a>
+</li>
         <li><a href="_api/sm_bluesky.common.html#module-sm_bluesky.common">sm_bluesky.common</a>
+</li>
+        <li><a href="_api/sm_bluesky.common.helper.html#module-sm_bluesky.common.helper">sm_bluesky.common.helper</a>
 </li>
         <li><a href="_api/sm_bluesky.common.math_functions.html#module-sm_bluesky.common.math_functions">sm_bluesky.common.math_functions</a>
 </li>
@@ -655,6 +670,20 @@
 </li>
       </ul></li>
       <li>
+    sm_bluesky.beamlines.p99.helper
+
+      <ul>
+        <li><a href="_api/sm_bluesky.beamlines.p99.helper.html#module-sm_bluesky.beamlines.p99.helper">module</a>
+</li>
+      </ul></li>
+      <li>
+    sm_bluesky.beamlines.p99.plans
+
+      <ul>
+        <li><a href="_api/sm_bluesky.beamlines.p99.plans.html#module-sm_bluesky.beamlines.p99.plans">module</a>
+</li>
+      </ul></li>
+      <li>
     sm_bluesky.common
 
       <ul>
@@ -662,14 +691,21 @@
 </li>
       </ul></li>
       <li>
+    sm_bluesky.common.helper
+
+      <ul>
+        <li><a href="_api/sm_bluesky.common.helper.html#module-sm_bluesky.common.helper">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
     sm_bluesky.common.math_functions
 
       <ul>
         <li><a href="_api/sm_bluesky.common.math_functions.html#module-sm_bluesky.common.math_functions">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     sm_bluesky.common.plan_stubs
 
@@ -718,9 +754,9 @@
 </li>
       <li><a href="_api/sm_bluesky.common.math_functions.html#sm_bluesky.common.math_functions.step_size_to_step_num">step_size_to_step_num() (in module sm_bluesky.common.math_functions)</a>
 </li>
-      <li><a href="_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.stxm_fast">stxm_fast() (in module sm_bluesky.common.plans)</a>
+      <li><a href="_api/sm_bluesky.beamlines.p99.plans.html#sm_bluesky.beamlines.p99.plans.stxm_fast">stxm_fast() (in module sm_bluesky.beamlines.p99.plans)</a>
 </li>
-      <li><a href="_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.stxm_step">stxm_step() (in module sm_bluesky.common.plans)</a>
+      <li><a href="_api/sm_bluesky.beamlines.p99.plans.html#sm_bluesky.beamlines.p99.plans.stxm_step">stxm_step() (in module sm_bluesky.beamlines.p99.plans)</a>
 </li>
   </ul></td>
 </tr></table>

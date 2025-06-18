@@ -1,0 +1,21 @@
+``sm_bluesky.common.helper``
+============================
+        
+
+.. automodule:: sm_bluesky.common.helper
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        add_default_metadata
+    
+    

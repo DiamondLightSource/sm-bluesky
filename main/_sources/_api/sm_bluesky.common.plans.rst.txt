@@ -30,8 +30,8 @@
         align_slit_with_look_up
         fast_scan_1d
         fast_scan_grid
-        stxm_fast
-        stxm_step
+        grid_fast_scan
+        grid_step_scan
         tigger_img
     
     

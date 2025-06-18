@@ -13,6 +13,7 @@
         :template: custom-module-template.rst
         :recursive:
     
+        helper
         math_functions
         plan_stubs
         plans
