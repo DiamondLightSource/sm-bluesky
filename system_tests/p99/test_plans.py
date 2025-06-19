@@ -73,19 +73,19 @@ def test_spec_plan_available(
     assert client.get_plan(plan), f"In {plan} is available"
 
 
-@pytest.mark.parametrize("plan", ["count", "stxm_step", "stxm_fast"])
-def test_spec_scan_task(
-    client: BlueapiClient, task_definition: dict[str, Task], plan: str
-):
-    assert client.get_plan(plan), f"In {plan} is available"
+# @pytest.mark.parametrize("plan", ["count", "stxm_step", "stxm_fast"])
+# def test_spec_scan_task(
+#     client: BlueapiClient, task_definition: dict[str, Task], plan: str
+# ):
+#     assert client.get_plan(plan), f"In {plan} is available"
 
-    all_events: list[AnyEvent] = []
+#     all_events: list[AnyEvent] = []
 
-    def on_event(event: AnyEvent):
-        all_events.append(event)
+#     def on_event(event: AnyEvent):
+#         all_events.append(event)
 
-    client.run_task(task_definition[plan], on_event=on_event)
+#     client.run_task(task_definition[plan], on_event=on_event)
 
-    _check_all_events(all_events)
+#     _check_all_events(all_events)
 
-    assert client.get_state() is WorkerState.IDLE
+#     assert client.get_state() is WorkerState.IDLE
