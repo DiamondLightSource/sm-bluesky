@@ -22,12 +22,10 @@ def check_msg_wait(msgs, wait_group, wait=False):
     )
 
 
-def check_mv_wait(msgs, wait_group, timeout=None):
-    print(msgs)
-
+def check_mv_wait(msgs, wait_group):
     return assert_message_and_return_remaining(
         msgs,
         lambda msg: msg.command == "wait"
         and msg.obj is None
-        and msg.kwargs == {"group": wait_group, "timeout": timeout},
+        and msg.kwargs == {"group": wait_group},
     )

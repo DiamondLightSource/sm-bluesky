@@ -11,7 +11,7 @@ from bluesky.preprocessors import (
 from bluesky.protocols import Readable
 from bluesky.utils import plan
 from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
-from ophyd_async.epics.adcore import AreaDetector
+from ophyd_async.epics.adcore import AreaDetector, SingleTriggerDetector
 from ophyd_async.epics.motor import Motor
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
@@ -34,7 +34,7 @@ class CleanUpArgs(TypedDict, total=False):
 @plan
 @attach_data_session_metadata_decorator()
 def grid_step_scan(
-    dets: Sequence[AreaDetector | Readable],
+    dets: Sequence[Readable],
     count_time: float,
     x_step_motor: Motor,
     x_step_start: float,
@@ -105,7 +105,7 @@ def grid_step_scan(
             x_step_motor, y_step_motor
         )  # type: ignore
     main_det = dets[0]
-    if isinstance(main_det, AreaDetector):
+    if isinstance(main_det, AreaDetector | SingleTriggerDetector):
         # Set count time on detector
         yield from set_area_detector_acquire_time(main_det, acquire_time=count_time)
     # add 1 to step number to include the end point
@@ -130,7 +130,7 @@ def grid_step_scan(
 @plan
 @attach_data_session_metadata_decorator()
 def grid_fast_scan(
-    dets: list[AreaDetector | Readable],
+    dets: list[Readable],
     count_time: float,
     step_motor: Motor,
     step_start: float,
@@ -220,6 +220,9 @@ def grid_fast_scan(
         # Set count time on detector
         yield from set_area_detector_acquire_time(det=main_det, acquire_time=count_time)
         deadtime = main_det._controller.get_deadtime(count_time)  # noqa: SLF001
+    elif isinstance(main_det, SingleTriggerDetector):
+        yield from set_area_detector_acquire_time(det=main_det, acquire_time=count_time)
+        deadtime = count_time
     else:
         deadtime = count_time
 
@@ -251,7 +254,7 @@ def grid_fast_scan(
         + f", number of step = {num_of_step}."
     )
     # Set count time on detector
-    if isinstance(main_det, AreaDetector):
+    if isinstance(main_det, AreaDetector | SingleTriggerDetector):
         yield from set_area_detector_acquire_time(det=main_det, acquire_time=count_time)
     yield from finalize_wrapper(
         plan=fast_scan_grid(

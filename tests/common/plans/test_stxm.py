@@ -212,8 +212,8 @@ async def test_stxm_fast_with_speed_capped(
         start=1,
         descriptor=1,
         stream_resource=1,
-        stream_datum=num_of_step * 2,
-        event=num_of_step * 2,
+        stream_datum=int(num_of_step * 0.5),
+        event=int(num_of_step * 0.5),
         stop=1,
     )
 
