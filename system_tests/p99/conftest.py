@@ -51,6 +51,7 @@ def config(request: pytest.FixtureRequest) -> ApplicationConfig:
     password = request.config.getoption("--password")
     return ApplicationConfig(
         stomp=StompConfig(
+            enabled=True,
             url=HttpUrl("http://172.23.177.208"),
             auth=BasicAuthentication(username="p99", password=password),  # type: ignore
         ),

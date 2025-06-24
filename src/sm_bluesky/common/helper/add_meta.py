@@ -19,6 +19,6 @@ def add_default_metadata(
             kwargs["md"].update(extra_metadata)
         else:
             kwargs["md"] = extra_metadata
-        yield from (funcs(*args, **kwargs))
+        return funcs(*args, **kwargs)
 
     return cast(TCallable, inner)
