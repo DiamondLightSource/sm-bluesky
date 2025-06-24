@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from math import floor, sqrt
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
@@ -143,7 +143,7 @@ def grid_fast_scan(
     step_size: float | None = None,
     home: bool = False,
     snake_axes: bool = True,
-    md: dict | None = None,
+    md: dict[str, Any] | None = None,
 ) -> MsgGenerator:
     """
     This initiates an 2 axis scan, targeting a maximum scan speed of around 10Hz.

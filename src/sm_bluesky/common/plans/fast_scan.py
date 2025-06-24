@@ -22,6 +22,7 @@ def fast_scan_1d(
     start: float,
     end: float,
     motor_speed: float | None = None,
+    md: dict[str, Any] | None = None,
 ) -> MsgGenerator:
     """
     Perform a fast scan along one axis.
@@ -46,8 +47,11 @@ def fast_scan_1d(
         A Bluesky generator for the scan.
     """
 
+    if md is None:
+        md = {}
+
     @bpp.stage_decorator(dets)
-    @bpp.run_decorator()
+    @bpp.run_decorator(md=md)
     def inner_fast_scan_1d(
         dets: list[Any],
         motor: Motor,
@@ -76,7 +80,7 @@ def fast_scan_grid(
     scan_end: float,
     motor_speed: float | None = None,
     snake_axes: bool = False,
-    md: dict | None = None,
+    md: dict[str, Any] | None = None,
 ) -> MsgGenerator:
     """
     Same as fast_scan_1d with an extra axis to step through forming a grid.
@@ -109,8 +113,11 @@ def fast_scan_grid(
 
     """
 
+    if md is None:
+        md = {}
+
     @bpp.stage_decorator(dets)
-    @bpp.run_decorator()
+    @bpp.run_decorator(md=md)
     def inner_fast_scan_grid(
         dets: list[Any],
         step_motor: Motor,
