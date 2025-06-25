@@ -115,6 +115,8 @@ def fast_scan_grid(
 
     if md is None:
         md = {}
+    md["detectors"] = [det.name for det in dets]
+    md["motors"] = [scan_motor.name, step_motor.name]
 
     @bpp.stage_decorator(dets)
     @bpp.run_decorator(md=md)
