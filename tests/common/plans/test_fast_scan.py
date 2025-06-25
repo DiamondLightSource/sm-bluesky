@@ -77,9 +77,10 @@ async def test_fast_scan_1d_success_without_speed(
 
     assert 88.88 == await sim_motor_delay.x.velocity.get_value()
     assert 2 == get_mock_put(sim_motor_delay.x.user_setpoint).call_count
-    assert 2 == get_mock_put(sim_motor_delay.x.velocity).call_count
+    assert 3 == get_mock_put(sim_motor_delay.x.velocity).call_count
     # check speed is set and reset
     assert [
+        mock.call(pytest.approx(0), wait=True),  # SimMotor fast move to start
         mock.call(pytest.approx(88.88), wait=True),
         mock.call(pytest.approx(88.88), wait=True),
     ] == get_mock_put(sim_motor_delay.x.velocity).call_args_list
