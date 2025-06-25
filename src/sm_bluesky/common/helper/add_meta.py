@@ -32,8 +32,6 @@ def add_default_metadata(
                 merged = dict(md)
                 merged.update(extra_metadata)
                 kwargs["md"] = merged
-            else:
-                kwargs["md"] = extra_metadata
         elif md is None:
             kwargs["md"] = {}
         return func(*args, **kwargs)
