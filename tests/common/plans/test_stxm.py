@@ -9,7 +9,7 @@ from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.testing import assert_emitted, set_mock_value
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
-from sm_bluesky.common.plans.stxm import stxm_fast, stxm_step
+from sm_bluesky.common.plans.grid_scan import grid_fast_scan, grid_step_scan
 
 
 async def test_stxm_fast_zero_velocity_fail(
@@ -27,7 +27,7 @@ async def test_stxm_fast_zero_velocity_fail(
 
     with pytest.raises(ValueError):
         RE(
-            stxm_fast(
+            grid_fast_scan(
                 dets=[andor2],
                 count_time=count_time,
                 step_motor=sim_motor.x,
@@ -61,7 +61,7 @@ async def test_stxm_fast(
     num_of_step = step_size_to_step_num(step_start, step_end, step_size)
 
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[sim_motor.z, andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -101,7 +101,7 @@ async def test_stxm_fast_with_too_little_time_stxm_become_1d(
     step_end = 3
 
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[sim_motor.z, andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -144,7 +144,7 @@ async def test_stxm_fast_with_too_little_time_stxm_cannot_have_any_points(
     set_mock_value(sim_motor.y.acceleration_time, 0)
     with pytest.raises(ValueError):
         RE(
-            stxm_fast(
+            grid_fast_scan(
                 dets=[sim_motor.z, andor2],
                 count_time=count_time,
                 step_motor=sim_motor.x,
@@ -179,7 +179,7 @@ async def test_stxm_fast_with_speed_capped(
         sim_motor.y.max_velocity, 1
     )  # running at half the speed that required
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -247,7 +247,7 @@ async def test_stxm_fast_unknown_step_snake(
         + 10  # extra overhead poor plan time guess
     )
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -310,7 +310,7 @@ async def test_stxm_fast_unknown_step_no_snake(
     )
     docs = defaultdict(list)
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -365,7 +365,7 @@ async def test_stxm_fast_unknown_step_snake_with_point_correction(
 
     docs = defaultdict(list)
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -399,7 +399,7 @@ async def test_stxm_step_with_home(
     await sim_motor_step.y.set(-2)
 
     RE(
-        stxm_step(
+        grid_step_scan(
             dets=[andor2],
             count_time=0.2,
             x_step_motor=sim_motor_step.x,
@@ -443,7 +443,7 @@ async def test_stxm_step_without_home_with_readable(
     y_step_end = 1
     x_step_end = 2
     RE(
-        stxm_step(
+        grid_step_scan(
             dets=[sim_motor_step.z],
             count_time=0.2,
             x_step_motor=sim_motor_step.x,
@@ -484,7 +484,7 @@ async def test_stxm_fast_sim_flyable_motor(
     step_start = -0.5
     step_end = 0.5
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
             step_motor=sim_motor_delay.x,
