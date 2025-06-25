@@ -3,6 +3,11 @@ Setup Developer Environment
 
 This document outlines the steps to set up a developer environment for the ``sm_bluesky`` project. You can choose to develop within a VSCode devcontainer or using a local virtual environment.
 
+Setup Github account
+--------------------
+If you have not yet had a Github account, please create one and upload your public SSH key to your Github account.
+You can get instruction from Github on how to generate SSH key and upload it to your account.
+
 Clone the Repository
 --------------------
 
@@ -12,7 +17,7 @@ To clone the repository locally, use `Git <https://git-scm.com/downloads>`__
 
 .. code:: bash
 
-    git clone git@github.com:DiamondLightSource/sm-bluesky.git
+    git clone ssh://git@github.com/DiamondLightSource/sm-bluesky
 
 **HTTPS:**
 
