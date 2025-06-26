@@ -22,6 +22,7 @@ from ophyd_async.core import (
     init_devices,
 )
 from ophyd_async.epics.adandor import Andor2Detector
+from ophyd_async.epics.adcore import ADBaseIO, SingleTriggerDetector
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
 from super_state_machine.errors import TransitionError
 
@@ -202,3 +203,12 @@ async def andor2(static_path_provider: StaticPathProvider) -> Andor2Detector:
     )
 
     return andor2
+
+
+# area detector point that is use for testing
+@pytest.fixture
+async def andor2_point() -> SingleTriggerDetector:
+    async with init_devices(mock=True):
+        andor2_point = SingleTriggerDetector(drv=ADBaseIO("p99"))
+
+    return andor2_point
