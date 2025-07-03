@@ -3,9 +3,8 @@ import math as mt
 
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
-from bluesky.utils import MsgGenerator
 from aioca import caput
-
+from bluesky.utils import MsgGenerator
 from dodal.common.coordination import inject
 from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
 from ophyd_async.core import (
@@ -28,8 +27,7 @@ from ophyd_async.fastcs.panda import (
 )
 from ophyd_async.fastcs.panda._block import PcompBlock
 from ophyd_async.plan_stubs import ensure_connected
-from scanspec.specs import Line, Repeat, fly
-from dodal.common.beamlines.beamline_utils import get_path_provider
+from scanspec.specs import Line, fly
 
 X_MOTOR_RESOLUTION = -2 / 100000
 
@@ -56,6 +54,7 @@ class _StaticPcompTriggerLogic(StaticPcompTriggerLogic):
     async def stop(self):
         pass
 
+
 def get_pcomp_info(width, start_pos, direction_of_sweep: PandaPcompDirection, num):
     start_pos_pcomp = mt.floor(start_pos / X_MOTOR_RESOLUTION)
     rising_edge_step = mt.ceil(abs(width / X_MOTOR_RESOLUTION))
@@ -70,6 +69,7 @@ def get_pcomp_info(width, start_pos, direction_of_sweep: PandaPcompDirection, nu
 
     return panda_pcomp_info
 
+
 def calculate_stuff(start, stop, num):
     width = (stop - start) / (num - 1)
     direction_of_sweep = (
@@ -79,6 +79,7 @@ def calculate_stuff(start, stop, num):
     )
 
     return width, start, stop, direction_of_sweep
+
 
 def trajectory_fly_scan(
     fast_start: float,
@@ -103,7 +104,8 @@ def trajectory_fly_scan(
     #     duration,
     # )
     spec = fly(
-        Line(motor_y, slow_start, slow_stop, slow_num) * ~Line(motor_x, fast_start, fast_stop, fast_num),
+        Line(motor_y, slow_start, slow_stop, slow_num)
+        * ~Line(motor_x, fast_start, fast_stop, fast_num),
         duration,
     )
 
@@ -116,7 +118,9 @@ def trajectory_fly_scan(
     @bpp.run_decorator()
     @bpp.stage_decorator([panda, panda_pcomp1, panda_pcomp2])
     def inner_plan():
-        width, _, _, direction_of_sweep = calculate_stuff(fast_start, fast_stop, fast_num)
+        width, _, _, direction_of_sweep = calculate_stuff(
+            fast_start, fast_stop, fast_num
+        )
 
         dir1 = direction_of_sweep
         dir2 = (
