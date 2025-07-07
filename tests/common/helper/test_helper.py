@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from bluesky.plans import count
 from bluesky.run_engine import RunEngine
-from dodal.devices.motors import XYZPositioner
+from dodal.devices.motors import XYZStage
 
 from sm_bluesky.common.helper.add_meta import add_default_metadata
 
@@ -14,7 +14,7 @@ DEFAULT_METADATA = {
 
 async def test_add_meta_success_with_no_meta(
     RE: RunEngine,
-    sim_motor_step: XYZPositioner,
+    sim_motor_step: XYZStage,
 ):
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
     docs = defaultdict(list)
@@ -33,7 +33,7 @@ async def test_add_meta_success_with_no_meta(
 
 async def test_add_meta_success_with_meta(
     RE: RunEngine,
-    sim_motor_step: XYZPositioner,
+    sim_motor_step: XYZStage,
 ):
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
     docs = defaultdict(list)
@@ -53,7 +53,7 @@ async def test_add_meta_success_with_meta(
 
 async def test_add_meta_success_with_no_extra_meta(
     RE: RunEngine,
-    sim_motor_step: XYZPositioner,
+    sim_motor_step: XYZStage,
 ):
     count_meta = add_default_metadata(count)
     docs = defaultdict(list)

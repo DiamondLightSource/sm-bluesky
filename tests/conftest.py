@@ -1,7 +1,5 @@
 import asyncio
-import os
 from pathlib import Path
-from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -13,7 +11,7 @@ from dodal.common.visit import (
     LocalDirectoryServiceClient,
     StaticVisitPathProvider,
 )
-from dodal.devices.motors import XYZPositioner
+from dodal.devices.motors import XYZStage
 from dodal.utils import make_all_devices
 from ophyd_async.core import (
     FilenameProvider,
@@ -45,24 +43,6 @@ set_path_provider(
         client=LocalDirectoryServiceClient(),  # RemoteDirectoryServiceClient("http://p99-control:8088/api"),
     )
 )
-
-
-# Prevent pytest from catching exceptions when debugging in vscode so that break on
-# exception works correctly (see: https://github.com/pytest-dev/pytest/issues/7409)
-if os.getenv("PYTEST_RAISE", "0") == "1":
-
-    @pytest.hookimpl(tryfirst=True)
-    def pytest_exception_interact(call: pytest.CallInfo[Any]):
-        if call.excinfo is not None:
-            raise call.excinfo.value
-        else:
-            raise RuntimeError(
-                f"{call} has no exception data, an unknown error has occurred"
-            )
-
-    @pytest.hookimpl(tryfirst=True)
-    def pytest_internalerror(excinfo: pytest.ExceptionInfo[Any]):
-        raise excinfo.value
 
 
 @pytest.fixture(scope="session")
@@ -112,7 +92,7 @@ def static_path_provider(
 @pytest.fixture
 async def sim_motor():
     async with init_devices(mock=True):
-        sim_motor = XYZPositioner("BLxxI-MO-TABLE-01:X", name="sim_motor")
+        sim_motor = XYZStage("BLxxI-MO-TABLE-01:X", name="sim_motor")
     set_mock_value(sim_motor.x.velocity, 2.78)
     set_mock_value(sim_motor.x.high_limit_travel, 8.168)
     set_mock_value(sim_motor.x.low_limit_travel, -8.888)

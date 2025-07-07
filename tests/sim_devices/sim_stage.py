@@ -10,6 +10,7 @@ from bluesky.protocols import (
 )
 from ophyd_async.core import (
     AsyncStatus,
+    FlyMotorInfo,
     StandardReadable,
     WatchableAsyncStatus,
     WatcherUpdate,
@@ -18,7 +19,7 @@ from ophyd_async.core import (
     soft_signal_rw,
 )
 from ophyd_async.core import StandardReadableFormat as Format
-from ophyd_async.epics.motor import FlyMotorInfo, MotorLimitsException
+from ophyd_async.epics.motor import MotorLimitsException
 
 
 class SimRealMotor(
