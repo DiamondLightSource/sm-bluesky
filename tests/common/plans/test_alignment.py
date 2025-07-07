@@ -282,7 +282,7 @@ async def test_align_slit_with_look_up(
     print(docs)
     for i in docs["event"]:
         y_data1 = np.append(y_data1, i["data"]["fake_detector-value"])
-        x_data1 = np.append(x_data1, i["data"]["sim_motor_step-y-user_readback"])
+        x_data1 = np.append(x_data1, i["data"]["sim_motor_step-y"])
     assert FAKEDSU[str(size)] == pytest.approx(expected_centre + offset, 0.01)
 
 
