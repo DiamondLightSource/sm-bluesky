@@ -99,7 +99,7 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
 ) -> None:
     # Mock driver.set to track expected calls
     driver = sim_analyser.driver
-    driver.set = MagicMock(side_effect=fake_status)
+    driver.set = AsyncMock(side_effect=fake_status)
     expected_driver_set_calls = [call(r_det.region) for r_det in region_detectors]
 
     RE(analyser_nd_step(all_detectors, step, pos_cache))

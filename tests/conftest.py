@@ -11,7 +11,7 @@ from dodal.common.visit import (
     LocalDirectoryServiceClient,
     StaticVisitPathProvider,
 )
-from dodal.devices.motors import XYZPositioner
+from dodal.devices.motors import XYZStage
 from dodal.utils import make_all_devices
 from ophyd_async.core import (
     FilenameProvider,
@@ -91,7 +91,7 @@ def static_path_provider(
 @pytest.fixture
 async def sim_motor():
     async with init_devices(mock=True):
-        sim_motor = XYZPositioner("BLxxI-MO-TABLE-01:X", name="sim_motor")
+        sim_motor = XYZStage("BLxxI-MO-TABLE-01:X", name="sim_motor")
     set_mock_value(sim_motor.x.velocity, 2.78)
     set_mock_value(sim_motor.x.high_limit_travel, 8.168)
     set_mock_value(sim_motor.x.low_limit_travel, -8.888)
