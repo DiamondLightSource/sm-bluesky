@@ -13,7 +13,6 @@
         :template: custom-module-template.rst
         :recursive:
     
-        energy_source
         plan_stubs
         plans
     

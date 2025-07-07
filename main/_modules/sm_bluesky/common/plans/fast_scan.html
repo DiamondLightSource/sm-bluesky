@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans.fast_scan &#8212; sm-bluesky 0.0.2.dev85+gcdd9408 documentation</title>
+    <title>sm_bluesky.common.plans.fast_scan &#8212; sm-bluesky 0.0.2.dev91+ge8119b9 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=be91f6bf"></script>
+    <script src="../../../../_static/documentation_options.js?v=9cc3a38e"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -453,7 +453,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">Readable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">plan</span><span class="p">,</span> <span class="n">short_uid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">linspace</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.motor</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlyMotorInfo</span><span class="p">,</span> <span class="n">Motor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlyMotorInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.motor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Motor</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_within_limit</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
