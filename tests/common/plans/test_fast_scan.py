@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 from bluesky.run_engine import RunEngine
-from dodal.devices.motors import XYZPositioner
+from dodal.devices.motors import XYZStage
 from numpy import linspace
 from ophyd.sim import SynPeriodicSignal
 from ophyd_async.testing import assert_emitted, get_mock_put
@@ -21,9 +21,7 @@ def det():
     return det
 
 
-async def test_fast_scan_1d_fail_limit_check(
-    sim_motor: XYZPositioner, RE: RunEngine, det
-):
+async def test_fast_scan_1d_fail_limit_check(sim_motor: XYZStage, RE: RunEngine, det):
     """Testing both high and low limits making sure nothing get run if it is exceeded"""
     docs = defaultdict(list)
 
@@ -41,7 +39,7 @@ async def test_fast_scan_1d_fail_limit_check(
     assert_emitted(docs, start=2, stop=2)
 
 
-async def test_fast_scan_1d_success(sim_motor: XYZPositioner, RE: RunEngine, det):
+async def test_fast_scan_1d_success(sim_motor: XYZStage, RE: RunEngine, det):
     docs = defaultdict(list)
     det.start_simulation()
 
@@ -66,7 +64,7 @@ async def test_fast_scan_1d_success(sim_motor: XYZPositioner, RE: RunEngine, det
 
 
 async def test_fast_scan_1d_success_without_speed(
-    sim_motor_delay: XYZPositioner, RE: RunEngine, det
+    sim_motor_delay: XYZStage, RE: RunEngine, det
 ):
     docs = defaultdict(list)
 
@@ -90,7 +88,7 @@ async def test_fast_scan_1d_success_without_speed(
     assert_emitted(docs, start=1, descriptor=1, event=mock.ANY, stop=1)
 
 
-async def test_fast_scan_2d_success(sim_motor: XYZPositioner, RE: RunEngine, det):
+async def test_fast_scan_2d_success(sim_motor: XYZStage, RE: RunEngine, det):
     docs = defaultdict(list)
 
     def capture_emitted(name, doc):
@@ -145,7 +143,7 @@ async def test_fast_scan_2d_success(sim_motor: XYZPositioner, RE: RunEngine, det
     assert_emitted(docs, start=1, descriptor=1, event=num_step, stop=1)
 
 
-async def test_fast_scan_2d_snake_success(sim_motor: XYZPositioner, RE: RunEngine, det):
+async def test_fast_scan_2d_snake_success(sim_motor: XYZStage, RE: RunEngine, det):
     docs = defaultdict(list)
 
     def capture_emitted(name, doc):

@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from bluesky.plans import scan
 from bluesky.run_engine import RunEngine
-from dodal.devices.motors import XYZPositioner
+from dodal.devices.motors import XYZStage
 from ophyd_async.core import (
     StaticPathProvider,
 )
@@ -44,7 +44,7 @@ async def test_Andor2_scan(
     RE: RunEngine,
     andor2: Andor2Detector,
     static_path_provider: StaticPathProvider,
-    sim_motor: XYZPositioner,
+    sim_motor: XYZStage,
 ):
     docs = defaultdict(list)
 
