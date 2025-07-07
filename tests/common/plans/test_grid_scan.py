@@ -6,25 +6,12 @@ import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
 from numpy import random
-from ophyd_async.core import (
-    init_devices,
-)
 from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.epics.adcore import SingleTriggerDetector
 from ophyd_async.testing import assert_emitted, set_mock_value
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
 from sm_bluesky.common.plans.grid_scan import grid_fast_scan, grid_step_scan
-
-from ...sim_devices import SimStage
-
-
-@pytest.fixture
-async def sim_motor_fly():
-    async with init_devices():
-        sim_motor_fly = SimStage(name="sim_motor_fly", instant=False)
-
-    yield sim_motor_fly
 
 
 async def test_grid_fast_zero_velocity_fail(
@@ -484,7 +471,7 @@ async def test_grid_step_without_home_with_readable(
 
 
 async def test_grid_fast_sim_flyable_motor_with_andor_point(
-    andor2_point: SingleTriggerDetector, sim_motor_fly: XYZStage, RE: RunEngine
+    andor2_point: SingleTriggerDetector, sim_motor_delay: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
 
@@ -500,10 +487,10 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
         grid_fast_scan(
             dets=[andor2_point],
             count_time=count_time,
-            step_motor=sim_motor_fly.x,
+            step_motor=sim_motor_delay.x,
             step_start=step_start,
             step_end=step_end,
-            scan_motor=sim_motor_fly.y,
+            scan_motor=sim_motor_delay.y,
             scan_start=1,
             scan_end=2,
             plan_time=plan_time,
@@ -525,7 +512,7 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
 
 
 async def test_grid_fast_sim_flyable_motor(
-    andor2: Andor2Detector, sim_motor_fly: XYZStage, RE: RunEngine
+    andor2: Andor2Detector, sim_motor_delay: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
 
@@ -541,10 +528,10 @@ async def test_grid_fast_sim_flyable_motor(
         grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
-            step_motor=sim_motor_fly.x,
+            step_motor=sim_motor_delay.x,
             step_start=step_start,
             step_end=step_end,
-            scan_motor=sim_motor_fly.y,
+            scan_motor=sim_motor_delay.y,
             scan_start=1,
             scan_end=2,
             plan_time=plan_time,
