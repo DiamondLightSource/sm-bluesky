@@ -2,7 +2,6 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from bluesky.plan_stubs import (
-    abs_set,
     move_per_step,
     trigger_and_read,
 )
@@ -71,9 +70,6 @@ def analyser_nd_step(
     for analyser_det in analyser_detectors:
         dets = [analyser_det] + list(other_detectors) + list(motors)
 
-        # This is a work around until we can find a way to get the energy sources to use
-        # the prepare method.
-        yield from abs_set(analyser_det.driver, analyser_det.region)
         LOGGER.info(f"Scanning region {analyser_det.region.name}.")
         yield from trigger_and_read(
             dets,
