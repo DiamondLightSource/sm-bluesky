@@ -66,7 +66,6 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
         *args,
         **kwargs,
     ):
-        print(motor.name)
         ps = PeakStats(
             f"{motor.name}",
             f"{det.name}-{detname_suffix}",
