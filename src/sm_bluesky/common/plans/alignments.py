@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from enum import Enum
 from functools import wraps
-from typing import TypeVar, cast
+from typing import ParamSpec, TypeVar
 
 from bluesky import preprocessors as bpp
 from bluesky.callbacks.fitting import PeakStats
@@ -38,10 +38,14 @@ class StatPosition(tuple, Enum):
     D_MAX = ("derivative_stats", "max")
 
 
-TCallable = TypeVar("TCallable", bound=Callable)
+P = ParamSpec("P")
+T = TypeVar("T")
+TCallable = Callable[
+    P, T
+]  # Type for callable functions with parameters P and return type T
 
 
-def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
+def scan_and_move_to_fit_pos(func: TCallable) -> TCallable:
     """
     Wrapper to add a PeakStats callback before performing a scan
     and move to the fitted position after the scan.
@@ -57,7 +61,7 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
         The wrapped scan function.
     """
 
-    @wraps(funcs)
+    @wraps(func)
     def inner(
         det: StandardReadable,
         motor: Motor,
@@ -65,14 +69,14 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
         detname_suffix: str,
         *args,
         **kwargs,
-    ):
+    ) -> MsgGenerator:
         ps = PeakStats(
             f"{motor.name}",
             f"{det.name}-{detname_suffix}",
             calc_derivative_and_stats=True,
         )
         yield from bpp.subs_wrapper(
-            funcs(det, motor, fitted_loc, detname_suffix, *args, **kwargs),
+            func(det, motor, fitted_loc, detname_suffix, *args, **kwargs),
             ps,
         )
         peak_position = get_stat_loc(ps, fitted_loc)
@@ -80,7 +84,7 @@ def scan_and_move_to_fit_pos(funcs: TCallable) -> TCallable:
         LOGGER.info(f"Fit info {ps}")
         yield from abs_set(motor, peak_position, wait=True)
 
-    return cast(TCallable, inner)
+    return inner
 
 
 @plan
