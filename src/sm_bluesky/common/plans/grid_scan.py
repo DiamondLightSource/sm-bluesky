@@ -33,7 +33,7 @@ class CleanUpArgs(TypedDict, total=False):
 
 @plan
 @attach_data_session_metadata_decorator()
-def stxm_step(
+def grid_step_scan(
     dets: Sequence[AreaDetector | Readable],
     count_time: float,
     x_step_motor: Motor,
@@ -129,7 +129,7 @@ def stxm_step(
 
 @plan
 @attach_data_session_metadata_decorator()
-def stxm_fast(
+def grid_fast_scan(
     dets: list[AreaDetector | Readable],
     count_time: float,
     step_motor: Motor,
@@ -146,7 +146,7 @@ def stxm_fast(
     md: dict | None = None,
 ) -> MsgGenerator:
     """
-    This initiates an STXM scan, targeting a maximum scan speed of around 10Hz.
+    This initiates an 2 axis scan, targeting a maximum scan speed of around 10Hz.
     It calculates the number of data points achievable based on the detector's count
     time. If no step size is provided, the software aims for a uniform distribution
     of points across the scan area. The scanning motor's speed is then determined using

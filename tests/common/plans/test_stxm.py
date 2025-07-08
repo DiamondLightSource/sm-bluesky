@@ -3,30 +3,17 @@ from math import floor
 
 import pytest
 from bluesky.run_engine import RunEngine
-from dodal.devices.motors import XYZPositioner
+from dodal.devices.motors import XYZStage
 from numpy import random
-from ophyd_async.core import (
-    init_devices,
-)
 from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.testing import assert_emitted, set_mock_value
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
-from sm_bluesky.common.plans.stxm import stxm_fast, stxm_step
-
-from ...sim_devices import SimStage
-
-
-@pytest.fixture
-async def sim_motor_fly():
-    async with init_devices():
-        sim_motor_fly = SimStage(name="sim_motor_fly", instant=False)
-
-    yield sim_motor_fly
+from sm_bluesky.common.plans.grid_scan import grid_fast_scan, grid_step_scan
 
 
 async def test_stxm_fast_zero_velocity_fail(
-    andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ):
     plan_time = 10
     count_time = 0.2
@@ -40,7 +27,7 @@ async def test_stxm_fast_zero_velocity_fail(
 
     with pytest.raises(ValueError):
         RE(
-            stxm_fast(
+            grid_fast_scan(
                 dets=[andor2],
                 count_time=count_time,
                 step_motor=sim_motor.x,
@@ -58,9 +45,7 @@ async def test_stxm_fast_zero_velocity_fail(
     assert_emitted(docs)
 
 
-async def test_stxm_fast(
-    andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine
-):
+async def test_stxm_fast(andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine):
     docs = defaultdict(list)
 
     def capture_emitted(name, doc):
@@ -74,7 +59,7 @@ async def test_stxm_fast(
     num_of_step = step_size_to_step_num(step_start, step_end, step_size)
 
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[sim_motor.z, andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -101,7 +86,7 @@ async def test_stxm_fast(
 
 
 async def test_stxm_fast_with_too_little_time_stxm_become_1d(
-    andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
 
@@ -114,7 +99,7 @@ async def test_stxm_fast_with_too_little_time_stxm_become_1d(
     step_end = 3
 
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[sim_motor.z, andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -140,7 +125,7 @@ async def test_stxm_fast_with_too_little_time_stxm_become_1d(
 
 
 async def test_stxm_fast_with_too_little_time_stxm_cannot_have_any_points(
-    andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
 
@@ -157,7 +142,7 @@ async def test_stxm_fast_with_too_little_time_stxm_cannot_have_any_points(
     set_mock_value(sim_motor.y.acceleration_time, 0)
     with pytest.raises(ValueError):
         RE(
-            stxm_fast(
+            grid_fast_scan(
                 dets=[sim_motor.z, andor2],
                 count_time=count_time,
                 step_motor=sim_motor.x,
@@ -175,7 +160,7 @@ async def test_stxm_fast_with_too_little_time_stxm_cannot_have_any_points(
 
 
 async def test_stxm_fast_with_speed_capped(
-    andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
 
@@ -192,7 +177,7 @@ async def test_stxm_fast_with_speed_capped(
         sim_motor.y.max_velocity, 1
     )  # running at half the speed that required
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -220,7 +205,7 @@ async def test_stxm_fast_with_speed_capped(
 
 @pytest.mark.parametrize("execution_number", range(1))
 async def test_stxm_fast_unknown_step_snake(
-    andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine, execution_number
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
 ):
     docs = defaultdict(list)
 
@@ -260,7 +245,7 @@ async def test_stxm_fast_unknown_step_snake(
         + 10  # extra overhead poor plan time guess
     )
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -282,7 +267,7 @@ async def test_stxm_fast_unknown_step_snake(
 
 @pytest.mark.parametrize("execution_number", range(1))
 async def test_stxm_fast_unknown_step_no_snake(
-    andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine, execution_number
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
 ):
     docs = defaultdict(list)
 
@@ -323,7 +308,7 @@ async def test_stxm_fast_unknown_step_no_snake(
     )
     docs = defaultdict(list)
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -344,7 +329,7 @@ async def test_stxm_fast_unknown_step_no_snake(
 
 @pytest.mark.parametrize("execution_number", range(1))
 async def test_stxm_fast_unknown_step_snake_with_point_correction(
-    andor2: Andor2Detector, sim_motor: XYZPositioner, RE: RunEngine, execution_number
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
 ):
     docs = defaultdict(list)
 
@@ -378,7 +363,7 @@ async def test_stxm_fast_unknown_step_snake_with_point_correction(
 
     docs = defaultdict(list)
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
             step_motor=sim_motor.x,
@@ -401,7 +386,7 @@ async def test_stxm_fast_unknown_step_snake_with_point_correction(
 
 
 async def test_stxm_step_with_home(
-    RE: RunEngine, sim_motor_step: XYZPositioner, andor2: Andor2Detector
+    RE: RunEngine, sim_motor_step: XYZStage, andor2: Andor2Detector
 ):
     docs = defaultdict(list)
 
@@ -412,7 +397,7 @@ async def test_stxm_step_with_home(
     await sim_motor_step.y.set(-2)
 
     RE(
-        stxm_step(
+        grid_step_scan(
             dets=[andor2],
             count_time=0.2,
             x_step_motor=sim_motor_step.x,
@@ -444,7 +429,7 @@ async def test_stxm_step_with_home(
 
 async def test_stxm_step_without_home_with_readable(
     RE: RunEngine,
-    sim_motor_step: XYZPositioner,
+    sim_motor_step: XYZStage,
 ):
     docs = defaultdict(list)
 
@@ -456,7 +441,7 @@ async def test_stxm_step_without_home_with_readable(
     y_step_end = 1
     x_step_end = 2
     RE(
-        stxm_step(
+        grid_step_scan(
             dets=[sim_motor_step.z],
             count_time=0.2,
             x_step_motor=sim_motor_step.x,
@@ -484,7 +469,7 @@ async def test_stxm_step_without_home_with_readable(
 
 
 async def test_stxm_fast_sim_flyable_motor(
-    andor2: Andor2Detector, sim_motor_fly: XYZPositioner, RE: RunEngine
+    andor2: Andor2Detector, sim_motor_delay: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
 
@@ -497,13 +482,13 @@ async def test_stxm_fast_sim_flyable_motor(
     step_start = -0.5
     step_end = 0.5
     RE(
-        stxm_fast(
+        grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
-            step_motor=sim_motor_fly.x,
+            step_motor=sim_motor_delay.x,
             step_start=step_start,
             step_end=step_end,
-            scan_motor=sim_motor_fly.y,
+            scan_motor=sim_motor_delay.y,
             scan_start=1,
             scan_end=2,
             plan_time=plan_time,

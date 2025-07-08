@@ -1,10 +1,10 @@
 # Changes here will be overwritten by Copier
-_commit: 3.0.0
-_src_path: gh:DiamondLightSource/python-copier-template
+_commit: 4.1.0
+_src_path: https://github.com/DiamondLightSource/python-copier-template
 author_email: raymond.fan@diamond.ac.uk
 author_name: Raymond Fan
 component_lifecycle: production
-component_owner: ""
+component_owner: ''
 component_type: library
 description: Bluesky code for Diamond's surface and magnetic materials beamline.
 distribution_name: sm_bluesky
