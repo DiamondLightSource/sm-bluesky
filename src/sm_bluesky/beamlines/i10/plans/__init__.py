@@ -2,6 +2,7 @@
 
 from .align_slits import align_dsd, align_dsu, move_dsd, move_dsu
 from .centre_direct_beam import (
+    beam_on_pin,
     centre_alpha,
     centre_det_angles,
     centre_tth,
@@ -29,4 +30,5 @@ __all__ = [
     "centre_tth",
     "centre_det_angles",
     "move_pin_origin",
+    "beam_on_pin",
 ]

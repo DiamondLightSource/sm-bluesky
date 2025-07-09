@@ -1,23 +1,32 @@
 from collections import defaultdict
 from unittest.mock import Mock, call, patch
 
+import numpy as np
+import pytest
 from bluesky.run_engine import RunEngine
 from bluesky.simulators import RunEngineSimulator
 from dodal.beamlines.i10 import diffractometer, sample_stage
+from dodal.devices.i10.mirrors import PiezoMirror
+from dodal.devices.motors import XYZStage
+from ophyd_async.testing import callback_on_mock_put, set_mock_value
 
 from sm_bluesky.beamlines.i10.configuration.default_setting import (
     RASOR_DEFAULT_DET,
     RASOR_DEFAULT_DET_NAME_EXTENSION,
 )
 from sm_bluesky.beamlines.i10.plans import (
+    beam_on_pin,
     centre_alpha,
     centre_det_angles,
     centre_tth,
     move_pin_origin,
 )
-from sm_bluesky.common.plans import StatPosition
+from sm_bluesky.common.plans import (
+    StatPosition,
+)
 
-from ....helpers import check_msg_set, check_msg_wait
+from ....helpers import check_msg_set, check_msg_wait, gaussian, step_function
+from ....sim_devices import sim_detector
 
 docs = defaultdict(list)
 
@@ -102,3 +111,58 @@ def test_move_pin_origin_default_without_wait():
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().y, value=0)
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().z, value=0)
     assert len(msgs) == 1
+
+
+@pytest.mark.parametrize(
+    "test_input, expected_centre",
+    [
+        (
+            [5.22, 10.2, 100, 1.25, -3.25, 121],
+            [6, -2.1],
+        ),
+    ],
+)
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.sample_stage")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.focusing_mirror")
+async def test_beam_on_pin(
+    focusing_mirror: Mock,
+    sample_stage: Mock,
+    RE: RunEngine,
+    sim_motor_step: XYZStage,
+    fake_detector: sim_detector,
+    fake_mirror: PiezoMirror,
+    test_input,
+    expected_centre,
+):
+    sample_stage.return_value = sim_motor_step
+    x_data = np.linspace(test_input[3], test_input[4], test_input[5] + 1, endpoint=True)
+    y_data = step_function(x_data, expected_centre[1])
+    rbv_mocks = Mock()
+    y_data = np.append(y_data, [0])
+    y_data = np.array(y_data, dtype=np.float64)
+    rbv_mocks.get.side_effect = y_data
+    callback_on_mock_put(
+        sim_motor_step.y.user_setpoint,
+        lambda *_, **__: set_mock_value(fake_detector.value, value=rbv_mocks.get()),
+    )
+
+    focusing_mirror.return_value = fake_mirror
+    m_x_data = np.linspace(test_input[0], test_input[1], test_input[2], endpoint=True)
+    m_y_data = gaussian(x=m_x_data, mu=expected_centre[0], sig=0.5) * -1
+    m_y_data = np.append(m_y_data, [0])
+    m_y_data = np.array(m_y_data, dtype=np.float64)
+    m_rbv_mocks = Mock()
+    m_rbv_mocks.get.side_effect = m_y_data
+
+    callback_on_mock_put(
+        fake_mirror.fine_pitch,
+        lambda *_, **__: set_mock_value(fake_detector.value, value=m_rbv_mocks.get()),
+    )
+
+    RE(beam_on_pin(fake_detector, "value", *test_input))
+    assert await sim_motor_step.y.user_setpoint.get_value() == pytest.approx(
+        expected_centre[1], abs=0.1
+    )
+    assert await fake_mirror.fine_pitch.get_value() == pytest.approx(
+        expected_centre[0], abs=0.5
+    )
