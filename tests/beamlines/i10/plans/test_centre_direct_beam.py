@@ -1,11 +1,10 @@
 from collections import defaultdict
 from unittest.mock import Mock, call, patch
 
-import numpy as np
 import pytest
 from bluesky.run_engine import RunEngine
 from bluesky.simulators import RunEngineSimulator
-from dodal.beamlines.i10 import diffractometer, sample_stage
+from dodal.beamlines.i10 import Diffractometer, diffractometer, sample_stage
 from dodal.devices.i10.mirrors import PiezoMirror
 from dodal.devices.motors import XYZStage
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
@@ -20,6 +19,9 @@ from sm_bluesky.beamlines.i10.plans import (
     centre_det_angles,
     centre_tth,
     move_pin_origin,
+)
+from sm_bluesky.beamlines.i10.plans.centre_direct_beam import (
+    beam_on_centre_diffractometer,
 )
 from sm_bluesky.common.plans import (
     StatPosition,
@@ -59,7 +61,7 @@ async def test_centre_tth(
 
 
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.step_scan_and_move_fit")
-async def test_centre_alpha(fake_step_scan_and_move_fit: Mock, RE: RunEngine, fake_i10):
+async def test_centre_alpha(fake_step_scan_and_move_fit: Mock, RE: RunEngine):
     RE(centre_alpha())
 
     fake_step_scan_and_move_fit.assert_called_once_with(
@@ -147,12 +149,11 @@ async def test_beam_on_pin(
     y_data = generate_test_data(
         start=test_input[3],
         end=test_input[4],
-        num=test_input[5] + 1,
-        type=math_functions.step_function,
+        num=test_input[5] + 2,
+        func=math_functions.step_function,
         centre=expected_centre[1],
     )
-    y_data = np.append(y_data, [0])
-    y_data = np.array(y_data, dtype=np.float64)
+
     rbv_mocks = Mock()
     rbv_mocks.get.side_effect = y_data
     callback_on_mock_put(
@@ -166,13 +167,10 @@ async def test_beam_on_pin(
         start=test_input[0],
         end=test_input[1],
         num=test_input[2] + 1,
-        type=math_functions.gaussian,
+        func=math_functions.gaussian,
         centre=expected_centre[0],
         sig=0.1,
     )
-
-    m_y_data = np.append(m_y_data, [0])
-    m_y_data = np.array(m_y_data, dtype=np.float64)
     m_rbv_mocks = Mock()
     m_rbv_mocks.get.side_effect = m_y_data
 
@@ -188,3 +186,33 @@ async def test_beam_on_pin(
     assert await fake_mirror.fine_pitch.get_value() == pytest.approx(
         expected_centre[0], abs=0.2
     )
+
+
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.focusing_mirror")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.sample_stage")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.diffractometer")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.beam_on_pin")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.centre_det_angles")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.move_pin_origin")
+def test_beam_on_centre_diffractometer_runs(
+    move_pin_origin: Mock,
+    centre_det_angles: Mock,
+    beam_on_pin: Mock,
+    diffractometer: Mock,
+    focusing_mirror: Mock,
+    sample_stage: Mock,
+    sim_motor_step: XYZStage,
+    fake_mirror: PiezoMirror,
+    fake_detector,
+    fake_diffractometer: Diffractometer,
+    RE: RunEngine,
+):
+    # Patch all yield from calls to just record the call
+    sample_stage.return_value = sim_motor_step
+    focusing_mirror.return_value = fake_mirror
+    diffractometer.return_value = fake_diffractometer
+    RE(beam_on_centre_diffractometer(fake_detector, "value"))
+
+    assert move_pin_origin.call_count == 1
+    assert centre_det_angles.call_count == 1
+    assert beam_on_pin.call_count == 1

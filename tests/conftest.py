@@ -12,6 +12,9 @@ from dodal.common.visit import (
     StaticVisitPathProvider,
 )
 from dodal.devices.i10.mirrors import PiezoMirror
+from dodal.devices.i10.rasor.rasor_motors import (
+    Diffractometer,
+)
 from dodal.devices.motors import XYZStage
 from dodal.utils import make_all_devices
 from ophyd_async.core import (
@@ -147,7 +150,27 @@ async def sim_motor_delay():
 async def fake_mirror():
     async with init_devices(mock=True):
         fake_mirror = PiezoMirror(prefix="007")
+    set_mock_value(fake_mirror.yaw.velocity, 88.88)
+    set_mock_value(fake_mirror.pitch.velocity, 88.88)
+    set_mock_value(fake_mirror.roll.velocity, 88.88)
+    set_mock_value(fake_mirror.x.velocity, 88.88)
+    set_mock_value(fake_mirror.y.velocity, 88.88)
+    set_mock_value(fake_mirror.z.velocity, 88.88)
+
     yield fake_mirror
+
+
+@pytest.fixture
+async def fake_diffractometer():
+    async with init_devices(mock=True):
+        fake_diffractometer = Diffractometer(
+            prefix="BLxxI-DI-01", name="fake_diffractometer"
+        )
+    set_mock_value(fake_diffractometer.th.velocity, 88.88)
+    set_mock_value(fake_diffractometer.th.high_limit_travel, 888)
+    set_mock_value(fake_diffractometer.th.low_limit_travel, -888)
+
+    yield fake_diffractometer
 
 
 @pytest.fixture

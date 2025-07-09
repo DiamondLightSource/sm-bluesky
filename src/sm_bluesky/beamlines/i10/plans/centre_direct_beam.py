@@ -116,7 +116,6 @@ def beam_on_centre_diffractometer(
     yield from beam_on_pin(det, det_name)
     y_0 = yield from bps.rd(sample_stage().y)
     yield from bps.abs_set(diffractometer().th, 180, wait=True)
-    yield from move_pin_origin()
     y_180 = yield from bps.rd(sample_stage().y)
     middle_y = (y_180 + y_0) / 2.0
     while abs(middle_y - y_180) > 0.08:
