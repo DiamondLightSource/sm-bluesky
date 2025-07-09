@@ -4,7 +4,7 @@ from .helper_functions import (
     check_msg_wait,
     check_mv_wait,
 )
-from .math_function import gaussian, step_function
+from .math_function import gaussian, generate_test_data, math_functions, step_function
 
 __all__ = [
     "assert_message_and_return_remaining",
@@ -13,4 +13,6 @@ __all__ = [
     "check_mv_wait",
     "gaussian",
     "step_function",
+    "generate_test_data",
+    "math_functions",
 ]

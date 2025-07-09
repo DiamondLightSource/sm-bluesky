@@ -25,7 +25,12 @@ from sm_bluesky.common.plans import (
     StatPosition,
 )
 
-from ....helpers import check_msg_set, check_msg_wait, gaussian, step_function
+from ....helpers import (
+    check_msg_set,
+    check_msg_wait,
+    generate_test_data,
+    math_functions,
+)
 from ....sim_devices import sim_detector
 
 docs = defaultdict(list)
@@ -117,8 +122,12 @@ def test_move_pin_origin_default_without_wait():
     "test_input, expected_centre",
     [
         (
-            [5.22, 10.2, 100, 1.25, -3.25, 121],
+            [5.22, 10.2, 51, 1.25, -3.25, 51],
             [6, -2.1],
+        ),
+        (
+            [-3.22, 3.2, 51, -1.25, -3.25, 51],
+            [1.7, -2.1],
         ),
     ],
 )
@@ -135,11 +144,16 @@ async def test_beam_on_pin(
     expected_centre,
 ):
     sample_stage.return_value = sim_motor_step
-    x_data = np.linspace(test_input[3], test_input[4], test_input[5] + 1, endpoint=True)
-    y_data = step_function(x_data, expected_centre[1])
-    rbv_mocks = Mock()
+    y_data = generate_test_data(
+        start=test_input[3],
+        end=test_input[4],
+        num=test_input[5] + 1,
+        type=math_functions.step_function,
+        centre=expected_centre[1],
+    )
     y_data = np.append(y_data, [0])
     y_data = np.array(y_data, dtype=np.float64)
+    rbv_mocks = Mock()
     rbv_mocks.get.side_effect = y_data
     callback_on_mock_put(
         sim_motor_step.y.user_setpoint,
@@ -147,8 +161,16 @@ async def test_beam_on_pin(
     )
 
     focusing_mirror.return_value = fake_mirror
-    m_x_data = np.linspace(test_input[0], test_input[1], test_input[2], endpoint=True)
-    m_y_data = gaussian(x=m_x_data, mu=expected_centre[0], sig=0.5) * -1
+
+    m_y_data = -1 * generate_test_data(
+        start=test_input[0],
+        end=test_input[1],
+        num=test_input[2] + 1,
+        type=math_functions.gaussian,
+        centre=expected_centre[0],
+        sig=0.1,
+    )
+
     m_y_data = np.append(m_y_data, [0])
     m_y_data = np.array(m_y_data, dtype=np.float64)
     m_rbv_mocks = Mock()
@@ -164,5 +186,5 @@ async def test_beam_on_pin(
         expected_centre[1], abs=0.1
     )
     assert await fake_mirror.fine_pitch.get_value() == pytest.approx(
-        expected_centre[0], abs=0.5
+        expected_centre[0], abs=0.2
     )
