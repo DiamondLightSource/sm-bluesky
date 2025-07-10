@@ -15,7 +15,7 @@ from sm_bluesky.common.plans import (
     step_scan_and_move_fit,
 )
 
-from ...helpers import gaussian
+from ...helpers import gaussian, step_function
 from ...sim_devices import sim_detector
 
 docs = defaultdict(list)
@@ -87,10 +87,6 @@ async def test_scan_and_move_cen_success_with_gaussian(
     assert await sim_motor_step.x.user_setpoint.get_value() == pytest.approx(
         expected_centre, 0.01
     )
-
-
-def step_function(x_data, step_centre):
-    return [0 if x < step_centre else 1 for x in x_data]
 
 
 @pytest.mark.parametrize(
