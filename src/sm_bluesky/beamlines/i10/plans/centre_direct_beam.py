@@ -140,7 +140,7 @@ def beam_on_centre_diffractometer(
     pin_clear_beam_position: float = -2.0,
     pin_half_cut: float = 1.0,
 ) -> MsgGenerator:
-    """Move the the beam centre of diffractometer by adjusting
+    """Move the beam centre of diffractometer by adjusting
      the focusing mirror pitch and height.
 
     Parameters
