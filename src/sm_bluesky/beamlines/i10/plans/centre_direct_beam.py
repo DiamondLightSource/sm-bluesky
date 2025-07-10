@@ -108,18 +108,30 @@ def beam_on_pin(
 def beam_on_centre_diffractometer(
     det: StandardReadable = RASOR_DEFAULT_DET,
     det_name: str = RASOR_DEFAULT_DET_NAME_EXTENSION,
+    mirror_height_adjust: float = 0.001,
+    mirror_diff_acceptance: float = 0.08,
+    pin_clear_beam_position: float = -2.0,
 ) -> MsgGenerator:
     """Move the pin hole to the centre of the beam."""
     yield from move_pin_origin()
-    yield from bps.abs_set(sample_stage().y, -2.0, wait=True)
+    yield from bps.abs_set(sample_stage().y, pin_clear_beam_position, wait=True)
     yield from centre_det_angles(det, det_name)
     yield from beam_on_pin(det, det_name)
     y_0 = yield from bps.rd(sample_stage().y)
     yield from bps.abs_set(diffractometer().th, 180, wait=True)
+    yield from beam_on_pin(det, det_name)
     y_180 = yield from bps.rd(sample_stage().y)
     middle_y = (y_180 + y_0) / 2.0
-    while abs(middle_y - y_180) > 0.08:
-        yield from bps.rel_set(focusing_mirror().y, 0.001 * middle_y, wait=True)
+    cnt = 0
+    while abs(middle_y - y_180) > mirror_diff_acceptance:
+        yield from bps.rel_set(
+            focusing_mirror().y, mirror_height_adjust * (y_180 - middle_y), wait=True
+        )
         yield from beam_on_pin(det, det_name)
         y_180 = yield from bps.rd(sample_stage().y)
+        cnt += 1
+        if cnt > 5:
+            raise RuntimeError(
+                "Failed to centre the pin hole on the beam after 5 iterations."
+            )
     yield from bps.abs_set(diffractometer().th, 0, wait=True)

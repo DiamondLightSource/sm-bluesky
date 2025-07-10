@@ -1,6 +1,7 @@
 from collections import defaultdict
-from unittest.mock import Mock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
+import numpy as np
 import pytest
 from bluesky.run_engine import RunEngine
 from bluesky.simulators import RunEngineSimulator
@@ -188,31 +189,91 @@ async def test_beam_on_pin(
     )
 
 
+@pytest.mark.parametrize(
+    "test_y_positions",
+    [
+        (
+            [
+                -2.0,
+                1.0,
+                0.7,
+                0.5,
+                0.3,
+                0.1,
+                -0.5,
+            ]
+        ),
+        (
+            [
+                -2.0,
+                5.0,
+                0.7,
+                0.5,
+                1.5,
+            ]
+        ),
+    ],
+)
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.focusing_mirror")
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.sample_stage")
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.diffractometer")
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.beam_on_pin")
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.centre_det_angles")
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.move_pin_origin")
-def test_beam_on_centre_diffractometer_runs(
+async def test_beam_on_centre_diffractometer_runs(
     move_pin_origin: Mock,
     centre_det_angles: Mock,
     beam_on_pin: Mock,
     diffractometer: Mock,
-    focusing_mirror: Mock,
     sample_stage: Mock,
+    focusing_mirror: Mock,
     sim_motor_step: XYZStage,
     fake_mirror: PiezoMirror,
     fake_detector,
     fake_diffractometer: Diffractometer,
+    test_y_positions: list[float],
     RE: RunEngine,
 ):
-    # Patch all yield from calls to just record the call
     sample_stage.return_value = sim_motor_step
+    sample_stage().y.user_readback.get_value = AsyncMock()
+    print(test_y_positions)
+    sample_stage().y.user_readback.get_value.side_effect = test_y_positions
     focusing_mirror.return_value = fake_mirror
     diffractometer.return_value = fake_diffractometer
     RE(beam_on_centre_diffractometer(fake_detector, "value"))
 
     assert move_pin_origin.call_count == 1
     assert centre_det_angles.call_count == 1
-    assert beam_on_pin.call_count == 1
+    assert beam_on_pin.call_count == len(test_y_positions)
+
+
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.focusing_mirror")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.sample_stage")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.diffractometer")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.beam_on_pin")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.centre_det_angles")
+@patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.move_pin_origin")
+async def test_beam_on_centre_diffractometer_runs_failed(
+    move_pin_origin: Mock,
+    centre_det_angles: Mock,
+    beam_on_pin: Mock,
+    diffractometer: Mock,
+    sample_stage: Mock,
+    focusing_mirror: Mock,
+    sim_motor_step: XYZStage,
+    fake_mirror: PiezoMirror,
+    fake_detector,
+    fake_diffractometer: Diffractometer,
+    RE: RunEngine,
+):
+    sample_stage.return_value = sim_motor_step
+    sample_stage().y.user_readback.get_value = AsyncMock()
+    test_y_positions = np.random.uniform(-2.0, 5.0, size=10)
+    sample_stage().y.user_readback.get_value.side_effect = test_y_positions
+    focusing_mirror.return_value = fake_mirror
+    diffractometer.return_value = fake_diffractometer
+    with pytest.raises(
+        RuntimeError,
+        match="Failed to centre the pin hole on the beam after 5 iterations.",
+    ):
+        RE(beam_on_centre_diffractometer(fake_detector, "value"))
