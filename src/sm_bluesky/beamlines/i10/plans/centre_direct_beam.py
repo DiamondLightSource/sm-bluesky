@@ -85,9 +85,8 @@ def beam_on_pin(
     sy_num: int = 51,
     pin_half_cut: float = 1.0,
 ) -> MsgGenerator:
-    """Move the pin to the centre of the beam.
-    This plan will move the pin to the centre of the beam by
-    scanning the focusing mirror and the sample stage in y direction.
+    """Move beam onto the pin by scanning
+     the focusing mirror and the sample stage in y direction.
 
     Parameters
     ----------
@@ -141,8 +140,8 @@ def beam_on_centre_diffractometer(
     pin_clear_beam_position: float = -2.0,
     pin_half_cut: float = 1.0,
 ) -> MsgGenerator:
-    """Move the pin to the centre of the beam
-    by adjusting the focusing mirror and the sample stage in y direction.
+    """Move the the beam centre of diffractometer by adjusting
+     the focusing mirror pitch and height.
 
     Parameters
     ----------
