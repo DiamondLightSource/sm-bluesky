@@ -88,6 +88,7 @@ def beam_on_pin(
     """Move the pin to the centre of the beam.
     This plan will move the pin to the centre of the beam by
     scanning the focusing mirror and the sample stage in y direction.
+
     Parameters
     ----------
     det : StandardReadable, optional
@@ -118,9 +119,8 @@ def beam_on_pin(
         detname_suffix=det_name,
         fitted_loc=StatPosition.MIN,
     )
-    sy_current = yield from bps.rd(sample_stage().y)
-    sy_start = sy_current - sy_coverage / 2.0
-    sy_end = sy_current + sy_coverage / 2.0
+    sy_start = pin_half_cut - sy_coverage / 2.0
+    sy_end = pin_half_cut + sy_coverage / 2.0
     yield from step_scan_and_move_fit(
         det=det,
         motor=sample_stage().y,
@@ -143,6 +143,7 @@ def beam_on_centre_diffractometer(
 ) -> MsgGenerator:
     """Move the pin to the centre of the beam
     by adjusting the focusing mirror and the sample stage in y direction.
+
     Parameters
     ----------
     det : StandardReadable, optional
