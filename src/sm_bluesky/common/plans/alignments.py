@@ -121,7 +121,7 @@ def step_scan_and_move_fit(
     """
     LOGGER.info(
         f"Step scanning {motor.name} with {det.name}-{detname_suffix}\
-            pro-scan move to {fitted_loc}"
+            post-scan move to {fitted_loc}"
     )
     return scan([det], motor, start, end, num=num)
 

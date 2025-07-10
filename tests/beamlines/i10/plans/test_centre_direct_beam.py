@@ -130,7 +130,7 @@ def test_move_pin_origin_default_without_wait():
         ),
         (
             [-3.22, 3.2, 51, -1.25, -3.25, 51],
-            [1.7, -2.1],
+            [1.7, -3.1],
         ),
     ],
 )
@@ -147,14 +147,17 @@ async def test_beam_on_pin(
     expected_centre,
 ):
     sample_stage.return_value = sim_motor_step
+    pin_half_cut = expected_centre[1] * np.random.uniform(0.8, 1.2)
+    sy_coverage = abs(test_input[4] - test_input[3])
+    sy_start = pin_half_cut - sy_coverage / 2.0
+    sy_end = pin_half_cut + sy_coverage / 2.0
     y_data = generate_test_data(
-        start=test_input[3],
-        end=test_input[4],
+        start=sy_start,
+        end=sy_end,
         num=test_input[5] + 2,
         func=math_functions.step_function,
         centre=expected_centre[1],
     )
-
     rbv_mocks = Mock()
     rbv_mocks.get.side_effect = y_data
     callback_on_mock_put(
@@ -164,9 +167,15 @@ async def test_beam_on_pin(
 
     focusing_mirror.return_value = fake_mirror
 
+    focusing_mirror_pos = expected_centre[0] * np.random.uniform(0.8, 1.2)
+    set_mock_value(fake_mirror.fine_pitch, focusing_mirror_pos)
+    mirror_coverage = abs(test_input[1] - test_input[0])
+    mirror_start = focusing_mirror_pos - mirror_coverage / 2.0
+    mirror_end = focusing_mirror_pos + mirror_coverage / 2.0
+
     m_y_data = -1 * generate_test_data(
-        start=test_input[0],
-        end=test_input[1],
+        start=mirror_start,
+        end=mirror_end,
         num=test_input[2] + 1,
         func=math_functions.gaussian,
         centre=expected_centre[0],
@@ -180,7 +189,17 @@ async def test_beam_on_pin(
         lambda *_, **__: set_mock_value(fake_detector.value, value=m_rbv_mocks.get()),
     )
 
-    RE(beam_on_pin(fake_detector, "value", *test_input))
+    RE(
+        beam_on_pin(
+            fake_detector,
+            "value",
+            pin_half_cut=pin_half_cut,
+            sy_num=test_input[5],
+            sy_coverage=sy_coverage,
+            mirror_coverage=mirror_coverage,
+            mirror_num=test_input[2],
+        )
+    )
     assert await sim_motor_step.y.user_setpoint.get_value() == pytest.approx(
         expected_centre[1], abs=0.1
     )
@@ -274,6 +293,10 @@ async def test_beam_on_centre_diffractometer_runs_failed(
     diffractometer.return_value = fake_diffractometer
     with pytest.raises(
         RuntimeError,
-        match="Failed to centre the pin hole on the beam after 5 iterations.",
+        match="Failed to centre the pin on the beam after 5 iterations.",
     ):
         RE(beam_on_centre_diffractometer(fake_detector, "value"))
+
+    assert move_pin_origin.call_count == 1
+    assert centre_det_angles.call_count == 1
+    assert beam_on_pin.call_count == 8
