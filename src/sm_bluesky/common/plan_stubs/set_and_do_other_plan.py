@@ -30,9 +30,8 @@ def set_and_wait_within_tolerance(
     yield from abs_set(set_signal, value, wait=False)
 
     def inner_plan():
-        set = yield from bps.rd(set_signal)
         readback = yield from bps.rd(readback_signal)
-        while abs(readback - set) > tolerance:
+        while abs(readback - value) > tolerance:
             yield from plan
             readback = yield from bps.rd(readback_signal)
             yield from bps.checkpoint()
