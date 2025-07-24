@@ -42,6 +42,7 @@ async def test_set_and_wait_within_tolerance(
             value=10,
             readback_signal=sim_lakeshore.temperature.user_readback[1],
             tolerance=0.1,
+            plan_parm=[0.0],
         ),
         capture_emitted,
     )
