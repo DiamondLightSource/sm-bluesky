@@ -9,6 +9,7 @@ import pytest
 from bluesky import RunEngine
 from bluesky import plan_stubs as bps
 from bluesky.protocols import Movable, Readable, Triggerable
+from dodal.beamlines import b07, i09
 from dodal.devices.electron_analyser import (
     ElectronAnalyserDetector,
     ElectronAnalyserRegionDetector,
@@ -24,7 +25,7 @@ from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
 from tests.electron_analyser.util import analyser_setup_for_scan
 
 
-@pytest.fixture(params=[VGScientaDetector, SpecsDetector])
+@pytest.fixture(params=[VGScientaDetector[i09.LensMode], SpecsDetector[b07.LensMode]])
 def detector_class(
     request: pytest.FixtureRequest,
 ) -> type[ElectronAnalyserDetector]:

@@ -1,3 +1,5 @@
+from typing import get_args
+
 import pytest
 from bluesky import RunEngine
 from dodal.devices.electron_analyser import ElectronAnalyserDetectorImpl
@@ -32,8 +34,11 @@ async def sim_analyser(
     energy_sources: dict[str, SignalR[float]],
     RE: RunEngine,
 ) -> ElectronAnalyserDetectorImpl:
+    lens_mode_type = get_args(detector_class)[0]
     async with init_devices(mock=True, connect=True):
-        sim_detector = detector_class(prefix="TEST:", energy_sources=energy_sources)
+        sim_detector = detector_class(
+            prefix="TEST:", lens_mode_type=lens_mode_type, energy_sources=energy_sources
+        )
     return sim_detector
 
 
