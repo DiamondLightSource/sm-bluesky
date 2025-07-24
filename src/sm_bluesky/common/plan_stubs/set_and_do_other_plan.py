@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import bluesky.plan_stubs as bps
 from bluesky import preprocessors as bpp
 from bluesky.plan_stubs import abs_set, sleep
@@ -18,11 +20,14 @@ def set_and_wait_within_tolerance(
     value: float,
     tolerance: float,
     readback_signal: Readable | None = None,
-    plan: MsgGenerator | None = None,
+    plan: Callable | None = None,
+    plan_parm: list | None = None,
     final_plan: MsgGenerator | None = None,
 ):
     if plan is None:
-        plan = sleep(1)
+        plan = sleep
+    if plan_parm is None:
+        plan_parm = [1]
     if readback_signal is None:
         readback_signal = set_signal
     if final_plan is None:
@@ -32,7 +37,7 @@ def set_and_wait_within_tolerance(
     def inner_plan():
         readback = yield from bps.rd(readback_signal)
         while abs(readback - value) > tolerance:
-            yield from plan
+            yield from plan(*plan_parm)
             readback = yield from bps.rd(readback_signal)
             yield from bps.checkpoint()
 
