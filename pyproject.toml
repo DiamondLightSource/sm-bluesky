@@ -18,7 +18,7 @@ dependencies = [
     #
     "bluesky",
     "dls-dodal",
-    "ophyd-async[sim] = 0.11",
+    "ophyd-async[sim] == 0.11",
     "scanspec",
 ]
 dynamic = ["version"]
