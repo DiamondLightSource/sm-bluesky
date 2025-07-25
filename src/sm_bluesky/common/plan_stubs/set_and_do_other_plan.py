@@ -1,15 +1,19 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
+from typing import ParamSpec
 
 import bluesky.plan_stubs as bps
 from bluesky import preprocessors as bpp
 from bluesky.plan_stubs import abs_set, sleep
-from bluesky.protocols import Readable
+from bluesky.protocols import Movable, Readable
 from bluesky.utils import MsgGenerator, plan
-from ophyd_async.core import SignalRW
+from ophyd_async.core import SignalDatatypeT
+
+MR = type("MR", (Movable, Readable), {"MR": "MR"})
+P = ParamSpec("P")
 
 
 def set_setpoint_to_readback(
-    set_signal: SignalRW, readback_signal: Readable
+    set_signal: Movable[SignalDatatypeT], readback_signal: Readable[SignalDatatypeT]
 ) -> MsgGenerator:
     """
     Set the set_signal to the current value of readback_signal and wait for completion.
@@ -20,13 +24,14 @@ def set_setpoint_to_readback(
 
 @plan
 def set_and_wait_within_tolerance(
-    set_signal: SignalRW,
+    set_signal: MR,
     value: float,
     tolerance: float,
     readback_signal: Readable | None = None,
-    plan: Callable[..., MsgGenerator] | None = None,
-    plan_parm: Sequence | None = None,
+    plan: Callable[P, MsgGenerator] = sleep,
     final_plan: MsgGenerator | None = None,
+    *args: P.args,
+    **kwargs: P.kwargs,
 ) -> MsgGenerator:
     """
     Set a signal to a value and wait until the readback is within a given tolerance.
@@ -43,21 +48,18 @@ def set_and_wait_within_tolerance(
     readback_signal : Readable, optional
         Signal to read back (defaults to set_signal).
     plan : Callable[..., MsgGenerator], optional
-        Plan to run between checks (defaults to sleep).
-    plan_parm : Sequence, optional
-        Parameters for the plan (defaults to [1]).
+        Plan to run between checks (defaults to sleep, require time as args).
     final_plan : MsgGenerator, optional
         Plan to run after tolerance is reached (defaults to set_setpoint_to_readback).
+    args and kwargs:
+        Plans parameters.
 
     Returns
     -------
     MsgGenerator
         Bluesky plan generator.
     """
-    if plan is None:
-        plan = sleep
-    if plan_parm is None:
-        plan_parm = [1]
+
     if readback_signal is None:
         readback_signal = set_signal
     if final_plan is None:
@@ -70,7 +72,7 @@ def set_and_wait_within_tolerance(
             readback = yield from bps.rd(readback_signal)
             if abs(readback - value) <= tolerance:
                 break
-            yield from plan(*plan_parm)
+            yield from plan(*args, **kwargs)
             yield from bps.checkpoint()
 
     yield from bpp.finalize_wrapper(
