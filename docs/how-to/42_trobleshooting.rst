@@ -19,11 +19,11 @@ The Nexus writer is not creating a .nxs file.
 - Verify that the RabbitMQ configuration is correct and able to handle messages from BlueAPI.
 - Add detectors as metadata so that the nexus-file-converter can identify them, rather than relying on discovery from the data stream.
 
-.. literalinclude:: ../../src/sm_bluesky/common/plans/fast_scan.py
-    :start-at: md["detectors"] = [det.name for det in dets]
-    :end-at: def inner_fast_scan_grid
+.. code-block:: python
 
-
+    md["detectors"] = [det.name for det in dets]
+    md["motors"] = [scan_motor.name, step_motor.name]
+    
 Common Issues
 ~~~~~~~~~~~~~
 
