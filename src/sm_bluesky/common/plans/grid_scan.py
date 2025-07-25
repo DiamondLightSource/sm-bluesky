@@ -231,8 +231,6 @@ def grid_fast_scan(
         f"Step size = {ideal_step_size}, {scan_motor.name}: velocity = {velocity}, "
         f"number of steps = {num_of_step}."
     )
-    if isinstance(main_det, AreaDetector | SingleTriggerDetector):
-        yield from set_area_detector_acquire_time(det=main_det, acquire_time=count_time)
     yield from finalize_wrapper(
         plan=fast_scan_grid(
             dets,

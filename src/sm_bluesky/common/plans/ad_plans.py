@@ -10,8 +10,8 @@ from ophyd_async.epics.adandor import Andor2Detector
 
 @plan
 @attach_data_session_metadata_decorator()
-def tigger_img(
-    dets: Andor2Detector, value: int, md: dict[str, Any] | None = None
+def trigger_img(
+    dets: Andor2Detector, acquire_time: int, md: dict[str, Any] | None = None
 ) -> MsgGenerator:
     """
     Set the acquire time and trigger the detector to read data.
@@ -30,11 +30,11 @@ def tigger_img(
     """
     if md is None:
         md = {}
-    yield Msg("set", dets.driver.acquire_time, value)
+    yield Msg("set", dets.driver.acquire_time, acquire_time)
 
     @bpp.stage_decorator([dets])
     @bpp.run_decorator(md=md)
-    def innertigger_img():
+    def inner_trigger_img():
         return (yield from bps.trigger_and_read([dets]))
 
-    yield from innertigger_img()
+    yield from inner_trigger_img()

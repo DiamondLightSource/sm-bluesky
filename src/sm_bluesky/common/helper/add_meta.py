@@ -28,12 +28,18 @@ def add_default_metadata(
             if md is None:
                 kwargs["md"] = extra_metadata
             elif isinstance(md, dict):
-                # Avoid mutating the original dict
-                merged = dict(md)
-                merged.update(extra_metadata)
-                kwargs["md"] = merged
+                kwargs["md"] = {**md, **extra_metadata}
+            else:
+                raise ValueError("md is reserved for meta data.")
         elif md is None:
             kwargs["md"] = {}
         return func(*args, **kwargs)
 
     return cast(TCallable, inner)
+
+
+def add_extra_names_to_meta(md: dict, key: str, names: list[str]):
+    if key in md:
+        return md[key] + names
+    md[key] = names
+    return md

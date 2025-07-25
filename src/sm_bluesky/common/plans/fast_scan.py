@@ -13,6 +13,7 @@ from numpy import linspace
 from ophyd_async.core import FlyMotorInfo
 from ophyd_async.epics.motor import Motor
 
+from sm_bluesky.common.helper import add_extra_names_to_meta
 from sm_bluesky.common.plan_stubs import check_within_limit
 from sm_bluesky.log import LOGGER
 
@@ -116,11 +117,10 @@ def fast_scan_grid(
         place holder for meta data for future.
 
     """
-
     if md is None:
         md = {}
-    md["detectors"] = [det.name for det in dets]
-    md["motors"] = [scan_motor.name, step_motor.name]
+    md = add_extra_names_to_meta(md, "detectors", [det.name for det in dets])
+    md = add_extra_names_to_meta(md, "motors", [scan_motor.name, step_motor.name])
 
     @bpp.stage_decorator(dets)
     @bpp.run_decorator(md=md)
