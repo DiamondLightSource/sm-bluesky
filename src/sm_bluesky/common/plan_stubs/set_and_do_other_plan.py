@@ -6,7 +6,7 @@ from bluesky import preprocessors as bpp
 from bluesky.plan_stubs import abs_set, sleep
 from bluesky.protocols import Movable, Readable
 from bluesky.utils import MsgGenerator, plan
-from ophyd_async.core import SignalDatatypeT
+from ophyd_async.core import SignalDatatypeT, SignalRW
 
 MR = type("MR", (Movable, Readable), {"MR": "MR"})
 P = ParamSpec("P")
@@ -24,7 +24,7 @@ def set_setpoint_to_readback(
 
 @plan
 def set_and_wait_within_tolerance(
-    set_signal: MR,
+    set_signal: MR | SignalRW[SignalDatatypeT],
     value: float,
     tolerance: float,
     readback_signal: Readable | None = None,
