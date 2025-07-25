@@ -1,15 +1,26 @@
 from collections import defaultdict
 from unittest.mock import AsyncMock
 
+import pytest
 from bluesky.plans import count
-from bluesky.protocols import Reading
+from bluesky.protocols import Location, Reading
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
+from ophyd_async.core import init_devices
+from ophyd_async.epics.core import epics_signal_rw
 from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.plan_stubs.set_and_do_other_plan import (
     set_and_wait_within_tolerance,
 )
+
+
+@pytest.fixture
+async def sim_rw_signal():
+    async with init_devices(mock=True):
+        sim_rw_signal = epics_signal_rw(float, read_pv="BL007", write_pv="write")
+
+    return sim_rw_signal
 
 
 async def test_set_and_wait_within_tolerance(sim_motor: XYZStage, RE: RunEngine):
@@ -97,6 +108,38 @@ async def test_set_and_wait_within_tolerance_with_count(
         capture_emitted,
     )
     assert sim_motor.x.user_readback.read.call_count == setpoint + 2
+    assert_emitted(
+        docs, start=setpoint, descriptor=setpoint, event=setpoint * 2, stop=setpoint
+    )
+
+
+async def test_set_and_wait_within_tolerance_without_readback(
+    sim_rw_signal, RE: RunEngine
+):
+    docs = defaultdict(list)
+
+    def capture_emitted(name, doc):
+        docs[name].append(doc)
+
+    setpoint = 10
+    sim_rw_signal.locate = AsyncMock()
+    sim_rw_signal.locate.side_effect = [
+        Location(setpoint=setpoint, readback=i)  # type: ignore
+        for i in range(0, 200)
+    ]
+
+    RE(
+        set_and_wait_within_tolerance(
+            set_signal=sim_rw_signal,
+            value=setpoint,
+            tolerance=0.1,
+            plan=count,
+            detectors=[sim_rw_signal],
+            num=2,
+        ),
+        capture_emitted,
+    )
+    assert sim_rw_signal.locate.call_count == setpoint + 2
     assert_emitted(
         docs, start=setpoint, descriptor=setpoint, event=setpoint * 2, stop=setpoint
     )
