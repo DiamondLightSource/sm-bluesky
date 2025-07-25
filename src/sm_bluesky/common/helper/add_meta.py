@@ -40,6 +40,7 @@ def add_default_metadata(
 
 def add_extra_names_to_meta(md: dict, key: str, names: list[str]):
     if key in md:
-        return md[key] + names
+        md[key] = md[key] + names
+        return md
     md[key] = names
     return md

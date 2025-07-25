@@ -98,10 +98,12 @@ def test_add_extra_names_to_meta_with_empty_dictionary():
 
 
 def test_add_extra_names_to_meta_dictionary():
-    md = {"Bound": "Hun"}
-    md = add_extra_names_to_meta(md=md, key="Bound", names=["James"])
+    md = {"Bound": ["Hun"]}
+    print(md)
+    md = add_extra_names_to_meta(md=md, key="Bound", names=["James", "more"])
 
-    assert md == {"Bound": ["Hun", "James"]}
+    print(md)
+    assert md == {"Bound": ["Hun", "James", "more"]}
 
 
 def test_add_extra_names_to_meta_dictionary_fail_value_not_list():
