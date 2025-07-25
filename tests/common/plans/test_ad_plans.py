@@ -28,7 +28,7 @@ async def test_Andor2_tigger_img(
     RE(tigger_img(andor2, 4))
 
     assert (
-        str(static_path_provider._directory_path)
+        f"{static_path_provider._directory_path}/"
         == await andor2.fileio.file_path.get_value()
     )
     assert (
@@ -55,7 +55,7 @@ async def test_Andor2_scan(
     set_mock_value(andor2.driver.detector_state, ADState.IDLE)
     RE(scan([andor2], sim_motor.y, -3, 3, 10))
     assert (
-        str(static_path_provider._directory_path)
+        f"{static_path_provider._directory_path}/"
         == await andor2.fileio.file_path.get_value()
     )
     assert (
