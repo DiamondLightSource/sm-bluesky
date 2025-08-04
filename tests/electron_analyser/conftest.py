@@ -1,4 +1,4 @@
-from typing import get_args
+from typing import get_args, get_origin
 
 import pytest
 from bluesky import RunEngine
@@ -34,11 +34,19 @@ async def sim_analyser(
     energy_sources: dict[str, SignalR[float]],
     RE: RunEngine,
 ) -> ElectronAnalyserDetectorImpl:
-    lens_mode_type = get_args(detector_class)[0]
+    # ToDo - this needs to use what dodal uses once this is implemented
+    # https://github.com/DiamondLightSource/dodal/issues/1396
+    parameters = {
+        "prefix": "TEST:",
+        "lens_mode_type": get_args(detector_class)[0],
+        "psu_mode_type": get_args(detector_class)[1],
+        "energy_sources": energy_sources,
+    }
+    if get_origin(detector_class) is VGScientaDetector:
+        parameters["pass_energy_type"] = get_args(detector_class)[2]
+
     async with init_devices(mock=True, connect=True):
-        sim_detector = detector_class(
-            prefix="TEST:", lens_mode_type=lens_mode_type, energy_sources=energy_sources
-        )
+        sim_detector = detector_class(**parameters)
     return sim_detector
 
 
