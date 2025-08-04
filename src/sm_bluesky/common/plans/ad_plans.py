@@ -1,12 +1,18 @@
+from typing import Any
+
 from blueapi.core import MsgGenerator
 from bluesky import plan_stubs as bps
 from bluesky import preprocessors as bpp
 from bluesky.utils import Msg, plan
+from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
 from ophyd_async.epics.adandor import Andor2Detector
 
 
 @plan
-def tigger_img(dets: Andor2Detector, value: int) -> MsgGenerator:
+@attach_data_session_metadata_decorator()
+def trigger_img(
+    dets: Andor2Detector, acquire_time: int, md: dict[str, Any] | None = None
+) -> MsgGenerator:
     """
     Set the acquire time and trigger the detector to read data.
 
@@ -22,11 +28,13 @@ def tigger_img(dets: Andor2Detector, value: int) -> MsgGenerator:
     MsgGenerator
         A Bluesky generator for triggering the detector.
     """
-    yield Msg("set", dets.driver.acquire_time, value)
+    if md is None:
+        md = {}
+    yield Msg("set", dets.driver.acquire_time, acquire_time)
 
     @bpp.stage_decorator([dets])
-    @bpp.run_decorator()
-    def innertigger_img():
+    @bpp.run_decorator(md=md)
+    def inner_trigger_img():
         return (yield from bps.trigger_and_read([dets]))
 
-    yield from innertigger_img()
+    yield from inner_trigger_img()

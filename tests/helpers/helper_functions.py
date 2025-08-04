@@ -23,8 +23,6 @@ def check_msg_wait(msgs, wait_group, wait=False):
 
 
 def check_mv_wait(msgs, wait_group, timeout=None):
-    print(msgs)
-
     return assert_message_and_return_remaining(
         msgs,
         lambda msg: msg.command == "wait"

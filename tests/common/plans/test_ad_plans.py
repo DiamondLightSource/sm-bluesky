@@ -10,10 +10,10 @@ from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.epics.adcore import ADState
 from ophyd_async.testing import assert_emitted, set_mock_value
 
-from sm_bluesky.common.plans import tigger_img
+from sm_bluesky.common.plans import trigger_img
 
 
-async def test_Andor2_tigger_img(
+async def test_Andor2_trigger_img(
     RE: RunEngine, andor2: Andor2Detector, static_path_provider: StaticPathProvider
 ):
     docs = defaultdict(list)
@@ -25,7 +25,7 @@ async def test_Andor2_tigger_img(
 
     set_mock_value(andor2.driver.detector_state, ADState.IDLE)
 
-    RE(tigger_img(andor2, 4))
+    RE(trigger_img(andor2, 4))
 
     assert (
         f"{static_path_provider._directory_path}/"
