@@ -25,7 +25,12 @@ from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
 from tests.electron_analyser.util import analyser_setup_for_scan
 
 
-@pytest.fixture(params=[VGScientaDetector[i09.LensMode], SpecsDetector[b07.LensMode]])
+@pytest.fixture(
+    params=[
+        VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy],
+        SpecsDetector[b07.LensMode, b07.PsuMode],
+    ]
+)
 def detector_class(
     request: pytest.FixtureRequest,
 ) -> type[ElectronAnalyserDetector]:
