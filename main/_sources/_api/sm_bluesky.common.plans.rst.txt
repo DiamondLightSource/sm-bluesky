@@ -32,6 +32,6 @@
         fast_scan_grid
         grid_fast_scan
         grid_step_scan
-        tigger_img
+        trigger_img
     
     

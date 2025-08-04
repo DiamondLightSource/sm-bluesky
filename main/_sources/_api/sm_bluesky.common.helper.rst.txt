@@ -1,6 +1,7 @@
 ``sm_bluesky.common.helper``
 ============================
         
+        
 
 .. automodule:: sm_bluesky.common.helper
     :members:
@@ -17,5 +18,6 @@
         :nosignatures:
     
         add_default_metadata
+        add_extra_names_to_meta
     
     

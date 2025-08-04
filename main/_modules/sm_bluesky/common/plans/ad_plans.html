@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans.ad_plans &#8212; sm-bluesky 0.0.2.dev111+gb2b1ac3 documentation</title>
+    <title>sm_bluesky.common.plans.ad_plans &#8212; sm-bluesky 0.0.2.dev137+g9641af2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=8372b33e"></script>
+    <script src="../../../../_static/documentation_options.js?v=32e83130"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -442,17 +442,23 @@
                 <article class="bd-article">
                   
   <h1>Source code for sm_bluesky.common.plans.ad_plans</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">blueapi.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">blueapi.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky</span><span class="w"> </span><span class="kn">import</span> <span class="n">plan_stubs</span> <span class="k">as</span> <span class="n">bps</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky</span><span class="w"> </span><span class="kn">import</span> <span class="n">preprocessors</span> <span class="k">as</span> <span class="n">bpp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Msg</span><span class="p">,</span> <span class="n">plan</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.plan_stubs.data_session</span><span class="w"> </span><span class="kn">import</span> <span class="n">attach_data_session_metadata_decorator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.adandor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Andor2Detector</span>
 
 
-<div class="viewcode-block" id="tigger_img">
-<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.tigger_img">[docs]</a>
+<div class="viewcode-block" id="trigger_img">
+<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.trigger_img">[docs]</a>
 <span class="nd">@plan</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">tigger_img</span><span class="p">(</span><span class="n">dets</span><span class="p">:</span> <span class="n">Andor2Detector</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+<span class="nd">@attach_data_session_metadata_decorator</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">trigger_img</span><span class="p">(</span>
+    <span class="n">dets</span><span class="p">:</span> <span class="n">Andor2Detector</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Set the acquire time and trigger the detector to read data.</span>
 
@@ -468,14 +474,16 @@
 <span class="sd">    MsgGenerator</span>
 <span class="sd">        A Bluesky generator for triggering the detector.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">yield</span> <span class="n">Msg</span><span class="p">(</span><span class="s2">&quot;set&quot;</span><span class="p">,</span> <span class="n">dets</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">acquire_time</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">md</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">yield</span> <span class="n">Msg</span><span class="p">(</span><span class="s2">&quot;set&quot;</span><span class="p">,</span> <span class="n">dets</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">acquire_time</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">)</span>
 
     <span class="nd">@bpp</span><span class="o">.</span><span class="n">stage_decorator</span><span class="p">([</span><span class="n">dets</span><span class="p">])</span>
-    <span class="nd">@bpp</span><span class="o">.</span><span class="n">run_decorator</span><span class="p">()</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">innertigger_img</span><span class="p">():</span>
+    <span class="nd">@bpp</span><span class="o">.</span><span class="n">run_decorator</span><span class="p">(</span><span class="n">md</span><span class="o">=</span><span class="n">md</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inner_trigger_img</span><span class="p">():</span>
         <span class="k">return</span> <span class="p">(</span><span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">trigger_and_read</span><span class="p">([</span><span class="n">dets</span><span class="p">]))</span>
 
-    <span class="k">yield from</span> <span class="n">innertigger_img</span><span class="p">()</span></div>
+    <span class="k">yield from</span> <span class="n">inner_trigger_img</span><span class="p">()</span></div>
 
 </pre></div>
 

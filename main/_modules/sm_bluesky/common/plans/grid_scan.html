@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans.grid_scan &#8212; sm-bluesky 0.0.2.dev111+gb2b1ac3 documentation</title>
+    <title>sm_bluesky.common.plans.grid_scan &#8212; sm-bluesky 0.0.2.dev137+g9641af2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=8372b33e"></script>
+    <script src="../../../../_static/documentation_options.js?v=32e83130"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -444,18 +444,16 @@
   <h1>Source code for sm_bluesky.common.plans.grid_scan</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">floor</span><span class="p">,</span> <span class="n">sqrt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TypedDict</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bps</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">bluesky.plans</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">blueapi.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.preprocessors</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">finalize_wrapper</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.preprocessors</span><span class="w"> </span><span class="kn">import</span> <span class="n">finalize_wrapper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">Readable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">plan</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.plan_stubs.data_session</span><span class="w"> </span><span class="kn">import</span> <span class="n">attach_data_session_metadata_decorator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.adcore</span><span class="w"> </span><span class="kn">import</span> <span class="n">AreaDetector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.adcore</span><span class="w"> </span><span class="kn">import</span> <span class="n">AreaDetector</span><span class="p">,</span> <span class="n">SingleTriggerDetector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.motor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Motor</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.math_functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">step_size_to_step_num</span>
@@ -480,7 +478,7 @@
 <span class="nd">@plan</span>
 <span class="nd">@attach_data_session_metadata_decorator</span><span class="p">()</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">grid_step_scan</span><span class="p">(</span>
-    <span class="n">dets</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">AreaDetector</span> <span class="o">|</span> <span class="n">Readable</span><span class="p">],</span>
+    <span class="n">dets</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span>
     <span class="n">count_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">x_step_motor</span><span class="p">:</span> <span class="n">Motor</span><span class="p">,</span>
     <span class="n">x_step_start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -494,82 +492,78 @@
     <span class="n">snake</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Effectively the standard Bluesky grid scan adapted to use step size.</span>
-<span class="sd">    Added a centre option where it will move back to where it was before scan start.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Standard Bluesky grid scan adapted to use step size.</span>
+<span class="sd">    Optionally moves back to the original position after scan.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    det: Sequence[AreaDetector | Readable]</span>
-<span class="sd">        Area detector.</span>
-<span class="sd">    count_time: float</span>
-<span class="sd">        detector count time.</span>
-<span class="sd">    x_step_motor: Motor,</span>
-<span class="sd">        Motors</span>
-<span class="sd">    x_step_start: float,</span>
-<span class="sd">        Starting position for x_step_motor</span>
-<span class="sd">    x_step_size: float</span>
-<span class="sd">        Step size for x motor</span>
-<span class="sd">    step_end: float,</span>
-<span class="sd">        Ending position for x_step_motor</span>
-<span class="sd">    y_step_motor: Motor,</span>
-<span class="sd">        Motor</span>
-<span class="sd">    y_step_start: float,</span>
-<span class="sd">        Start for scanning axis</span>
-<span class="sd">    y_step_end: float,</span>
-<span class="sd">        End for scanning axis</span>
-<span class="sd">    y_step_size: float</span>
-<span class="sd">        Step size for y motor</span>
-<span class="sd">    home: bool = False,</span>
-<span class="sd">        If True move back to position before it scan</span>
-<span class="sd">    snake_axes: bool = True,</span>
+<span class="sd">    dets : Sequence[Readable]</span>
+<span class="sd">        Area detectors or readable devices.</span>
+<span class="sd">    count_time : float</span>
+<span class="sd">        Detector count time.</span>
+<span class="sd">    x_step_motor : Motor</span>
+<span class="sd">        Motor for the X axis.</span>
+<span class="sd">    x_step_start : float</span>
+<span class="sd">        Starting position for x_step_motor.</span>
+<span class="sd">    x_step_end : float</span>
+<span class="sd">        Ending position for x_step_motor.</span>
+<span class="sd">    x_step_size : float</span>
+<span class="sd">        Step size for x motor.</span>
+<span class="sd">    y_step_motor : Motor</span>
+<span class="sd">        Motor for the Y axis.</span>
+<span class="sd">    y_step_start : float</span>
+<span class="sd">        Starting position for y_step_motor.</span>
+<span class="sd">    y_step_end : float</span>
+<span class="sd">        Ending position for y_step_motor.</span>
+<span class="sd">    y_step_size : float</span>
+<span class="sd">        Step size for y motor.</span>
+<span class="sd">    home : bool, optional</span>
+<span class="sd">        If True, move back to position before scan.</span>
+<span class="sd">    snake : bool, optional</span>
 <span class="sd">        If True, do grid scan without moving scan axis back to start position.</span>
-<span class="sd">    md:  dict | None = None,</span>
-<span class="sd">        Meta data</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    md : dict, optional</span>
+<span class="sd">        Metadata.</span>
 
-    <span class="c1"># check limit before doing anything</span>
-    <span class="k">yield from</span> <span class="n">check_within_limit</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">x_step_start</span><span class="p">,</span>
-            <span class="n">x_step_end</span><span class="p">,</span>
-        <span class="p">],</span>
-        <span class="n">x_step_motor</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">check_within_limit</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">y_step_start</span><span class="p">,</span>
-            <span class="n">y_step_end</span><span class="p">,</span>
-        <span class="p">],</span>
-        <span class="n">y_step_motor</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="c1"># Dictionary to store clean up options</span>
-    <span class="n">clean_up_arg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">clean_up_arg</span><span class="p">[</span><span class="s2">&quot;Home&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">home</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MsgGenerator</span>
+<span class="sd">        A Bluesky generator for the scan.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check limits before doing anything</span>
+    <span class="k">yield from</span> <span class="n">check_within_limit</span><span class="p">([</span><span class="n">x_step_start</span><span class="p">,</span> <span class="n">x_step_end</span><span class="p">],</span> <span class="n">x_step_motor</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">check_within_limit</span><span class="p">([</span><span class="n">y_step_start</span><span class="p">,</span> <span class="n">y_step_end</span><span class="p">],</span> <span class="n">y_step_motor</span><span class="p">)</span>
+
+    <span class="n">clean_up_arg</span><span class="p">:</span> <span class="n">CleanUpArgs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Home&quot;</span><span class="p">:</span> <span class="n">home</span><span class="p">}</span>
     <span class="k">if</span> <span class="n">home</span><span class="p">:</span>
-        <span class="c1"># Add move back  positon to origin</span>
+        <span class="c1"># Store original positions to return to after scan</span>
         <span class="n">clean_up_arg</span><span class="p">[</span><span class="s2">&quot;Origin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">get_motor_positions</span><span class="p">(</span>
             <span class="n">x_step_motor</span><span class="p">,</span> <span class="n">y_step_motor</span>
         <span class="p">)</span>  <span class="c1"># type: ignore</span>
+
     <span class="n">main_det</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">AreaDetector</span><span class="p">):</span>
-        <span class="c1"># Set count time on detector</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">AreaDetector</span> <span class="o">|</span> <span class="n">SingleTriggerDetector</span><span class="p">):</span>
         <span class="k">yield from</span> <span class="n">set_area_detector_acquire_time</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">acquire_time</span><span class="o">=</span><span class="n">count_time</span><span class="p">)</span>
-    <span class="c1"># add 1 to step number to include the end point</span>
+
+    <span class="c1"># Add 1 to step number to include the end point</span>
+    <span class="n">x_num</span> <span class="o">=</span> <span class="n">step_size_to_step_num</span><span class="p">(</span><span class="n">x_step_start</span><span class="p">,</span> <span class="n">x_step_end</span><span class="p">,</span> <span class="n">x_step_size</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">y_num</span> <span class="o">=</span> <span class="n">step_size_to_step_num</span><span class="p">(</span><span class="n">y_step_start</span><span class="p">,</span> <span class="n">y_step_end</span><span class="p">,</span> <span class="n">y_step_size</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
     <span class="k">yield from</span> <span class="n">finalize_wrapper</span><span class="p">(</span>
         <span class="n">plan</span><span class="o">=</span><span class="n">bp</span><span class="o">.</span><span class="n">grid_scan</span><span class="p">(</span>
             <span class="n">dets</span><span class="p">,</span>
             <span class="n">x_step_motor</span><span class="p">,</span>
             <span class="n">x_step_start</span><span class="p">,</span>
             <span class="n">x_step_end</span><span class="p">,</span>
-            <span class="n">step_size_to_step_num</span><span class="p">(</span><span class="n">x_step_start</span><span class="p">,</span> <span class="n">x_step_end</span><span class="p">,</span> <span class="n">x_step_size</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">x_num</span><span class="p">,</span>
             <span class="n">y_step_motor</span><span class="p">,</span>
             <span class="n">y_step_start</span><span class="p">,</span>
             <span class="n">y_step_end</span><span class="p">,</span>
-            <span class="n">step_size_to_step_num</span><span class="p">(</span><span class="n">y_step_start</span><span class="p">,</span> <span class="n">y_step_end</span><span class="p">,</span> <span class="n">y_step_size</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">y_num</span><span class="p">,</span>
             <span class="n">snake_axes</span><span class="o">=</span><span class="n">snake</span><span class="p">,</span>
             <span class="n">md</span><span class="o">=</span><span class="n">md</span><span class="p">,</span>
         <span class="p">),</span>
-        <span class="n">final_plan</span><span class="o">=</span><span class="n">clean_up</span><span class="p">(</span><span class="o">**</span><span class="n">clean_up_arg</span><span class="p">),</span>
+        <span class="n">final_plan</span><span class="o">=</span><span class="n">clean_up</span><span class="p">(</span><span class="n">clean_up_arg</span><span class="p">),</span>
     <span class="p">)</span></div>
 
 
@@ -579,7 +573,7 @@
 <span class="nd">@plan</span>
 <span class="nd">@attach_data_session_metadata_decorator</span><span class="p">()</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">grid_fast_scan</span><span class="p">(</span>
-    <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AreaDetector</span> <span class="o">|</span> <span class="n">Readable</span><span class="p">],</span>
+    <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span>
     <span class="n">count_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">step_motor</span><span class="p">:</span> <span class="n">Motor</span><span class="p">,</span>
     <span class="n">step_start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -592,20 +586,17 @@
     <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">home</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">snake_axes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This initiates an 2 axis scan, targeting a maximum scan speed of around 10Hz.</span>
-<span class="sd">    It calculates the number of data points achievable based on the detector&#39;s count</span>
-<span class="sd">    time. If no step size is provided, the software aims for a uniform distribution</span>
-<span class="sd">    of points across the scan area. The scanning motor&#39;s speed is then determined using</span>
-<span class="sd">    the calculated point density. If the desired speed exceeds the motor&#39;s limit,</span>
-<span class="sd">    the maximum speed is used. In this case, the step size is automatically adjusted</span>
-<span class="sd">    to ensure the scan finishes close to the intended duration.</span>
+<span class="sd">    Initiates a 2-axis scan, targeting a maximum scan speed of around 10Hz.</span>
+<span class="sd">    Calculates the number of data points based on the detector&#39;s count time.</span>
+<span class="sd">    If no step size is provided, aims for a uniform distribution of points.</span>
+<span class="sd">    Adjusts scan speed and step size to fit the desired scan duration.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    dets : list[AreaDetector | Readable]</span>
+<span class="sd">    dets : list[Readable]</span>
 <span class="sd">        List of detectors to use for the scan.</span>
 <span class="sd">    count_time : float</span>
 <span class="sd">        Detector count time.</span>
@@ -625,13 +616,13 @@
 <span class="sd">        Desired duration of the scan in seconds.</span>
 <span class="sd">    point_correction : float, optional</span>
 <span class="sd">        Scaling factor for the number of points, by default 1.</span>
-<span class="sd">    step_size : Optional[float], optional</span>
+<span class="sd">    step_size : float, optional</span>
 <span class="sd">        Step size for the slow axis, by default None.</span>
 <span class="sd">    home : bool, optional</span>
 <span class="sd">        If True, move back to the original position after the scan, by default False.</span>
 <span class="sd">    snake_axes : bool, optional</span>
 <span class="sd">        If True, perform a snake scan, by default True.</span>
-<span class="sd">    md : Optional[dict], optional</span>
+<span class="sd">    md : dict, optional</span>
 <span class="sd">        Metadata for the scan, by default None.</span>
 
 <span class="sd">    Returns</span>
@@ -639,23 +630,10 @@
 <span class="sd">    MsgGenerator</span>
 <span class="sd">        A Bluesky generator for the scan.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">clean_up_arg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">clean_up_arg</span><span class="p">[</span><span class="s2">&quot;Home&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">home</span>
-    <span class="k">yield from</span> <span class="n">check_within_limit</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">scan_start</span><span class="p">,</span>
-            <span class="n">scan_end</span><span class="p">,</span>
-        <span class="p">],</span>
-        <span class="n">scan_motor</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">check_within_limit</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">step_start</span><span class="p">,</span>
-            <span class="n">step_end</span><span class="p">,</span>
-        <span class="p">],</span>
-        <span class="n">step_motor</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="c1"># Add move back position to origin</span>
+    <span class="n">clean_up_arg</span><span class="p">:</span> <span class="n">CleanUpArgs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Home&quot;</span><span class="p">:</span> <span class="n">home</span><span class="p">}</span>
+    <span class="k">yield from</span> <span class="n">check_within_limit</span><span class="p">([</span><span class="n">scan_start</span><span class="p">,</span> <span class="n">scan_end</span><span class="p">],</span> <span class="n">scan_motor</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">check_within_limit</span><span class="p">([</span><span class="n">step_start</span><span class="p">,</span> <span class="n">step_end</span><span class="p">],</span> <span class="n">step_motor</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">home</span><span class="p">:</span>
         <span class="n">clean_up_arg</span><span class="p">[</span><span class="s2">&quot;Origin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">get_motor_positions</span><span class="p">(</span><span class="n">scan_motor</span><span class="p">,</span> <span class="n">step_motor</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
@@ -664,11 +642,14 @@
     <span class="n">scan_motor_max_vel</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">rd</span><span class="p">(</span><span class="n">scan_motor</span><span class="o">.</span><span class="n">max_velocity</span><span class="p">)</span>
     <span class="n">step_motor_speed</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">rd</span><span class="p">(</span><span class="n">step_motor</span><span class="o">.</span><span class="n">velocity</span><span class="p">)</span>
     <span class="n">step_acc</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">rd</span><span class="p">(</span><span class="n">step_motor</span><span class="o">.</span><span class="n">acceleration_time</span><span class="p">)</span>
+
     <span class="n">main_det</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">AreaDetector</span><span class="p">):</span>
-        <span class="c1"># Set count time on detector</span>
         <span class="k">yield from</span> <span class="n">set_area_detector_acquire_time</span><span class="p">(</span><span class="n">det</span><span class="o">=</span><span class="n">main_det</span><span class="p">,</span> <span class="n">acquire_time</span><span class="o">=</span><span class="n">count_time</span><span class="p">)</span>
         <span class="n">deadtime</span> <span class="o">=</span> <span class="n">main_det</span><span class="o">.</span><span class="n">_controller</span><span class="o">.</span><span class="n">get_deadtime</span><span class="p">(</span><span class="n">count_time</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">SingleTriggerDetector</span><span class="p">):</span>
+        <span class="k">yield from</span> <span class="n">set_area_detector_acquire_time</span><span class="p">(</span><span class="n">det</span><span class="o">=</span><span class="n">main_det</span><span class="p">,</span> <span class="n">acquire_time</span><span class="o">=</span><span class="n">count_time</span><span class="p">)</span>
+        <span class="n">deadtime</span> <span class="o">=</span> <span class="n">count_time</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">deadtime</span> <span class="o">=</span> <span class="n">count_time</span>
 
@@ -696,12 +677,9 @@
     <span class="p">)</span>
     <span class="n">num_of_step</span> <span class="o">=</span> <span class="n">step_size_to_step_num</span><span class="p">(</span><span class="n">step_start</span><span class="p">,</span> <span class="n">step_end</span><span class="p">,</span> <span class="n">ideal_step_size</span><span class="p">)</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot; step size = </span><span class="si">{</span><span class="n">ideal_step_size</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">scan_motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: velocity = </span><span class="si">{</span><span class="n">velocity</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;, number of step = </span><span class="si">{</span><span class="n">num_of_step</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;Step size = </span><span class="si">{</span><span class="n">ideal_step_size</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">scan_motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: velocity = </span><span class="si">{</span><span class="n">velocity</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;number of steps = </span><span class="si">{</span><span class="n">num_of_step</span><span class="si">}</span><span class="s2">.&quot;</span>
     <span class="p">)</span>
-    <span class="c1"># Set count time on detector</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">AreaDetector</span><span class="p">):</span>
-        <span class="k">yield from</span> <span class="n">set_area_detector_acquire_time</span><span class="p">(</span><span class="n">det</span><span class="o">=</span><span class="n">main_det</span><span class="p">,</span> <span class="n">acquire_time</span><span class="o">=</span><span class="n">count_time</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">finalize_wrapper</span><span class="p">(</span>
         <span class="n">plan</span><span class="o">=</span><span class="n">fast_scan_grid</span><span class="p">(</span>
             <span class="n">dets</span><span class="p">,</span>
@@ -716,16 +694,16 @@
             <span class="n">snake_axes</span><span class="o">=</span><span class="n">snake_axes</span><span class="p">,</span>
             <span class="n">md</span><span class="o">=</span><span class="n">md</span><span class="p">,</span>
         <span class="p">),</span>
-        <span class="n">final_plan</span><span class="o">=</span><span class="n">clean_up</span><span class="p">(</span><span class="o">**</span><span class="n">clean_up_arg</span><span class="p">),</span>
+        <span class="n">final_plan</span><span class="o">=</span><span class="n">clean_up</span><span class="p">(</span><span class="n">clean_up_arg</span><span class="p">),</span>
     <span class="p">)</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">clean_up</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">CleanUpArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Clean up: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Home&quot;</span><span class="p">):</span>
-        <span class="c1"># move motor back to stored position</span>
-        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">mov</span><span class="p">(</span><span class="o">*</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;Origin&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">clean_up</span><span class="p">(</span><span class="n">clean_up_arg</span><span class="p">:</span> <span class="n">CleanUpArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Clean up: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">clean_up_arg</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">clean_up_arg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Home&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;Origin&quot;</span> <span class="ow">in</span> <span class="n">clean_up_arg</span><span class="p">:</span>
+        <span class="c1"># Move motors back to stored position</span>
+        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">mov</span><span class="p">(</span><span class="o">*</span><span class="n">clean_up_arg</span><span class="p">[</span><span class="s2">&quot;Origin&quot;</span><span class="p">])</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">estimate_speed_steps</span><span class="p">(</span>
@@ -762,20 +740,18 @@
         <span class="n">snake_axes</span><span class="o">=</span><span class="n">snake_axes</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">point_per_step_axis</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">point_per_axis</span> <span class="o">*</span> <span class="n">correction</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">)</span>
-    <span class="n">point_per_scan_axis</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">point_per_axis</span> <span class="o">*</span> <span class="n">correction</span> <span class="o">*</span> <span class="p">(</span><span class="n">scan_range</span><span class="p">))</span>
+    <span class="n">point_per_step_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">point_per_axis</span> <span class="o">*</span> <span class="n">correction</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
+    <span class="n">point_per_scan_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">point_per_axis</span> <span class="o">*</span> <span class="n">correction</span> <span class="o">*</span> <span class="n">scan_range</span><span class="p">))</span>
 
-    <span class="c1"># Assuming ideal step size is evenly distributed points within the two axis.</span>
+    <span class="c1"># Ideal step size is evenly distributed points within the two axes.</span>
     <span class="k">if</span> <span class="n">step_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">step_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Step_size is 0&quot;</span><span class="p">)</span>
         <span class="n">ideal_step_size</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">step_size</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">point_per_step_axis</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">point_per_step_axis</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">ideal_step_size</span> <span class="o">=</span> <span class="n">step_range</span> <span class="o">/</span> <span class="n">point_per_step_axis</span>
 
-    <span class="c1"># ideal_velocity: speed that allow the required step size.</span>
+    <span class="c1"># ideal_velocity: speed that allows the required step size.</span>
     <span class="k">if</span> <span class="n">point_per_scan_axis</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">ideal_velocity</span> <span class="o">=</span> <span class="n">scan_max_vel</span>
     <span class="k">else</span><span class="p">:</span>
@@ -783,8 +759,8 @@
             <span class="p">(</span><span class="n">scan_range</span> <span class="o">/</span> <span class="n">ideal_step_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">deadtime</span> <span class="o">+</span> <span class="n">scan_acceleration</span> <span class="o">*</span> <span class="mi">2</span>
         <span class="p">)</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;ideal step size = </span><span class="si">{</span><span class="n">ideal_step_size</span><span class="si">}</span><span class="s2"> velocity = </span><span class="si">{</span><span class="n">ideal_velocity</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; number of data point for step axis </span><span class="si">{</span><span class="n">point_per_step_axis</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;Ideal step size = </span><span class="si">{</span><span class="n">ideal_step_size</span><span class="si">}</span><span class="s2">, velocity = </span><span class="si">{</span><span class="n">ideal_velocity</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;number of data points for step axis </span><span class="si">{</span><span class="n">point_per_step_axis</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">ideal_velocity</span><span class="p">,</span> <span class="n">ideal_step_size</span>
 
@@ -802,7 +778,7 @@
     <span class="n">num_points_per_axis</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Estimate the number of points per axis for a scan..</span>
+<span class="sd">    Estimate the number of points per axis for a scan.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">iteration_limit</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># Prevent infinite recursion</span>
     <span class="n">iteration_count</span> <span class="o">=</span> <span class="mi">0</span>
@@ -817,16 +793,13 @@
     <span class="p">):</span>
         <span class="n">old_num_points_per_axis</span> <span class="o">=</span> <span class="n">num_points_per_axis</span>
 
-        <span class="n">point_step_axis</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">point_step_axis</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">point_step_axis</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">point_step_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
         <span class="n">step_mv_time</span> <span class="o">=</span> <span class="n">point_step_axis</span> <span class="o">*</span> <span class="n">step_acceleration</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">step_range</span> <span class="o">/</span> <span class="n">step_speed</span>
 
         <span class="k">if</span> <span class="n">snake_axes</span><span class="p">:</span>
             <span class="n">scan_mv_time</span> <span class="o">=</span> <span class="n">point_step_axis</span> <span class="o">*</span> <span class="p">(</span><span class="n">scan_acceleration</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">point_scan_axis</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">*</span> <span class="p">(</span><span class="n">scan_range</span><span class="p">))</span>
+            <span class="n">point_scan_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">*</span> <span class="n">scan_range</span><span class="p">))</span>
             <span class="n">scan_mv_time</span> <span class="o">=</span> <span class="n">point_scan_axis</span> <span class="o">*</span> <span class="p">(</span><span class="n">scan_acceleration</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span>
                 <span class="n">point_scan_axis</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">scan_range</span> <span class="o">/</span> <span class="n">scan_speed</span> <span class="o">+</span> <span class="n">scan_acceleration</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
@@ -840,8 +813,8 @@
             <span class="p">)</span>
         <span class="n">iteration_count</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">num_points_per_axis</span> <span class="o">=</span> <span class="n">corrected_num_points</span>
-    <span class="n">point_per_axis</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">((</span><span class="n">num_points_per_axis</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">scan_range</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">floor</span><span class="p">(</span><span class="n">point_per_axis</span><span class="p">)</span>
+    <span class="n">point_per_axis</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">/</span> <span class="p">(</span><span class="n">scan_range</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">point_per_axis</span><span class="p">))</span>
 </pre></div>
 
                 </article>
