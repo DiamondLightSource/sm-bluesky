@@ -3,6 +3,16 @@ requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
+dependencies = [
+    #
+    # If a constraint is not set here or if the dependency is pinned to a hash
+    # it will be auto-pinned to the latest release version by the pre-release workflow
+    #
+    "bluesky",
+    "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git@main",
+    "ophyd-async[sim] >= 0.11",
+    "scanspec",
+]
 name = "sm_bluesky"
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -11,16 +21,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 description = "Bluesky code for Diamond's surface and magnetic materials beamline."
-dependencies = [
-    #
-    # If a constraint is not set here or if the dependency is pinned to a hash
-    # it will be auto-pinned to the latest release version by the pre-release workflow
-    #
-    "bluesky",
-    "dls-dodal",
-    "ophyd-async[sim] >= 0.11",
-    "scanspec",
-]
 dynamic = ["version"]
 license.file = "LICENSE"
 readme = "README.md"
