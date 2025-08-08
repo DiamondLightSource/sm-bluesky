@@ -3,6 +3,14 @@ requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
+name = "sm_bluesky"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+description = "Bluesky code for Diamond's surface and magnetic materials beamline."
 dependencies = [
     #
     # If a constraint is not set here or if the dependency is pinned to a hash
@@ -13,14 +21,6 @@ dependencies = [
     "ophyd-async[sim] >= 0.11",
     "scanspec",
 ]
-name = "sm_bluesky"
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-]
-description = "Bluesky code for Diamond's surface and magnetic materials beamline."
 dynamic = ["version"]
 license.file = "LICENSE"
 readme = "README.md"
