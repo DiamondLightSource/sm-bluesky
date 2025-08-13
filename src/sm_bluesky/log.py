@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from dodal.log import LOGGER as dodal_logger
+from dodal.log import LOGGER as dodal_logger  # noqa: N811
 from dodal.log import (
     DodalLogHandlers,
 )
