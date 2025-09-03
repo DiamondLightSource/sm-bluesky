@@ -1,10 +1,7 @@
 import pytest
 from bluesky import RunEngine
 from dodal.beamlines import b07, i09
-from dodal.devices.electron_analyser import (
-    ElectronAnalyserDetector,
-    ElectronAnalyserDetectorImpl,
-)
+from dodal.devices.electron_analyser import ElectronAnalyserDetector
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
 from dodal.testing.electron_analyser import create_detector
@@ -55,7 +52,7 @@ async def sim_analyser(
 
 
 @pytest.fixture
-def sequence_file(sim_analyser: ElectronAnalyserDetectorImpl) -> str:
+def sequence_file(sim_analyser: ElectronAnalyserDetector) -> str:
     if isinstance(sim_analyser, VGScientaDetector):
         return TEST_VGSCIENTA_SEQUENCE
     elif isinstance(sim_analyser, SpecsDetector):
