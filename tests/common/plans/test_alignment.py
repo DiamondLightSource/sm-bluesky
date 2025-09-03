@@ -16,7 +16,7 @@ from sm_bluesky.common.plans import (
 )
 
 from ...helpers import gaussian
-from ...sim_devices import sim_detector
+from ...sim_devices import SimDetector
 
 docs = defaultdict(list)
 
@@ -45,7 +45,7 @@ def capture_emitted(name, doc):
 async def test_scan_and_move_cen_success_with_gaussian(
     RE: RunEngine,
     sim_motor_step: XYZStage,
-    fake_detector: sim_detector,
+    fake_detector: SimDetector,
     test_input,
     expected_centre,
 ):
@@ -109,7 +109,7 @@ def step_function(x_data, step_centre):
 async def test_scan_and_move_cen_success_with_step(
     RE: RunEngine,
     sim_motor_step: XYZStage,
-    fake_detector: sim_detector,
+    fake_detector: SimDetector,
     test_input,
     expected_centre,
 ):
@@ -155,7 +155,7 @@ async def test_scan_and_move_cen_success_with_step(
 async def test_scan_and_move_cen_fail_to_with_wrong_name(
     RE: RunEngine,
     sim_motor: XYZStage,
-    fake_detector: sim_detector,
+    fake_detector: SimDetector,
 ):
     rbv_mocks = Mock()
     y_data = range(0, 19999, 1)
@@ -194,7 +194,7 @@ async def test_scan_and_move_cen_fail_to_with_wrong_name(
 async def test_scan_and_move_cen_failed_with_no_peak_in_range(
     RE: RunEngine,
     sim_motor_step: XYZStage,
-    fake_detector: sim_detector,
+    fake_detector: SimDetector,
     test_input,
     expected_centre,
 ):
@@ -244,7 +244,7 @@ FAKEDSU = {"5000": 16.7, "1000": 21.7, "500": 25.674, "100": 31.7, "50": 36.7}
 async def test_align_slit_with_look_up(
     RE: RunEngine,
     sim_motor_step: XYZStage,
-    fake_detector: sim_detector,
+    fake_detector: SimDetector,
     size,
     expected_centre,
     offset,
@@ -289,7 +289,7 @@ async def test_align_slit_with_look_up(
 async def test_align_slit_with_look_up_fail_wrong_key(
     RE: RunEngine,
     sim_motor_step: XYZStage,
-    fake_detector: sim_detector,
+    fake_detector: SimDetector,
 ):
     size = 555
     with pytest.raises(ValueError) as e:
