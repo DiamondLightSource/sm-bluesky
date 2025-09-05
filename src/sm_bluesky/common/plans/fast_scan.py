@@ -14,7 +14,7 @@ from ophyd_async.core import FlyMotorInfo
 from ophyd_async.epics.motor import Motor
 
 from sm_bluesky.common.helper import add_extra_names_to_meta
-from sm_bluesky.common.plan_stubs import check_within_limit
+from sm_bluesky.common.plan_stubs import cache_speed, check_within_limit, restore_speed
 from sm_bluesky.log import LOGGER
 
 
@@ -182,13 +182,6 @@ def fast_scan_grid(
     )
 
 
-@plan
-def reset_speed(old_speed, motor: Motor) -> MsgGenerator:
-    LOGGER.info(f"Clean up: setting motor speed to {old_speed}.")
-    if old_speed:
-        yield from bps.abs_set(motor.velocity, old_speed)
-
-
 def clean_up():
     LOGGER.info("Clean up")
     # possibly use to move back to starting position.
@@ -235,7 +228,7 @@ def _fast_scan_1d(
     """
 
     # read the current speed and store it
-    old_speed: float = yield from bps.rd(motor.velocity)
+    old_speed: dict[Motor, float] = yield from cache_speed([motor])
 
     def inner_fast_scan_1d(
         dets: list[Any],
@@ -245,7 +238,7 @@ def _fast_scan_1d(
         motor_speed: float | None = None,
     ):
         if not motor_speed:
-            motor_speed = old_speed
+            motor_speed = old_speed[motor]
 
         LOGGER.info(
             f"Starting 1d fly scan with {motor.name}:"
@@ -270,5 +263,5 @@ def _fast_scan_1d(
 
     yield from finalize_wrapper(
         plan=inner_fast_scan_1d(dets, motor, start, end, motor_speed),
-        final_plan=reset_speed(old_speed, motor),
+        final_plan=restore_speed(old_speed),
     )
