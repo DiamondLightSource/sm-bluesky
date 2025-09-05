@@ -1,9 +1,10 @@
-from collections.abc import Hashable, Iterator
+import uuid
+from collections.abc import Generator, Hashable, Iterator
 from typing import Any
 
 import bluesky.plan_stubs as bps
 from bluesky.plan_stubs import abs_set
-from bluesky.utils import MsgGenerator, plan
+from bluesky.utils import Msg, MsgGenerator, plan
 from dodal.devices.slits import Slits
 from ophyd_async.epics.motor import Motor
 from pydantic import RootModel
@@ -172,3 +173,26 @@ def get_velocity_and_step_size(
         ideal_velocity = round(max_velocity, 3)
 
     return ideal_velocity, ideal_step_size
+
+
+def cache_speed(
+    devices_and_speeds: list[Motor],
+) -> Generator[Msg, Any, dict[Motor, float]]:
+    speeds = {}
+    for axis in devices_and_speeds:
+        speed = yield from bps.rd(axis.velocity)
+        speeds[axis] = speed
+    return speeds
+
+
+@plan
+def restore_speed(
+    devices_and_speeds: dict[Motor, float],
+    group: str | None = None,
+    wait_for_all: bool = True,
+) -> MsgGenerator:
+    reset_group = f"reset-{group if group else str(uuid.uuid4())[:6]}"
+    for device, speed in devices_and_speeds.items():
+        yield from bps.abs_set(device.velocity, speed, group=reset_group)
+    if wait_for_all:
+        yield from bps.wait(reset_group)
