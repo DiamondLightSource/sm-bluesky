@@ -14,7 +14,12 @@ from ophyd_async.core import FlyMotorInfo
 from ophyd_async.epics.motor import Motor
 
 from sm_bluesky.common.helper import add_extra_names_to_meta
-from sm_bluesky.common.plan_stubs import cache_speed, check_within_limit, restore_speed
+from sm_bluesky.common.plan_stubs import (
+    cache_speed,
+    check_within_limit,
+    fly_trigger_and_read,
+    restore_speed,
+)
 from sm_bluesky.log import LOGGER
 
 
@@ -252,14 +257,7 @@ def _fast_scan_1d(
             time_for_move=abs(start - end) / motor_speed,
         )
         yield from bps.prepare(motor, fly_info, group=grp, wait=True)
-        yield from bps.wait(group=grp)
-        yield from bps.kickoff(motor, group=grp, wait=True)
-        LOGGER.info(f"flying motor =  {motor.name} at speed = {motor_speed}")
-        done = yield from bps.complete(motor)
-        yield from bps.trigger_and_read(dets + [motor])
-        while not done.done:
-            yield from bps.trigger_and_read(dets + [motor])
-            yield from bps.checkpoint()
+        yield from fly_trigger_and_read(motor, fly_info, dets)
 
     yield from finalize_wrapper(
         plan=inner_fast_scan_1d(dets, motor, start, end, motor_speed),
