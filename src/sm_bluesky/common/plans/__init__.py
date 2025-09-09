@@ -12,7 +12,7 @@ from .alignments import (
     fast_scan_and_move_fit,
     step_scan_and_move_fit,
 )
-from .fast_scan import fast_scan_1d, fast_scan_grid
+from .fast_scan import fast_scan_1d, fast_scan_grid, soft_fly_energy_scan
 from .grid_scan import grid_fast_scan, grid_step_scan
 
 __all__ = [
@@ -25,4 +25,5 @@ __all__ = [
     "grid_fast_scan",
     "grid_step_scan",
     "trigger_img",
+    "soft_fly_energy_scan",
 ]
