@@ -1,5 +1,5 @@
 import pytest
-from blueapi.client.client import BlueapiClient
+from blueapi.client.client import BlueapiClient, TaskRequest
 from blueapi.client.event_bus import AnyEvent
 from blueapi.core.bluesky_types import DataEvent
 from blueapi.worker.event import TaskStatus, WorkerEvent, WorkerState
@@ -84,7 +84,14 @@ def test_spec_scan_task(
     def on_event(event: AnyEvent):
         all_events.append(event)
 
-    client.run_task(task_definition[plan], on_event=on_event)
+    client.run_task(
+        TaskRequest(
+            name=task_definition[plan].name,
+            params=task_definition[plan].params,
+            instrument_session="p99",
+        ),
+        on_event=on_event,
+    )
 
     _check_all_events(all_events)
 
