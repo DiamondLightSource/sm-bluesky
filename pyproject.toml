@@ -87,6 +87,7 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 data_file = "/tmp/sm_bluesky.coverage"
+omit = ["tests/*", "src/sm_bluesky/__main__.py"]
 
 [tool.coverage.paths]
 # Tests are run from installed location, map back to the src directory
