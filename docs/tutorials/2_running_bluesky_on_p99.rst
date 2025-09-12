@@ -42,8 +42,7 @@ This notebook provides a starting point for interacting with p99 hardware.
 Local blueAPI
 -------------
 
-To run blueAPI locally, you must first start a RabbitMQ instance, you can do this by running the blueAPI script `here <https://github.com/DiamondLightSource/blueapi/blob/main/src/script/start_rabbitmq.sh>`__.
-
+To run blueAPI locally, you must first start a RabbitMQ instance, Please folllow instruction at  `Start RabbitQM https://diamondlightsource.github.io/blueapi/main/tutorials/run-bus.html` to set up RabbitMQ.
 
 Once RabbitMQ is running, execute the following command from the project root directory:
 
