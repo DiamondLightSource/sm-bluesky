@@ -92,7 +92,11 @@ async def test_motor_with_look_up_move_using_motor_position_success(
 async def fake_slit(fake_i10):
     fake_slit = fake_i10["slits"].s5
     set_mock_value(fake_slit.x_gap.velocity, 2.78)
+    set_mock_value(fake_slit.x_gap.low_limit_travel, 0)
+    set_mock_value(fake_slit.x_gap.high_limit_travel, 50)
     set_mock_value(fake_slit.y_gap.velocity, 1)
+    set_mock_value(fake_slit.y_gap.low_limit_travel, 0)
+    set_mock_value(fake_slit.y_gap.high_limit_travel, 50)
 
     return fake_slit
 

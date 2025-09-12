@@ -106,6 +106,8 @@ async def pinhole(fake_i10):
     ph = pin_hole()
     set_mock_value(ph.x.velocity, 2.78)
     set_mock_value(ph.x.user_readback, 1)
+    set_mock_value(ph.x.low_limit_travel, 0)
+    set_mock_value(ph.x.high_limit_travel, 150)
 
     return ph
 
