@@ -43,7 +43,7 @@ dev = [
     "sphinx-design",
     "tox-direct",
     "types-mock",
-    "pytest-asyncio",
+    "pytest-asyncio==1.1.0",
 
     #usefull stuff for testing
     "jupyter",
