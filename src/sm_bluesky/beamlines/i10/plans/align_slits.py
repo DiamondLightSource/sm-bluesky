@@ -25,7 +25,7 @@ from ..configuration.default_setting import (
 )
 
 """I10 has fix/solid slit on a motor, this store the rough motor opening
- position against slit size in um"""
+ position against slit size in um."""
 
 DSD = {"5000": 14.3, "1000": 19.3, "500": 26.5, "100": 29.3, "50": 34.3}
 DSU = {"5000": 16.7, "1000": 21.7, "500": 25.674, "100": 31.7, "50": 36.7}
