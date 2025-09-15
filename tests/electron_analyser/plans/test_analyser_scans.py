@@ -1,17 +1,14 @@
 from collections.abc import Sequence
 
 import pytest
+from bluesky import RunEngine
 from bluesky.protocols import Readable
-from bluesky.run_engine import RunEngine
-from dodal.beamlines import b07, i09
 from dodal.devices.electron_analyser import (
     ElectronAnalyserDetector,
     ElectronAnalyserRegionDetector,
     GenericElectronAnalyserDetector,
     GenericElectronAnalyserRegionDetector,
 )
-from dodal.devices.electron_analyser.specs import SpecsDetector
-from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plans.analyser_scans import (
@@ -21,13 +18,6 @@ from sm_bluesky.electron_analyser.plans.analyser_scans import (
     process_detectors_for_analyserscan,
 )
 from tests.electron_analyser.util import analyser_setup_for_scan
-
-
-@pytest.fixture(params=[VGScientaDetector[i09.LensMode], SpecsDetector[b07.LensMode]])
-def detector_class(
-    request: pytest.FixtureRequest,
-) -> type[ElectronAnalyserDetector]:
-    return request.param
 
 
 @pytest.fixture(params=[0, 1, 2])

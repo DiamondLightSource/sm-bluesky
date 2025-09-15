@@ -1,18 +1,20 @@
 from collections import defaultdict
 from math import floor
+from unittest.mock import ANY
 
 import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
 from numpy import random
 from ophyd_async.epics.adandor import Andor2Detector
+from ophyd_async.epics.adcore import SingleTriggerDetector
 from ophyd_async.testing import assert_emitted, set_mock_value
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
 from sm_bluesky.common.plans.grid_scan import grid_fast_scan, grid_step_scan
 
 
-async def test_stxm_fast_zero_velocity_fail(
+async def test_grid_fast_zero_velocity_fail(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ):
     plan_time = 10
@@ -45,7 +47,7 @@ async def test_stxm_fast_zero_velocity_fail(
     assert_emitted(docs)
 
 
-async def test_stxm_fast(andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine):
+async def test_grid_fast(andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine):
     docs = defaultdict(list)
 
     def capture_emitted(name, doc):
@@ -85,7 +87,7 @@ async def test_stxm_fast(andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEng
     )
 
 
-async def test_stxm_fast_with_too_little_time_stxm_become_1d(
+async def test_grid_fast_with_too_little_time_grid_become_1d(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
@@ -124,7 +126,7 @@ async def test_stxm_fast_with_too_little_time_stxm_become_1d(
     )
 
 
-async def test_stxm_fast_with_too_little_time_stxm_cannot_have_any_points(
+async def test_grid_fast_with_too_little_time_grid_cannot_have_any_points(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
@@ -159,7 +161,7 @@ async def test_stxm_fast_with_too_little_time_stxm_cannot_have_any_points(
         )
 
 
-async def test_stxm_fast_with_speed_capped(
+async def test_grid_fast_with_speed_capped(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
@@ -197,14 +199,14 @@ async def test_stxm_fast_with_speed_capped(
         start=1,
         descriptor=1,
         stream_resource=1,
-        stream_datum=num_of_step * 2,
-        event=num_of_step * 2,
+        stream_datum=int(num_of_step * 0.5),
+        event=int(num_of_step * 0.5),
         stop=1,
     )
 
 
 @pytest.mark.parametrize("execution_number", range(1))
-async def test_stxm_fast_unknown_step_snake(
+async def test_grid_fast_unknown_step_snake(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
 ):
     docs = defaultdict(list)
@@ -266,7 +268,7 @@ async def test_stxm_fast_unknown_step_snake(
 
 
 @pytest.mark.parametrize("execution_number", range(1))
-async def test_stxm_fast_unknown_step_no_snake(
+async def test_grid_fast_unknown_step_no_snake(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
 ):
     docs = defaultdict(list)
@@ -328,7 +330,7 @@ async def test_stxm_fast_unknown_step_no_snake(
 
 
 @pytest.mark.parametrize("execution_number", range(1))
-async def test_stxm_fast_unknown_step_snake_with_point_correction(
+async def test_grid_fast_unknown_step_snake_with_point_correction(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
 ):
     docs = defaultdict(list)
@@ -385,7 +387,7 @@ async def test_stxm_fast_unknown_step_snake_with_point_correction(
     )
 
 
-async def test_stxm_step_with_home(
+async def test_grid_step_with_home(
     RE: RunEngine, sim_motor_step: XYZStage, andor2: Andor2Detector
 ):
     docs = defaultdict(list)
@@ -427,7 +429,7 @@ async def test_stxm_step_with_home(
     assert -2 == await sim_motor_step.y.user_readback.get_value()
 
 
-async def test_stxm_step_without_home_with_readable(
+async def test_grid_step_without_home_with_readable(
     RE: RunEngine,
     sim_motor_step: XYZStage,
 ):
@@ -468,7 +470,48 @@ async def test_stxm_step_without_home_with_readable(
     assert y_step_end == await sim_motor_step.y.user_readback.get_value()
 
 
-async def test_stxm_fast_sim_flyable_motor(
+async def test_grid_fast_sim_flyable_motor_with_andor_point(
+    andor2_point: SingleTriggerDetector, sim_motor_delay: XYZStage, RE: RunEngine
+):
+    docs = defaultdict(list)
+
+    def capture_emitted(name, doc):
+        docs[name].append(doc)
+
+    plan_time = 1.5
+    count_time = 0.2
+    step_size = 0.2
+    step_start = -0.5
+    step_end = 0.5
+    RE(
+        grid_fast_scan(
+            dets=[andor2_point],
+            count_time=count_time,
+            step_motor=sim_motor_delay.x,
+            step_start=step_start,
+            step_end=step_end,
+            scan_motor=sim_motor_delay.y,
+            scan_start=1,
+            scan_end=2,
+            plan_time=plan_time,
+            step_size=step_size,
+            snake_axes=True,
+            home=False,
+        ),
+        capture_emitted,
+    )
+    # The overhead is about 3 sec in pytest
+
+    assert_emitted(
+        docs,
+        start=1,
+        descriptor=1,
+        event=ANY,
+        stop=1,
+    )
+
+
+async def test_grid_fast_sim_flyable_motor(
     andor2: Andor2Detector, sim_motor_delay: XYZStage, RE: RunEngine
 ):
     docs = defaultdict(list)
@@ -500,4 +543,13 @@ async def test_stxm_fast_sim_flyable_motor(
     )
     # The overhead is about 3 sec in pytest
 
+    assert_emitted(
+        docs,
+        start=1,
+        descriptor=1,
+        stream_resource=1,
+        stream_datum=ANY,
+        event=ANY,
+        stop=1,
+    )
     assert docs["event"].__len__() == docs["stream_datum"].__len__()

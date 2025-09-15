@@ -1,8 +1,9 @@
 import pytest
 from blueapi.client.client import BlueapiClient
-from blueapi.config import ApplicationConfig, RestConfig, StompConfig
+from blueapi.config import ApplicationConfig, RestConfig, StompConfig, TcpUrl
 from blueapi.worker.task import Task
 from bluesky_stomp.models import BasicAuthentication
+from pydantic import HttpUrl
 
 
 @pytest.fixture
@@ -50,10 +51,11 @@ def config(request: pytest.FixtureRequest) -> ApplicationConfig:
     password = request.config.getoption("--password")
     return ApplicationConfig(
         stomp=StompConfig(
-            host="172.23.177.208",
+            enabled=True,
+            url=TcpUrl("tcp://172.23.177.208:61613"),
             auth=BasicAuthentication(username="p99", password=password),  # type: ignore
         ),
-        api=RestConfig(host="p99-blueapi.diamond.ac.uk", port=443, protocol="https"),
+        api=RestConfig(url=HttpUrl("https://p99-blueapi.diamond.ac.uk:443")),
     )
 
 

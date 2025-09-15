@@ -1,14 +1,17 @@
-from typing import get_args
-
 import pytest
 from bluesky import RunEngine
-from dodal.devices.electron_analyser import ElectronAnalyserDetectorImpl
+from dodal.beamlines import b07, i09
+from dodal.devices.electron_analyser import ElectronAnalyserDetector
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
+from dodal.testing.electron_analyser import create_detector
 from ophyd_async.core import SignalR, init_devices
 from ophyd_async.sim import SimMotor
 
-from tests.electron_analyser.util import TEST_SPECS_SEQUENCE, TEST_VGSCIENTA_SEQUENCE
+from tests.electron_analyser.util import (
+    TEST_SPECS_SEQUENCE,
+    TEST_VGSCIENTA_SEQUENCE,
+)
 
 
 @pytest.fixture
@@ -28,22 +31,28 @@ async def energy_sources(
     return {"source1": dcm_energy.user_readback, "source2": pgm_energy.user_readback}
 
 
-@pytest.fixture
+@pytest.fixture(
+    params=[
+        VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy],
+        SpecsDetector[b07.LensMode, b07.PsuMode],
+    ]
+)
 async def sim_analyser(
-    detector_class: type[ElectronAnalyserDetectorImpl],
+    request: pytest.FixtureRequest,
     energy_sources: dict[str, SignalR[float]],
     RE: RunEngine,
-) -> ElectronAnalyserDetectorImpl:
-    lens_mode_type = get_args(detector_class)[0]
-    async with init_devices(mock=True, connect=True):
-        sim_detector = detector_class(
-            prefix="TEST:", lens_mode_type=lens_mode_type, energy_sources=energy_sources
+) -> ElectronAnalyserDetector:
+    with init_devices(mock=True):
+        sim_analyser = await create_detector(
+            request.param,
+            prefix="TEST:",
+            energy_sources=energy_sources,
         )
-    return sim_detector
+    return sim_analyser
 
 
 @pytest.fixture
-def sequence_file(sim_analyser: ElectronAnalyserDetectorImpl) -> str:
+def sequence_file(sim_analyser: ElectronAnalyserDetector) -> str:
     if isinstance(sim_analyser, VGScientaDetector):
         return TEST_VGSCIENTA_SEQUENCE
     elif isinstance(sim_analyser, SpecsDetector):

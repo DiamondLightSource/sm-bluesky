@@ -20,10 +20,11 @@ from ophyd_async.core import (
     init_devices,
 )
 from ophyd_async.epics.adandor import Andor2Detector
+from ophyd_async.epics.adcore import ADBaseIO, SingleTriggerDetector
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
 from super_state_machine.errors import TransitionError
 
-from .sim_devices import SimStage, sim_detector
+from .sim_devices import SimDetector, SimStage
 
 RECORD = str(Path(__file__).parent / "panda" / "db" / "panda.db")
 INCOMPLETE_BLOCK_RECORD = str(
@@ -48,20 +49,20 @@ set_path_provider(
 def RE(request):
     loop = asyncio.new_event_loop()
     loop.set_debug(True)
-    RE = RunEngine({}, call_returns_result=True, loop=loop)
+    re = RunEngine({}, call_returns_result=True, loop=loop)
 
     def clean_event_loop():
-        if RE.state not in ("idle", "panicked"):
+        if re.state not in ("idle", "panicked"):
             try:
-                RE.halt()
+                re.halt()
             except TransitionError:
                 pass
         loop.call_soon_threadsafe(loop.stop)
-        RE._th.join()
+        re._th.join()
         loop.close()
 
     request.addfinalizer(clean_event_loop)
-    return RE
+    return re
 
 
 A_BIT = 0.5
@@ -145,7 +146,7 @@ async def sim_motor_delay():
 @pytest.fixture
 async def fake_detector():
     async with init_devices(mock=True):
-        fake_detector = sim_detector(prefix="fake_Pv", name="fake_detector")
+        fake_detector = SimDetector(prefix="fake_Pv", name="fake_detector")
     set_mock_value(fake_detector.value, 0)
     yield fake_detector
 
@@ -187,3 +188,12 @@ async def andor2(static_path_provider: StaticPathProvider) -> Andor2Detector:
     )
 
     return andor2
+
+
+# area detector point that is use for testing
+@pytest.fixture
+async def andor2_point() -> SingleTriggerDetector:
+    async with init_devices(mock=True):
+        andor2_point = SingleTriggerDetector(drv=ADBaseIO("p99"))
+
+    return andor2_point
