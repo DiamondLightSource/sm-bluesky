@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Any
 from unittest.mock import Mock
 
 import numpy as np
@@ -14,14 +15,13 @@ from sm_bluesky.common.plans import (
     fast_scan_and_move_fit,
     step_scan_and_move_fit,
 )
-
-from ...helpers import gaussian
-from ...sim_devices import SimDetector
+from tests.helpers import gaussian
+from tests.sim_devices import SimDetector
 
 docs = defaultdict(list)
 
 
-def capture_emitted(name, doc):
+def capture_emitted(name: str, doc: Any):
     docs[name].append(doc)
 
 
@@ -29,15 +29,15 @@ def capture_emitted(name, doc):
     "test_input, expected_centre",
     [
         (
-            [5, -5, 21, 0.1],
+            (5, -5, 21, 0.1),
             -1,
         ),
         (
-            [50, -55, 21, 1],
+            (50, -55, 21, 1),
             21.1,
         ),
         (
-            [-1, -2.51241, 21, 0.05],
+            (-1, -2.51241, 21, 0.05),
             -1.2,
         ),
     ],
@@ -46,9 +46,9 @@ async def test_scan_and_move_cen_success_with_gaussian(
     RE: RunEngine,
     sim_motor_step: XYZStage,
     fake_detector: SimDetector,
-    test_input,
-    expected_centre,
-):
+    test_input: tuple[float, float, int, float],
+    expected_centre: float,
+) -> None:
     start = test_input[0]
     end = test_input[1]
     num = test_input[2]
@@ -89,7 +89,7 @@ async def test_scan_and_move_cen_success_with_gaussian(
     )
 
 
-def step_function(x_data, step_centre):
+def step_function(x_data, step_centre: float) -> list[float]:
     return [0 if x < step_centre else 1 for x in x_data]
 
 
@@ -97,11 +97,11 @@ def step_function(x_data, step_centre):
     "test_input, expected_centre",
     [
         (
-            [1, -2, 44],
+            (1, -2, 44),
             -1,
         ),
         (
-            [0.1, 0.5, 20],
+            (0.1, 0.5, 20),
             0.2,
         ),
     ],
@@ -110,12 +110,12 @@ async def test_scan_and_move_cen_success_with_step(
     RE: RunEngine,
     sim_motor_step: XYZStage,
     fake_detector: SimDetector,
-    test_input,
-    expected_centre,
-):
+    test_input: tuple[float, float, int],
+    expected_centre: float,
+) -> None:
     start = test_input[0]
     end = test_input[1]
-    num = test_input[2]
+    num = int(test_input[2])
     cen = expected_centre
     # Generate a step
     x_data = np.linspace(start, end, num, endpoint=True)
@@ -156,7 +156,7 @@ async def test_scan_and_move_cen_fail_to_with_wrong_name(
     RE: RunEngine,
     sim_motor: XYZStage,
     fake_detector: SimDetector,
-):
+) -> None:
     rbv_mocks = Mock()
     y_data = range(0, 19999, 1)
     rbv_mocks.get.side_effect = y_data
@@ -186,7 +186,7 @@ async def test_scan_and_move_cen_fail_to_with_wrong_name(
     "test_input, expected_centre",
     [
         (
-            [5, -4, 31, 0.1],
+            (5, -4, 31, 0.1),
             -5.1,
         ),
     ],
@@ -195,7 +195,7 @@ async def test_scan_and_move_cen_failed_with_no_peak_in_range(
     RE: RunEngine,
     sim_motor_step: XYZStage,
     fake_detector: SimDetector,
-    test_input,
+    test_input: tuple[float, float, int, float],
     expected_centre,
 ):
     start = test_input[0]

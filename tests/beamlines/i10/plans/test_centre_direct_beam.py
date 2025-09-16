@@ -16,8 +16,7 @@ from sm_bluesky.beamlines.i10.plans import (
     move_pin_origin,
 )
 from sm_bluesky.common.plans import StatPosition
-
-from ....helpers import check_msg_set, check_msg_wait
+from tests.helpers import check_msg_set, check_msg_wait
 
 docs = defaultdict(list)
 
@@ -30,7 +29,6 @@ def capture_emitted(name, doc):
 async def test_centre_tth(
     fake_step_scan_and_move_fit: Mock,
     RE: RunEngine,
-    fake_i10,
 ):
     RE(centre_tth(), docs)
     fake_step_scan_and_move_fit.assert_called_once_with(
@@ -45,7 +43,7 @@ async def test_centre_tth(
 
 
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.step_scan_and_move_fit")
-async def test_centre_alpha(fake_step_scan_and_move_fit: Mock, RE: RunEngine, fake_i10):
+async def test_centre_alpha(fake_step_scan_and_move_fit: Mock, RE: RunEngine):
     RE(centre_alpha())
 
     fake_step_scan_and_move_fit.assert_called_once_with(

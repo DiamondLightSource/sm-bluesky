@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Any
 
 from bluesky.plans import scan
 from bluesky.run_engine import RunEngine
@@ -18,7 +19,7 @@ async def test_Andor2_trigger_img(
 ):
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any):
         docs[name].append(doc)
 
     RE.subscribe(capture_emitted)

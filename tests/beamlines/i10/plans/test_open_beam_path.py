@@ -5,6 +5,7 @@ import pytest
 from bluesky.run_engine import RunEngine
 from bluesky.simulators import RunEngineSimulator
 from dodal.beamlines.i10 import det_slits, pa_stage, pin_hole, slits
+from dodal.devices.motors import XYStage
 from ophyd_async.testing import (
     callback_on_mock_put,
     get_mock_put,
@@ -23,8 +24,7 @@ from sm_bluesky.beamlines.i10.plans import (
     open_s5s6,
     remove_pin_hole,
 )
-
-from ....helpers import check_msg_set, check_msg_wait
+from tests.helpers import check_msg_set, check_msg_wait
 
 docs = defaultdict(list)
 
@@ -33,7 +33,7 @@ def capture_emitted(name, doc):
     docs[name].append(doc)
 
 
-async def test_open_s5s6_with_default(RE: RunEngine, fake_i10):
+async def test_open_s5s6_with_default(RE: RunEngine) -> None:
     sim = RunEngineSimulator()
     msgs = sim.simulate_plan(open_s5s6())
     msgs = check_msg_set(msgs=msgs, obj=slits().s5.x_gap, value=S5S6_OPENING_SIZE)
@@ -45,7 +45,7 @@ async def test_open_s5s6_with_default(RE: RunEngine, fake_i10):
     assert len(msgs) == 1
 
 
-async def test_open_s5s6_with_other_size(RE: RunEngine, fake_i10):
+async def test_open_s5s6_with_other_size(RE: RunEngine) -> None:
     sim = RunEngineSimulator()
     other_value = 0.5
     msgs = sim.simulate_plan(open_s5s6(other_value))
@@ -58,7 +58,7 @@ async def test_open_s5s6_with_other_size(RE: RunEngine, fake_i10):
     assert len(msgs) == 1
 
 
-async def test_open_s5s6_with_no_wait(RE: RunEngine, fake_i10):
+async def test_open_s5s6_with_no_wait(RE: RunEngine) -> None:
     sim = RunEngineSimulator()
     other_value = 0.5
     msgs = sim.simulate_plan(open_s5s6(other_value, wait=False))
@@ -69,7 +69,7 @@ async def test_open_s5s6_with_no_wait(RE: RunEngine, fake_i10):
     assert len(msgs) == 1
 
 
-async def test_open_dsd_dsu_with_default(RE: RunEngine, fake_i10):
+async def test_open_dsd_dsu_with_default(RE: RunEngine) -> None:
     sim = RunEngineSimulator()
     msgs = sim.simulate_plan(open_dsd_dsu())
     msgs = check_msg_set(msgs=msgs, obj=det_slits().upstream, value=DSD_DSU_OPENING_POS)
@@ -81,7 +81,7 @@ async def test_open_dsd_dsu_with_default(RE: RunEngine, fake_i10):
     assert len(msgs) == 1
 
 
-async def test_open_dsd_dsu_with_other_size(RE: RunEngine, fake_i10):
+async def test_open_dsd_dsu_with_other_size(RE: RunEngine) -> None:
     sim = RunEngineSimulator()
     other_value = 0.5
     msgs = sim.simulate_plan(open_dsd_dsu(other_value))
@@ -92,7 +92,7 @@ async def test_open_dsd_dsu_with_other_size(RE: RunEngine, fake_i10):
     assert len(msgs) == 1
 
 
-async def test_open_dsd_dsu_with_no_wait(RE: RunEngine, fake_i10):
+async def test_open_dsd_dsu_with_no_wait(RE: RunEngine) -> None:
     sim = RunEngineSimulator()
     other_value = 0.5
     msgs = sim.simulate_plan(open_dsd_dsu(other_value, wait=False))
@@ -102,17 +102,16 @@ async def test_open_dsd_dsu_with_no_wait(RE: RunEngine, fake_i10):
 
 
 @pytest.fixture
-async def pinhole(fake_i10):
+async def pinhole() -> XYStage:
     ph = pin_hole()
     set_mock_value(ph.x.velocity, 2.78)
     set_mock_value(ph.x.user_readback, 1)
     set_mock_value(ph.x.low_limit_travel, 0)
     set_mock_value(ph.x.high_limit_travel, 150)
-
     return ph
 
 
-async def test_remove_pin_hole_with_default(RE: RunEngine, pinhole):
+async def test_remove_pin_hole_with_default(RE: RunEngine, pinhole: XYStage) -> None:
     callback_on_mock_put(
         pinhole.x.user_setpoint,
         lambda *_, **__: set_mock_value(pinhole.x.user_readback, PIN_HOLE_OPEING_POS),
@@ -125,7 +124,9 @@ async def test_remove_pin_hole_with_default(RE: RunEngine, pinhole):
     assert await pin_hole().x.user_readback.get_value() == PIN_HOLE_OPEING_POS
 
 
-async def test_remove_pin_hole_with_other_value(RE: RunEngine, pinhole):
+async def test_remove_pin_hole_with_other_value(
+    RE: RunEngine, pinhole: XYStage
+) -> None:
     sim = RunEngineSimulator()
     other_value = 0.5
     msgs = sim.simulate_plan(remove_pin_hole(other_value, wait=True))
@@ -135,7 +136,7 @@ async def test_remove_pin_hole_with_other_value(RE: RunEngine, pinhole):
     assert len(msgs) == 1
 
 
-async def test_remove_pin_hole_with_no_wait(RE: RunEngine, pinhole):
+async def test_remove_pin_hole_with_no_wait(RE: RunEngine, pinhole: XYStage) -> None:
     sim = RunEngineSimulator()
     other_value = 0.5
     msgs = sim.simulate_plan(remove_pin_hole(other_value, wait=False))
@@ -143,7 +144,7 @@ async def test_remove_pin_hole_with_no_wait(RE: RunEngine, pinhole):
     assert len(msgs) == 1
 
 
-async def test_direct_beam_polan(RE: RunEngine, fake_i10):
+async def test_direct_beam_polan(RE: RunEngine) -> None:
     sim = RunEngineSimulator()
     other_value = 0.0
     msgs = sim.simulate_plan(direct_beam_polan())
@@ -166,7 +167,7 @@ async def test_clear_beam_path(
     open_s5s6: Mock,
     remove_pin_hole: Mock,
     RE: RunEngine,
-):
+) -> None:
     RE(clear_beam_path())
     direct_beam_polan.assert_called_once()
     open_dsd_dsu.assert_called_once()

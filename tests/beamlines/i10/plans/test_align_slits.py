@@ -20,8 +20,7 @@ from sm_bluesky.beamlines.i10.plans.align_slits import (
     move_dsd,
     move_dsu,
 )
-
-from ....helpers import check_msg_set, check_msg_wait, check_mv_wait
+from tests.helpers import check_msg_set, check_msg_wait, check_mv_wait
 
 docs = defaultdict(list)
 
@@ -89,16 +88,16 @@ def test_align_s5s6(mock_align_slit: MagicMock):
 def test_align_slit(
     mock_step_scan: MagicMock,
     mock_cal_range: MagicMock,
-    x_scan_size,
-    x_final_size,
-    x_open_size,
-    y_scan_size,
-    y_final_size,
-    y_open_size,
-    x_range,
-    x_cen,
-    y_range,
-    y_cen,
+    x_scan_size: float,
+    x_final_size: float,
+    x_open_size: float,
+    y_scan_size: float,
+    y_final_size: float,
+    y_open_size: float,
+    x_range: float,
+    x_cen: float,
+    y_range: float,
+    y_cen: float,
 ):
     slit = slits().s5
     det = rasor_femto_pa_scaler_det()

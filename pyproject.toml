@@ -18,7 +18,7 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal>=1.56.0",
+    "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git@main",
     "ophyd-async[sim]",
     "scanspec",
 ]
