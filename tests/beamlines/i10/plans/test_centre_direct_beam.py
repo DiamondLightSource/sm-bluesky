@@ -83,8 +83,7 @@ async def test_centre_det_angles(
     )
 
 
-def test_move_pin_origin_default():
-    sim = RunEngineSimulator()
+def test_move_pin_origin_default(sim: RunEngineSimulator):
     msgs = sim.simulate_plan(move_pin_origin())
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().x, value=0)
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().y, value=0)
@@ -93,8 +92,7 @@ def test_move_pin_origin_default():
     assert len(msgs) == 1
 
 
-def test_move_pin_origin_default_without_wait():
-    sim = RunEngineSimulator()
+def test_move_pin_origin_default_without_wait(sim: RunEngineSimulator):
     msgs = sim.simulate_plan(move_pin_origin(wait=False))
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().x, value=0)
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().y, value=0)

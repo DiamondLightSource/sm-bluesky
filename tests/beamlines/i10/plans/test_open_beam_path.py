@@ -33,8 +33,7 @@ def capture_emitted(name, doc):
     docs[name].append(doc)
 
 
-async def test_open_s5s6_with_default(RE: RunEngine) -> None:
-    sim = RunEngineSimulator()
+async def test_open_s5s6_with_default(sim: RunEngineSimulator) -> None:
     msgs = sim.simulate_plan(open_s5s6())
     msgs = check_msg_set(msgs=msgs, obj=slits().s5.x_gap, value=S5S6_OPENING_SIZE)
     msgs = check_msg_set(msgs=msgs, obj=slits().s5.y_gap, value=S5S6_OPENING_SIZE)
@@ -45,8 +44,7 @@ async def test_open_s5s6_with_default(RE: RunEngine) -> None:
     assert len(msgs) == 1
 
 
-async def test_open_s5s6_with_other_size(RE: RunEngine) -> None:
-    sim = RunEngineSimulator()
+async def test_open_s5s6_with_other_size(sim: RunEngineSimulator) -> None:
     other_value = 0.5
     msgs = sim.simulate_plan(open_s5s6(other_value))
     msgs = check_msg_set(msgs=msgs, obj=slits().s5.x_gap, value=other_value)
@@ -58,8 +56,7 @@ async def test_open_s5s6_with_other_size(RE: RunEngine) -> None:
     assert len(msgs) == 1
 
 
-async def test_open_s5s6_with_no_wait(RE: RunEngine) -> None:
-    sim = RunEngineSimulator()
+async def test_open_s5s6_with_no_wait(sim: RunEngineSimulator) -> None:
     other_value = 0.5
     msgs = sim.simulate_plan(open_s5s6(other_value, wait=False))
     msgs = check_msg_set(msgs=msgs, obj=slits().s5.x_gap, value=other_value)
@@ -69,8 +66,7 @@ async def test_open_s5s6_with_no_wait(RE: RunEngine) -> None:
     assert len(msgs) == 1
 
 
-async def test_open_dsd_dsu_with_default(RE: RunEngine) -> None:
-    sim = RunEngineSimulator()
+async def test_open_dsd_dsu_with_default(sim: RunEngineSimulator) -> None:
     msgs = sim.simulate_plan(open_dsd_dsu())
     msgs = check_msg_set(msgs=msgs, obj=det_slits().upstream, value=DSD_DSU_OPENING_POS)
     msgs = check_msg_set(
@@ -81,8 +77,7 @@ async def test_open_dsd_dsu_with_default(RE: RunEngine) -> None:
     assert len(msgs) == 1
 
 
-async def test_open_dsd_dsu_with_other_size(RE: RunEngine) -> None:
-    sim = RunEngineSimulator()
+async def test_open_dsd_dsu_with_other_size(sim: RunEngineSimulator) -> None:
     other_value = 0.5
     msgs = sim.simulate_plan(open_dsd_dsu(other_value))
     msgs = check_msg_set(msgs=msgs, obj=det_slits().upstream, value=other_value)
@@ -92,8 +87,7 @@ async def test_open_dsd_dsu_with_other_size(RE: RunEngine) -> None:
     assert len(msgs) == 1
 
 
-async def test_open_dsd_dsu_with_no_wait(RE: RunEngine) -> None:
-    sim = RunEngineSimulator()
+async def test_open_dsd_dsu_with_no_wait(sim: RunEngineSimulator) -> None:
     other_value = 0.5
     msgs = sim.simulate_plan(open_dsd_dsu(other_value, wait=False))
     msgs = check_msg_set(msgs=msgs, obj=det_slits().upstream, value=other_value)
@@ -125,9 +119,8 @@ async def test_remove_pin_hole_with_default(RE: RunEngine, pinhole: XYStage) -> 
 
 
 async def test_remove_pin_hole_with_other_value(
-    RE: RunEngine, pinhole: XYStage
+    sim: RunEngineSimulator, pinhole: XYStage
 ) -> None:
-    sim = RunEngineSimulator()
     other_value = 0.5
     msgs = sim.simulate_plan(remove_pin_hole(other_value, wait=True))
     msgs = check_msg_set(msgs=msgs, obj=pinhole.x, value=other_value)
@@ -136,16 +129,16 @@ async def test_remove_pin_hole_with_other_value(
     assert len(msgs) == 1
 
 
-async def test_remove_pin_hole_with_no_wait(RE: RunEngine, pinhole: XYStage) -> None:
-    sim = RunEngineSimulator()
+async def test_remove_pin_hole_with_no_wait(
+    sim: RunEngineSimulator, pinhole: XYStage
+) -> None:
     other_value = 0.5
     msgs = sim.simulate_plan(remove_pin_hole(other_value, wait=False))
     msgs = check_msg_set(msgs=msgs, obj=pinhole.x, value=other_value)
     assert len(msgs) == 1
 
 
-async def test_direct_beam_polan(RE: RunEngine) -> None:
-    sim = RunEngineSimulator()
+async def test_direct_beam_polan(sim: RunEngineSimulator) -> None:
     other_value = 0.0
     msgs = sim.simulate_plan(direct_beam_polan())
     msgs = check_msg_set(msgs=msgs, obj=pa_stage().eta, value=other_value)
