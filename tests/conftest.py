@@ -66,7 +66,7 @@ def RE(request: pytest.FixtureRequest):
 
 
 @pytest.fixture
-def sim() -> RunEngineSimulator:
+def sim_run_engine() -> RunEngineSimulator:
     return RunEngineSimulator()
 
 

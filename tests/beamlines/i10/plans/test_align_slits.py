@@ -29,15 +29,15 @@ def capture_emitted(name, doc):
     docs[name].append(doc)
 
 
-def test_move_dsu(sim: RunEngineSimulator) -> None:
-    msgs = sim.simulate_plan(move_dsu(5000))
+def test_move_dsu(sim_run_engine: RunEngineSimulator) -> None:
+    msgs = sim_run_engine.simulate_plan(move_dsu(5000))
     msgs = check_msg_set(msgs=msgs, obj=det_slits().upstream, value=DSU["5000"])
     msgs = check_msg_wait(msgs=msgs, wait_group=ANY, wait=True)
     assert len(msgs) == 1
 
 
-def test_move_dsd(sim: RunEngineSimulator) -> None:
-    msgs = sim.simulate_plan(move_dsd(50))
+def test_move_dsd(sim_run_engine: RunEngineSimulator) -> None:
+    msgs = sim_run_engine.simulate_plan(move_dsd(50))
     msgs = check_msg_set(msgs=msgs, obj=det_slits().downstream, value=DSD["50"])
     msgs = check_msg_wait(msgs=msgs, wait_group=ANY, wait=True)
     assert len(msgs) == 1
@@ -46,8 +46,10 @@ def test_move_dsd(sim: RunEngineSimulator) -> None:
 @patch(
     "sm_bluesky.beamlines.i10.plans.align_slits.align_slit_with_look_up",
 )
-def test_align_pa_slit(fake_step_scan_and_move_fit: MagicMock, sim: RunEngineSimulator):
-    msgs = sim.simulate_plan(align_pa_slit(dsd_size=50, dsu_size=50))
+def test_align_pa_slit(
+    fake_step_scan_and_move_fit: MagicMock, sim_run_engine: RunEngineSimulator
+):
+    msgs = sim_run_engine.simulate_plan(align_pa_slit(dsd_size=50, dsu_size=50))
     msgs = check_msg_set(msgs=msgs, obj=det_slits().downstream, value=DSD["5000"])
     msgs = check_msg_wait(msgs=msgs, wait_group=ANY, wait=True)
 
@@ -58,8 +60,8 @@ def test_align_pa_slit(fake_step_scan_and_move_fit: MagicMock, sim: RunEngineSim
 @patch(
     "sm_bluesky.beamlines.i10.plans.align_slits.align_slit",
 )
-def test_align_s5s6(mock_align_slit: MagicMock, sim: RunEngineSimulator):
-    msgs = sim.simulate_plan(align_s5s6())
+def test_align_s5s6(mock_align_slit: MagicMock, sim_run_engine: RunEngineSimulator):
+    msgs = sim_run_engine.simulate_plan(align_s5s6())
     assert mock_align_slit.call_count == 2
     msgs = check_msg_set(msgs=msgs, obj=diffractometer().tth, value=0)
     msgs = check_msg_set(msgs=msgs, obj=diffractometer().th, value=0)
@@ -84,7 +86,7 @@ def test_align_s5s6(mock_align_slit: MagicMock, sim: RunEngineSimulator):
 def test_align_slit(
     mock_step_scan: MagicMock,
     mock_cal_range: MagicMock,
-    sim: RunEngineSimulator,
+    sim_run_engine: RunEngineSimulator,
     x_scan_size: float,
     x_final_size: float,
     x_open_size: float,
@@ -98,7 +100,7 @@ def test_align_slit(
 ):
     slit = slits().s5
     det = rasor_femto_pa_scaler_det()
-    msgs = sim.simulate_plan(
+    msgs = sim_run_engine.simulate_plan(
         align_slit(
             det,
             slit,
