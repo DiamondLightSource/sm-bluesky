@@ -13,6 +13,7 @@ from dodal.common.visit import (
     StaticVisitPathProvider,
 )
 from dodal.devices.motors import XYZStage
+from dodal.utils import AnyDevice, make_all_devices
 from ophyd_async.core import (
     FilenameProvider,
     StaticFilenameProvider,
@@ -154,6 +155,14 @@ async def fake_detector() -> SimDetector:
         fake_detector = SimDetector(prefix="fake_Pv", name="fake_detector")
     set_mock_value(fake_detector.value, 0)
     return fake_detector
+
+
+@pytest.fixture
+def fake_i10() -> dict[str, AnyDevice]:
+    fake_i10, _ = make_all_devices(
+        "dodal.beamlines.i10", connect_immediately=True, mock=True
+    )
+    return fake_i10
 
 
 # area detector that is use for testing

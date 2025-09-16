@@ -6,6 +6,7 @@ from bluesky.run_engine import RunEngine
 from bluesky.simulators import RunEngineSimulator
 from dodal.beamlines.i10 import det_slits, pa_stage, pin_hole, slits
 from dodal.devices.motors import XYStage
+from dodal.utils import AnyDevice
 from ophyd_async.testing import (
     callback_on_mock_put,
     get_mock_put,
@@ -95,8 +96,9 @@ async def test_open_dsd_dsu_with_no_wait(sim_run_engine: RunEngineSimulator) -> 
     assert len(msgs) == 1
 
 
+# fake_i10 is needed to force pin_hole into mock mode
 @pytest.fixture
-async def pinhole() -> XYStage:
+async def pinhole(fake_i10: dict[str, AnyDevice]) -> XYStage:
     ph = pin_hole()
     set_mock_value(ph.x.velocity, 2.78)
     set_mock_value(ph.x.user_readback, 1)
