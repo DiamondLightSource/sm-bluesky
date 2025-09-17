@@ -29,11 +29,13 @@ def open_s5s6(
     size: float
         The size of their opening both x and y will set to the same value.
     wait: bool
-        If this is true it will set both slits to move and wait until it get to position
-        .
+        If this is true it will set both slits to move and wait until it get to
+        position.
     group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
+    slits (optional): I10Stils
+        Slit to set tje soze of the opening to.
     """
 
     if wait and group is None:
@@ -62,6 +64,8 @@ def open_dsd_dsu(
     group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
+    det_slits (optional): DetSlits
+        slits to move open_position to.
     """
 
     if wait and group is None:
@@ -91,6 +95,8 @@ def remove_pin_hole(
     group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
+    pin_hole (optional): XYStage
+        pin hole device to move.
     """
     if wait and group is None:
         group = f"{pin_hole.name}_wait"
@@ -115,6 +121,8 @@ def direct_beam_polan(
     group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
+    pa_stage (optional): PaStage
+        Polarisation analyser stage to move.
     """
     if wait and group is None:
         group = f"{pa_stage.name}_wait"
@@ -145,7 +153,14 @@ def clear_beam_path(
     group (optional): Hashable
         If given this will be the group name that pass along to bluesky, which
         can be use at a later time.
-
+    slits (optional): I10Slits
+        Slits to open.
+    det_selts (optional): DetSlits
+        Detector slits to open.
+    pin_hole (optional): XYStage
+        Pin hole to move out of the way of pin.
+    pa_stage (optional): PaStage
+        Polarisation analyser stage to move out of the way of the beam.
     """
     if group is None:
         group = "clear_beam_path"

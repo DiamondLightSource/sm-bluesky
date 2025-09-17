@@ -122,6 +122,12 @@ def align_s5s6(
     ----------
     det (optional): StandardReadable
         Detector that use for the alignments, default is rasor photodiode.
+    slits (optional): I10Slits
+        Slits used for alignment.
+    diffractometer (optional): Diffractometer
+        Diffractometer to move out of beam.
+    sample_stage (optional): XYZStage:
+        sample stage to move out of beam.
     """
     yield from move_to_direct_beam_position(diffractometer, sample_stage)
 
@@ -178,7 +184,7 @@ def align_slit(
     Parameters
     ----------
     det: StandardReadable
-        Detector to be use for alignment.
+        Detector to use for alignment.
     slit: Slits,
         x-y slits.
     x_scan_size: float,
