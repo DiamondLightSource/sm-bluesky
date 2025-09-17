@@ -86,7 +86,7 @@ asyncio_mode = "auto"
 
 
 [tool.coverage.run]
-omit = ["src/sm_bluesky/__main__.py"]
+patch = ["subprocess"]
 data_file = "/tmp/sm_bluesky.coverage"
 
 [tool.coverage.paths]
