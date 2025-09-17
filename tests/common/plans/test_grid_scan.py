@@ -208,9 +208,8 @@ async def test_grid_fast_with_speed_capped(
     )
 
 
-@pytest.mark.parametrize("execution_number", range(1))
 async def test_grid_fast_unknown_step_snake(
-    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ) -> None:
     docs = defaultdict(list)
 
