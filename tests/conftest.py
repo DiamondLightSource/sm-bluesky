@@ -13,6 +13,7 @@ from dodal.common.visit import (
 )
 from dodal.devices.motors import XYZStage
 from dodal.utils import make_all_devices
+from ophyd.sim import SynPeriodicSignal
 from ophyd_async.core import (
     FilenameProvider,
     StaticFilenameProvider,
@@ -197,3 +198,9 @@ async def andor2_point() -> SingleTriggerDetector:
         andor2_point = SingleTriggerDetector(drv=ADBaseIO("p99"))
 
     return andor2_point
+
+
+@pytest.fixture
+def det():
+    det = SynPeriodicSignal(name="rand", labels={"detectors"})
+    return det

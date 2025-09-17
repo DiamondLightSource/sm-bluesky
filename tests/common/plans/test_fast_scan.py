@@ -5,7 +5,6 @@ import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
 from numpy import linspace
-from ophyd.sim import SynPeriodicSignal
 from ophyd_async.testing import assert_emitted, get_mock_put
 
 from sm_bluesky.common.plans.fast_scan import fast_scan_1d, fast_scan_grid
@@ -13,12 +12,6 @@ from sm_bluesky.common.plans.fast_scan import fast_scan_1d, fast_scan_grid
 # Long enough for multiple asyncio event loop cycles to run so
 # all the tasks have a chance to run
 A_BIT = 0.001
-
-
-@pytest.fixture
-def det():
-    det = SynPeriodicSignal(name="rand", labels={"detectors"})
-    return det
 
 
 async def test_fast_scan_1d_fail_limit_check(sim_motor: XYZStage, RE: RunEngine, det):

@@ -8,13 +8,19 @@ from bluesky.preprocessors import (
 )
 from bluesky.protocols import Readable
 from bluesky.utils import plan, short_uid
+from dodal.devices.apple2_undulator import EnergySetter
 from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
 from numpy import linspace
 from ophyd_async.core import FlyMotorInfo
 from ophyd_async.epics.motor import Motor
 
 from sm_bluesky.common.helper import add_extra_names_to_meta
-from sm_bluesky.common.plan_stubs import check_within_limit
+from sm_bluesky.common.plan_stubs import (
+    cache_speed,
+    check_within_limit,
+    fly_trigger_and_read,
+    restore_speed,
+)
 from sm_bluesky.log import LOGGER
 
 
@@ -182,13 +188,6 @@ def fast_scan_grid(
     )
 
 
-@plan
-def reset_speed(old_speed, motor: Motor) -> MsgGenerator:
-    LOGGER.info(f"Clean up: setting motor speed to {old_speed}.")
-    if old_speed:
-        yield from bps.abs_set(motor.velocity, old_speed)
-
-
 def clean_up():
     LOGGER.info("Clean up")
     # possibly use to move back to starting position.
@@ -235,7 +234,7 @@ def _fast_scan_1d(
     """
 
     # read the current speed and store it
-    old_speed: float = yield from bps.rd(motor.velocity)
+    old_speed: dict[Motor, float] = yield from cache_speed([motor])
 
     def inner_fast_scan_1d(
         dets: list[Any],
@@ -245,7 +244,7 @@ def _fast_scan_1d(
         motor_speed: float | None = None,
     ):
         if not motor_speed:
-            motor_speed = old_speed
+            motor_speed = old_speed[motor]
 
         LOGGER.info(
             f"Starting 1d fly scan with {motor.name}:"
@@ -259,16 +258,46 @@ def _fast_scan_1d(
             time_for_move=abs(start - end) / motor_speed,
         )
         yield from bps.prepare(motor, fly_info, group=grp, wait=True)
-        yield from bps.wait(group=grp)
-        yield from bps.kickoff(motor, group=grp, wait=True)
-        LOGGER.info(f"flying motor =  {motor.name} at speed = {motor_speed}")
-        done = yield from bps.complete(motor)
-        yield from bps.trigger_and_read(dets + [motor])
-        while not done.done:
-            yield from bps.trigger_and_read(dets + [motor])
-            yield from bps.checkpoint()
+        yield from fly_trigger_and_read(motor, fly_info, dets)
 
     yield from finalize_wrapper(
         plan=inner_fast_scan_1d(dets, motor, start, end, motor_speed),
-        final_plan=reset_speed(old_speed, motor),
+        final_plan=restore_speed(old_speed),
+    )
+
+
+@plan
+@attach_data_session_metadata_decorator()
+def soft_fly_energy_scan(
+    dets: list[Readable],
+    energy_device: EnergySetter,
+    energy_start: float,
+    energy_end: float,
+    energy_step: float,
+    count_time: float,
+    md: dict[str, Any] | None = None,
+):
+    old_speeds = yield from cache_speed(
+        [energy_device.pgm_ref().energy, energy_device.id.gap]
+    )
+
+    fly_info = FlyMotorInfo(
+        start_position=energy_start,
+        end_position=energy_end,
+        time_for_move=abs(energy_end - energy_start) / energy_step * count_time,
+    )
+
+    @bpp.stage_decorator(dets)
+    @bpp.run_decorator(md=md)
+    def inn_fly_energy_scan(
+        energy_device: EnergySetter,
+        fly_info: FlyMotorInfo,
+        dets: list[Readable],
+    ) -> MsgGenerator:
+        yield from bps.prepare(energy_device, fly_info, wait=True)
+        yield from fly_trigger_and_read(energy_device, fly_info, dets)
+
+    yield from finalize_wrapper(
+        plan=inn_fly_energy_scan(energy_device, fly_info, dets),
+        final_plan=restore_speed(old_speeds),
     )
