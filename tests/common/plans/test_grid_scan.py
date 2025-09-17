@@ -270,9 +270,8 @@ async def test_grid_fast_unknown_step_snake(
     assert docs["event"].__len__() == pytest.approx(floor(t), rel=1)
 
 
-@pytest.mark.parametrize("execution_number", range(1))
 async def test_grid_fast_unknown_step_no_snake(
-    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number: int
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
 ) -> None:
     docs = defaultdict(list)
 
@@ -332,9 +331,10 @@ async def test_grid_fast_unknown_step_no_snake(
     assert docs["event"].__len__() == pytest.approx(number_of_point, abs=1)
 
 
-@pytest.mark.parametrize("execution_number", range(1))
 async def test_grid_fast_unknown_step_snake_with_point_correction(
-    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number: int
+    andor2: Andor2Detector,
+    sim_motor: XYZStage,
+    RE: RunEngine,
 ) -> None:
     docs = defaultdict(list)
 
