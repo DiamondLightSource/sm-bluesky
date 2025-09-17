@@ -16,10 +16,10 @@ from sm_bluesky.common.plans import trigger_img
 
 async def test_Andor2_trigger_img(
     RE: RunEngine, andor2: Andor2Detector, static_path_provider: StaticPathProvider
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name: str, doc: Any):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     RE.subscribe(capture_emitted)
@@ -46,10 +46,10 @@ async def test_Andor2_scan(
     andor2: Andor2Detector,
     static_path_provider: StaticPathProvider,
     sim_motor: XYZStage,
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     RE.subscribe(capture_emitted)

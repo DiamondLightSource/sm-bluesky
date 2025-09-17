@@ -39,7 +39,7 @@ async def test_process_detectors_for_analyserscan_func_correctly_replaces_detect
     sim_analyser: GenericElectronAnalyserDetector,
     extra_detectors: Sequence[Readable],
     all_detectors: Sequence[Readable],
-):
+) -> None:
     sequence = sim_analyser.load_sequence(sequence_file)
 
     analyserscan_detectors: Sequence[Readable] = process_detectors_for_analyserscan(

@@ -1,5 +1,6 @@
 from collections import defaultdict
 from math import floor
+from typing import Any
 from unittest.mock import ANY
 
 import pytest
@@ -16,7 +17,7 @@ from sm_bluesky.common.plans.grid_scan import grid_fast_scan, grid_step_scan
 
 async def test_grid_fast_zero_velocity_fail(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
-):
+) -> None:
     plan_time = 10
     count_time = 0.2
     step_size = 0.0
@@ -24,7 +25,7 @@ async def test_grid_fast_zero_velocity_fail(
     step_end = 3
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     with pytest.raises(ValueError):
@@ -47,10 +48,12 @@ async def test_grid_fast_zero_velocity_fail(
     assert_emitted(docs)
 
 
-async def test_grid_fast(andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine):
+async def test_grid_fast(
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     plan_time = 50
@@ -89,10 +92,10 @@ async def test_grid_fast(andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEng
 
 async def test_grid_fast_with_too_little_time_grid_become_1d(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     plan_time = 1.5
@@ -128,10 +131,10 @@ async def test_grid_fast_with_too_little_time_grid_become_1d(
 
 async def test_grid_fast_with_too_little_time_grid_cannot_have_any_points(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     plan_time = 10
@@ -163,10 +166,10 @@ async def test_grid_fast_with_too_little_time_grid_cannot_have_any_points(
 
 async def test_grid_fast_with_speed_capped(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     plan_time = 10
@@ -208,10 +211,10 @@ async def test_grid_fast_with_speed_capped(
 @pytest.mark.parametrize("execution_number", range(1))
 async def test_grid_fast_unknown_step_snake(
     andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     rng = random.default_rng()
@@ -267,13 +270,12 @@ async def test_grid_fast_unknown_step_snake(
     assert docs["event"].__len__() == pytest.approx(floor(t), rel=1)
 
 
-@pytest.mark.parametrize("execution_number", range(1))
 async def test_grid_fast_unknown_step_no_snake(
-    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
-):
+    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     step_motor_speed = 1
@@ -329,13 +331,14 @@ async def test_grid_fast_unknown_step_no_snake(
     assert docs["event"].__len__() == pytest.approx(number_of_point, abs=1)
 
 
-@pytest.mark.parametrize("execution_number", range(1))
 async def test_grid_fast_unknown_step_snake_with_point_correction(
-    andor2: Andor2Detector, sim_motor: XYZStage, RE: RunEngine, execution_number
-):
+    andor2: Andor2Detector,
+    sim_motor: XYZStage,
+    RE: RunEngine,
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     rng = random.default_rng()
@@ -389,10 +392,10 @@ async def test_grid_fast_unknown_step_snake_with_point_correction(
 
 async def test_grid_step_with_home(
     RE: RunEngine, sim_motor_step: XYZStage, andor2: Andor2Detector
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     await sim_motor_step.x.set(-1)
@@ -432,10 +435,10 @@ async def test_grid_step_with_home(
 async def test_grid_step_without_home_with_readable(
     RE: RunEngine,
     sim_motor_step: XYZStage,
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     await sim_motor_step.x.set(-1)
@@ -472,10 +475,10 @@ async def test_grid_step_without_home_with_readable(
 
 async def test_grid_fast_sim_flyable_motor_with_andor_point(
     andor2_point: SingleTriggerDetector, sim_motor_delay: XYZStage, RE: RunEngine
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     plan_time = 1.5
@@ -513,10 +516,10 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
 
 async def test_grid_fast_sim_flyable_motor(
     andor2: Andor2Detector, sim_motor_delay: XYZStage, RE: RunEngine
-):
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     plan_time = 1.5

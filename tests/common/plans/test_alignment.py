@@ -21,7 +21,7 @@ from tests.sim_devices import SimDetector
 docs = defaultdict(list)
 
 
-def capture_emitted(name: str, doc: Any):
+def capture_emitted(name: str, doc: Any) -> None:
     docs[name].append(doc)
 
 
@@ -196,8 +196,8 @@ async def test_scan_and_move_cen_failed_with_no_peak_in_range(
     sim_motor_step: XYZStage,
     fake_detector: SimDetector,
     test_input: tuple[float, float, int, float],
-    expected_centre,
-):
+    expected_centre: float,
+) -> None:
     start = test_input[0]
     end = test_input[1]
     num = test_input[2]
@@ -245,10 +245,10 @@ async def test_align_slit_with_look_up(
     RE: RunEngine,
     sim_motor_step: XYZStage,
     fake_detector: SimDetector,
-    size,
-    expected_centre,
-    offset,
-):
+    size: float,
+    expected_centre: float,
+    offset: float,
+) -> None:
     start, end, num = cal_range_num(
         cen=FAKEDSU[str(size)], range=size / 1000 * 3, size=size / 5000.0
     )
@@ -290,7 +290,7 @@ async def test_align_slit_with_look_up_fail_wrong_key(
     RE: RunEngine,
     sim_motor_step: XYZStage,
     fake_detector: SimDetector,
-):
+) -> None:
     size = 555
     with pytest.raises(ValueError) as e:
         RE(
