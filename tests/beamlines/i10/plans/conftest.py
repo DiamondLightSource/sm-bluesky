@@ -10,7 +10,7 @@ from dodal.devices.i10.rasor.rasor_motors import (
 from dodal.devices.i10.rasor.rasor_scaler_cards import RasorScalerCard1
 from dodal.devices.i10.slits import I10Slits
 from dodal.devices.motors import XYStage, XYZStage
-from dodal.testing import patch_all_motors
+from dodal.testing import patch_all_motors, patch_motor
 from ophyd_async.core import init_devices
 
 
@@ -42,7 +42,14 @@ def pa_stage(RE: RunEngine) -> PaStage:
 def pin_hole(RE: RunEngine) -> XYStage:
     with init_devices(mock=True):
         pin_hole = XYStage("TEST:")
-    patch_all_motors(pin_hole)
+    patch_motor(pin_hole.y)
+    patch_motor(
+        pin_hole.x,
+        initial_position=1,
+        velocity=2.78,
+        low_limit_travel=0,
+        high_limit_travel=150,
+    )
     return pin_hole
 
 
