@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.beamlines.i10.plans.align_slits &#8212; sm-bluesky 0.0.2.dev183+g10ff809c3 documentation</title>
+    <title>sm_bluesky.beamlines.i10.plans.align_slits &#8212; sm-bluesky 0.0.2.dev196+g8d3fc9f34 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../../_static/documentation_options.js?v=6bbd78a9"></script>
+    <script src="../../../../../_static/documentation_options.js?v=ccb29d0d"></script>
     <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -455,6 +455,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.slits</span><span class="w"> </span><span class="kn">import</span> <span class="n">Slits</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardReadable</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.beamlines.i10.configuration.default_setting</span><span class="w"> </span><span class="kn">import</span> <span class="n">RASOR_DEFAULT_DET</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.math_functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">cal_range_num</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">move_motor_with_look_up</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plans</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -463,10 +464,6 @@
     <span class="n">step_scan_and_move_fit</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">..configuration.default_setting</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">RASOR_DEFAULT_DET</span><span class="p">,</span>
-<span class="p">)</span>
 
 <span class="sd">&quot;&quot;&quot;I10 has fix/solid slit on a motor, this store the rough motor opening</span>
 <span class="sd"> position against slit size in um&quot;&quot;&quot;</span>
