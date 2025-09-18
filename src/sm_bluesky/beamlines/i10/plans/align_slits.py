@@ -11,6 +11,7 @@ from dodal.common.types import MsgGenerator
 from dodal.devices.slits import Slits
 from ophyd_async.core import StandardReadable
 
+from sm_bluesky.beamlines.i10.configuration.default_setting import RASOR_DEFAULT_DET
 from sm_bluesky.common.math_functions import cal_range_num
 from sm_bluesky.common.plan_stubs import move_motor_with_look_up
 from sm_bluesky.common.plans import (
@@ -19,10 +20,6 @@ from sm_bluesky.common.plans import (
     step_scan_and_move_fit,
 )
 from sm_bluesky.log import LOGGER
-
-from ..configuration.default_setting import (
-    RASOR_DEFAULT_DET,
-)
 
 """I10 has fix/solid slit on a motor, this store the rough motor opening
  position against slit size in um"""

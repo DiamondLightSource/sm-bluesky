@@ -16,13 +16,12 @@ from sm_bluesky.beamlines.i10.plans import (
     move_pin_origin,
 )
 from sm_bluesky.common.plans import StatPosition
-
-from ....helpers import check_msg_set, check_msg_wait
+from tests.helpers import check_msg_set, check_msg_wait
 
 docs = defaultdict(list)
 
 
-def capture_emitted(name, doc):
+def capture_emitted(name, doc) -> None:
     docs[name].append(doc)
 
 
@@ -30,8 +29,7 @@ def capture_emitted(name, doc):
 async def test_centre_tth(
     fake_step_scan_and_move_fit: Mock,
     RE: RunEngine,
-    fake_i10,
-):
+) -> None:
     RE(centre_tth(), docs)
     fake_step_scan_and_move_fit.assert_called_once_with(
         det=RASOR_DEFAULT_DET,
@@ -45,7 +43,7 @@ async def test_centre_tth(
 
 
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.step_scan_and_move_fit")
-async def test_centre_alpha(fake_step_scan_and_move_fit: Mock, RE: RunEngine, fake_i10):
+async def test_centre_alpha(fake_step_scan_and_move_fit: Mock, RE: RunEngine) -> None:
     RE(centre_alpha())
 
     fake_step_scan_and_move_fit.assert_called_once_with(
@@ -63,7 +61,7 @@ async def test_centre_alpha(fake_step_scan_and_move_fit: Mock, RE: RunEngine, fa
 async def test_centre_det_angles(
     fake_step_scan_and_move_fit: Mock,
     RE: RunEngine,
-):
+) -> None:
     RE(centre_det_angles())
     assert fake_step_scan_and_move_fit.call_args_list[0] == call(
         det=RASOR_DEFAULT_DET,
@@ -85,9 +83,8 @@ async def test_centre_det_angles(
     )
 
 
-def test_move_pin_origin_default():
-    sim = RunEngineSimulator()
-    msgs = sim.simulate_plan(move_pin_origin())
+def test_move_pin_origin_default(sim_run_engine: RunEngineSimulator) -> None:
+    msgs = sim_run_engine.simulate_plan(move_pin_origin())
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().x, value=0)
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().y, value=0)
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().z, value=0)
@@ -95,9 +92,10 @@ def test_move_pin_origin_default():
     assert len(msgs) == 1
 
 
-def test_move_pin_origin_default_without_wait():
-    sim = RunEngineSimulator()
-    msgs = sim.simulate_plan(move_pin_origin(wait=False))
+def test_move_pin_origin_default_without_wait(
+    sim_run_engine: RunEngineSimulator,
+) -> None:
+    msgs = sim_run_engine.simulate_plan(move_pin_origin(wait=False))
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().x, value=0)
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().y, value=0)
     msgs = check_msg_set(msgs=msgs, obj=sample_stage().z, value=0)

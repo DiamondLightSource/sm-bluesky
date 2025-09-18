@@ -16,7 +16,7 @@ from sm_bluesky.common.plan_stubs import (
 fake_motor_look_up = {"5000": 1.8, "1000": 8, "-500": 8.8, "100": 55, "50": -34.3}
 
 
-def test_check_within_limit(sim_motor_step: XYZStage, RE: RunEngine):
+def test_check_within_limit(sim_motor_step: XYZStage, RE: RunEngine) -> None:
     set_mock_value(sim_motor_step.x.low_limit_travel, -10)
     set_mock_value(sim_motor_step.x.high_limit_travel, 20)
 
@@ -29,7 +29,7 @@ def test_check_within_limit(sim_motor_step: XYZStage, RE: RunEngine):
     RE(check_within_limit([18], sim_motor_step.x))
 
 
-def test_motor_with_look_up_fail(RE: RunEngine, sim_motor_step: XYZStage):
+def test_motor_with_look_up_fail(RE: RunEngine, sim_motor_step: XYZStage) -> None:
     size = 400
     with pytest.raises(ValueError) as e:
         RE(
@@ -43,7 +43,9 @@ def test_motor_with_look_up_fail(RE: RunEngine, sim_motor_step: XYZStage):
     )
 
 
-def test_motor_with_look_up_fail_invalid_table(RE: RunEngine, sim_motor_step: XYZStage):
+def test_motor_with_look_up_fail_invalid_table(
+    RE: RunEngine, sim_motor_step: XYZStage
+) -> None:
     bad_motor_look_up = {"5000": 1.8, "1000": 8, "-500": 8.8, "100": "sdsf", "50": 34.3}
 
     size = 400
@@ -60,8 +62,8 @@ def test_motor_with_look_up_fail_invalid_table(RE: RunEngine, sim_motor_step: XY
     [(5000, 1.8), (-500, 8.8), (50, -34.3)],
 )
 async def test_motor_with_look_up_move_using_table_success(
-    RE: RunEngine, sim_motor_step: XYZStage, test_input, expected_centre
-):
+    RE: RunEngine, sim_motor_step: XYZStage, test_input: float, expected_centre: float
+) -> None:
     RE(
         move_motor_with_look_up(
             sim_motor_step.z, size=test_input, motor_table=fake_motor_look_up
@@ -75,8 +77,8 @@ async def test_motor_with_look_up_move_using_table_success(
     [(50, 50), (-5, -5), (0, 0)],
 )
 async def test_motor_with_look_up_move_using_motor_position_success(
-    RE: RunEngine, sim_motor_step: XYZStage, test_input, expected_centre
-):
+    RE: RunEngine, sim_motor_step: XYZStage, test_input: float, expected_centre: float
+) -> None:
     RE(
         move_motor_with_look_up(
             sim_motor_step.z,
@@ -89,8 +91,9 @@ async def test_motor_with_look_up_move_using_motor_position_success(
 
 
 @pytest.fixture
-async def fake_slit(fake_i10):
-    fake_slit = fake_i10["slits"].s5
+async def fake_slit() -> Slits:
+    with init_devices(mock=True):
+        fake_slit = Slits("TEST:")
     set_mock_value(fake_slit.x_gap.velocity, 2.78)
     set_mock_value(fake_slit.x_gap.low_limit_travel, 0)
     set_mock_value(fake_slit.x_gap.high_limit_travel, 50)
@@ -100,7 +103,7 @@ async def fake_slit(fake_i10):
     return fake_slit
 
 
-async def test_set_slit_size_(RE: RunEngine, fake_slit: Slits):
+async def test_set_slit_size_(RE: RunEngine, fake_slit: Slits) -> None:
     set_value = 25
     callback_on_mock_put(
         fake_slit.x_gap.user_setpoint,
@@ -121,15 +124,15 @@ async def test_set_slit_size_(RE: RunEngine, fake_slit: Slits):
 
 
 @pytest.fixture
-async def mock_motor():
+async def mock_motor() -> Motor:
     async with init_devices(mock=True):
         mock_motor = Motor("BLxx-MO-xx-01:", "mock_motor")
-    yield mock_motor
+    return mock_motor
 
 
 def test_get_velocity_and_step_size_speed_too_low_failed(
     mock_motor: Motor, RE: RunEngine
-):
+) -> None:
     with pytest.raises(ValueError):
         RE(
             get_velocity_and_step_size(
