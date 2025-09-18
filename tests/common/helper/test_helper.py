@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Any
 
 import pytest
 from bluesky.plan_stubs import sleep
@@ -24,7 +25,7 @@ async def test_add_meta_success_with_no_meta(
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     RE(

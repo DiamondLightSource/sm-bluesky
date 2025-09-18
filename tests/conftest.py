@@ -201,6 +201,6 @@ async def andor2_point() -> SingleTriggerDetector:
 
 
 @pytest.fixture
-def det():
+def det() -> SynPeriodicSignal:
     det = SynPeriodicSignal(name="rand", labels={"detectors"})
     return det

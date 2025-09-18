@@ -2,6 +2,7 @@ from collections import defaultdict
 from unittest.mock import ANY
 
 import pytest
+from bluesky.protocols import Readable
 from bluesky.run_engine import RunEngine
 from dodal.devices.apple2_undulator import (
     EnergySetter,
@@ -9,6 +10,7 @@ from dodal.devices.apple2_undulator import (
 )
 from dodal.devices.i10.i10_apple2 import I10Apple2
 from dodal.devices.pgm import PGM
+from dodal.testing import patch_all_motors
 from ophyd_async.core import (
     Device,
     StrictEnum,
@@ -63,11 +65,7 @@ async def mock_energy(mock_pgm: PGM) -> EnergySetter:
     set_mock_value(mock_energy.id.gap.velocity, 2)
     set_mock_value(mock_energy.id.gap.max_velocity, 200)
     set_mock_value(mock_energy.id.gap.min_velocity, 0.0)
-
-    set_mock_value(mock_energy.id.phase.btm_inner.velocity, 1)
-    set_mock_value(mock_energy.id.phase.top_inner.velocity, 1)
-    set_mock_value(mock_energy.id.phase.btm_outer.velocity, 1)
-    set_mock_value(mock_energy.id.phase.top_outer.velocity, 1)
+    patch_all_motors(mock_energy.id.phase)
     set_mock_value(mock_energy.pgm_ref().energy.acceleration_time, 0.1)
     set_mock_value(mock_energy.pgm_ref().energy.user_readback, 500)
     set_mock_value(mock_energy.pgm_ref().energy.user_setpoint, 500)
@@ -78,16 +76,15 @@ async def mock_energy(mock_pgm: PGM) -> EnergySetter:
 
 
 async def test_soft_fly_energy_scan_success(
-    mock_energy: EnergySetter, RE: RunEngine, det
-):
+    mock_energy: EnergySetter, RE: RunEngine, fake_detector: Readable
+) -> None:
     docs = defaultdict(list)
-    det.start_simulation()
 
     def capture_emitted(name, doc):
         docs[name].append(doc)
 
     RE(
-        soft_fly_energy_scan([det], mock_energy, 700, 800, 0.2, 1e-3),
+        soft_fly_energy_scan([fake_detector], mock_energy, 700, 800, 0.2, 1e-3),
         capture_emitted,
         wait=True,
     )
@@ -97,13 +94,13 @@ async def test_soft_fly_energy_scan_success(
     assert len(docs["event"]) > 1
     # check the starting point
     assert docs["event"][0]["data"] == {
-        "rand": ANY,
+        "fake_detector-value": ANY,
         "mock_energy-id-energy": 750,
         "mock_pgm-energy": 700.0,
     }
     # check end point
     assert docs["event"][-1]["data"] == {
-        "rand": ANY,
+        "fake_detector-value": ANY,
         "mock_energy-id-energy": 750,
         "mock_pgm-energy": 810.0,
     }

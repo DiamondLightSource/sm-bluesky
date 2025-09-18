@@ -276,7 +276,7 @@ def soft_fly_energy_scan(
     energy_step: float,
     count_time: float,
     md: dict[str, Any] | None = None,
-):
+) -> MsgGenerator:
     old_speeds = yield from cache_speed(
         [energy_device.pgm_ref().energy, energy_device.id.gap]
     )
