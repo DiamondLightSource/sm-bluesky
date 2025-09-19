@@ -127,7 +127,7 @@ def test_align_slit(
     msgs = sim_run_engine.simulate_plan(
         align_slit(
             rasor_femto_pa_scaler_det,
-            slits.s5,
+            slit,
             x_scan_size,
             x_final_size,
             x_open_size,
