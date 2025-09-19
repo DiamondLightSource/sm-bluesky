@@ -1,12 +1,14 @@
 from collections import defaultdict
+from typing import Any
 from unittest.mock import Mock, call, patch
 
 from bluesky.run_engine import RunEngine
 from bluesky.simulators import RunEngineSimulator
-from dodal.beamlines.i10 import diffractometer, sample_stage
+from dodal.devices.current_amplifiers import CurrentAmpDet
+from dodal.devices.i10.rasor.rasor_motors import Diffractometer
+from dodal.devices.motors import XYZStage
 
 from sm_bluesky.beamlines.i10.configuration.default_setting import (
-    RASOR_DEFAULT_DET,
     RASOR_DEFAULT_DET_NAME_EXTENSION,
 )
 from sm_bluesky.beamlines.i10.plans import (
@@ -21,7 +23,7 @@ from tests.helpers import check_msg_set, check_msg_wait
 docs = defaultdict(list)
 
 
-def capture_emitted(name, doc) -> None:
+def capture_emitted(name: str, doc: Any) -> None:
     docs[name].append(doc)
 
 
@@ -29,11 +31,13 @@ def capture_emitted(name, doc) -> None:
 async def test_centre_tth(
     fake_step_scan_and_move_fit: Mock,
     RE: RunEngine,
+    rasor_femto_pa_scaler_det: CurrentAmpDet,
+    diffractometer: Diffractometer,
 ) -> None:
-    RE(centre_tth(), docs)
+    RE(centre_tth(rasor_femto_pa_scaler_det, diffractometer=diffractometer), docs)
     fake_step_scan_and_move_fit.assert_called_once_with(
-        det=RASOR_DEFAULT_DET,
-        motor=diffractometer().tth,
+        det=rasor_femto_pa_scaler_det,
+        motor=diffractometer.tth,
         start=-1,
         end=1,
         num=21,
@@ -43,12 +47,17 @@ async def test_centre_tth(
 
 
 @patch("sm_bluesky.beamlines.i10.plans.centre_direct_beam.step_scan_and_move_fit")
-async def test_centre_alpha(fake_step_scan_and_move_fit: Mock, RE: RunEngine) -> None:
-    RE(centre_alpha())
+async def test_centre_alpha(
+    fake_step_scan_and_move_fit: Mock,
+    RE: RunEngine,
+    rasor_femto_pa_scaler_det: CurrentAmpDet,
+    diffractometer: Diffractometer,
+) -> None:
+    RE(centre_alpha(rasor_femto_pa_scaler_det, diffractometer=diffractometer))
 
     fake_step_scan_and_move_fit.assert_called_once_with(
-        det=RASOR_DEFAULT_DET,
-        motor=diffractometer().alpha,
+        det=rasor_femto_pa_scaler_det,
+        motor=diffractometer.alpha,
         start=-0.8,
         end=0.8,
         num=21,
@@ -61,11 +70,13 @@ async def test_centre_alpha(fake_step_scan_and_move_fit: Mock, RE: RunEngine) ->
 async def test_centre_det_angles(
     fake_step_scan_and_move_fit: Mock,
     RE: RunEngine,
+    rasor_femto_pa_scaler_det: CurrentAmpDet,
+    diffractometer: Diffractometer,
 ) -> None:
-    RE(centre_det_angles())
+    RE(centre_det_angles(rasor_femto_pa_scaler_det, diffractometer=diffractometer))
     assert fake_step_scan_and_move_fit.call_args_list[0] == call(
-        det=RASOR_DEFAULT_DET,
-        motor=diffractometer().tth,
+        det=rasor_femto_pa_scaler_det,
+        motor=diffractometer.tth,
         start=-1,
         end=1,
         num=21,
@@ -73,8 +84,8 @@ async def test_centre_det_angles(
         fitted_loc=StatPosition.CEN,
     )
     assert fake_step_scan_and_move_fit.call_args_list[1] == call(
-        det=RASOR_DEFAULT_DET,
-        motor=diffractometer().alpha,
+        det=rasor_femto_pa_scaler_det,
+        motor=diffractometer.alpha,
         start=-0.8,
         end=0.8,
         num=21,
@@ -83,20 +94,24 @@ async def test_centre_det_angles(
     )
 
 
-def test_move_pin_origin_default(sim_run_engine: RunEngineSimulator) -> None:
-    msgs = sim_run_engine.simulate_plan(move_pin_origin())
-    msgs = check_msg_set(msgs=msgs, obj=sample_stage().x, value=0)
-    msgs = check_msg_set(msgs=msgs, obj=sample_stage().y, value=0)
-    msgs = check_msg_set(msgs=msgs, obj=sample_stage().z, value=0)
+def test_move_pin_origin_default(
+    sim_run_engine: RunEngineSimulator, sample_stage: XYZStage
+) -> None:
+    msgs = sim_run_engine.simulate_plan(move_pin_origin(sample_stage=sample_stage))
+    msgs = check_msg_set(msgs=msgs, obj=sample_stage.x, value=0)
+    msgs = check_msg_set(msgs=msgs, obj=sample_stage.y, value=0)
+    msgs = check_msg_set(msgs=msgs, obj=sample_stage.z, value=0)
     msgs = check_msg_wait(msgs=msgs, wait_group="move_pin_origin")
     assert len(msgs) == 1
 
 
 def test_move_pin_origin_default_without_wait(
-    sim_run_engine: RunEngineSimulator,
+    sim_run_engine: RunEngineSimulator, sample_stage: XYZStage
 ) -> None:
-    msgs = sim_run_engine.simulate_plan(move_pin_origin(wait=False))
-    msgs = check_msg_set(msgs=msgs, obj=sample_stage().x, value=0)
-    msgs = check_msg_set(msgs=msgs, obj=sample_stage().y, value=0)
-    msgs = check_msg_set(msgs=msgs, obj=sample_stage().z, value=0)
+    msgs = sim_run_engine.simulate_plan(
+        move_pin_origin(wait=False, sample_stage=sample_stage)
+    )
+    msgs = check_msg_set(msgs=msgs, obj=sample_stage.x, value=0)
+    msgs = check_msg_set(msgs=msgs, obj=sample_stage.y, value=0)
+    msgs = check_msg_set(msgs=msgs, obj=sample_stage.z, value=0)
     assert len(msgs) == 1

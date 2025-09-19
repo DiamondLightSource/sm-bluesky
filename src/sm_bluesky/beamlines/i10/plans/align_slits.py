@@ -1,17 +1,14 @@
 from collections.abc import Hashable
 
 from bluesky.plan_stubs import abs_set, mv, wait
-from dodal.beamlines.i10 import (
-    det_slits,
-    diffractometer,
-    sample_stage,
-    slits,
-)
+from dodal.beamlines.i10 import DetSlits, I10Slits
+from dodal.common import inject
 from dodal.common.types import MsgGenerator
+from dodal.devices.i10.rasor.rasor_motors import Diffractometer
+from dodal.devices.motors import XYZStage
 from dodal.devices.slits import Slits
 from ophyd_async.core import StandardReadable
 
-from sm_bluesky.beamlines.i10.configuration.default_setting import RASOR_DEFAULT_DET
 from sm_bluesky.common.math_functions import cal_range_num
 from sm_bluesky.common.plan_stubs import move_motor_with_look_up
 from sm_bluesky.common.plans import (
@@ -34,11 +31,12 @@ def move_dsu(
     use_motor_position: bool = False,
     wait: bool = True,
     group: Hashable | None = None,
+    det_slits: DetSlits = inject("det_slits"),
 ) -> MsgGenerator:
     """Move up stream detector slit either by it size in slit motor table or by motor
     position."""
     yield from move_motor_with_look_up(
-        slit=det_slits().upstream,
+        slit=det_slits.upstream,
         size=size,
         motor_table=slit_table,
         use_motor_position=use_motor_position,
@@ -53,11 +51,12 @@ def move_dsd(
     use_motor_position: bool = False,
     wait: bool = True,
     group: Hashable | None = None,
+    det_slits: DetSlits = inject("det_slits"),
 ) -> MsgGenerator:
     """Move down stream detector slit either by it size in slit motor table or by motor
     position."""
     yield from move_motor_with_look_up(
-        slit=det_slits().downstream,
+        slit=det_slits.downstream,
         size=size,
         motor_table=slit_table,
         use_motor_position=use_motor_position,
@@ -66,12 +65,14 @@ def move_dsd(
     )
 
 
-def align_dsu(size: float, det: StandardReadable | None = None) -> MsgGenerator:
+def align_dsu(
+    size: float,
+    det: StandardReadable = inject("rasor_femto_pa_scaler_det"),
+    det_slits: DetSlits = inject("det_slits"),
+) -> MsgGenerator:
     """Align the up stream detector slit"""
-    if det is None:
-        det = get_rasor_default_det()
     yield from align_slit_with_look_up(
-        motor=det_slits().upstream,
+        motor=det_slits.upstream,
         size=size,
         slit_table=DSU,
         det=det,
@@ -81,13 +82,12 @@ def align_dsu(size: float, det: StandardReadable | None = None) -> MsgGenerator:
 
 def align_dsd(
     size: float,
-    det: StandardReadable | None = None,
+    det: StandardReadable = inject("rasor_femto_pa_scaler_det"),
+    det_slits: DetSlits = inject("det_slits"),
 ) -> MsgGenerator:
     """Align the down stream detector slit"""
-    if det is None:
-        det = get_rasor_default_det()
     yield from align_slit_with_look_up(
-        motor=det_slits().downstream,
+        motor=det_slits.downstream,
         size=size,
         slit_table=DSD,
         det=det,
@@ -95,14 +95,24 @@ def align_dsd(
     )
 
 
-def align_pa_slit(dsd_size: float, dsu_size: float) -> MsgGenerator:
+def align_pa_slit(
+    dsd_size: float,
+    dsu_size: float,
+    det: StandardReadable = inject("rasor_femto_pa_scaler_det"),
+    det_slits: DetSlits = inject("det_slits"),
+) -> MsgGenerator:
     """Align both detector slits"""
-    yield from move_dsd(5000, wait=True)
-    yield from align_dsu(dsu_size)
-    yield from align_dsd(dsd_size)
+    yield from move_dsd(5000, wait=True, det_slits=det_slits)
+    yield from align_dsu(dsu_size, det, det_slits)
+    yield from align_dsd(dsd_size, det, det_slits)
 
 
-def align_s5s6(det: StandardReadable | None = None) -> MsgGenerator:
+def align_s5s6(
+    det: StandardReadable = inject("rasor_femto_pa_scaler_det"),
+    slits: I10Slits = inject("slits"),
+    diffractometer: Diffractometer = inject("diffractometer"),
+    sample_stage: XYZStage = inject("sample_stage"),
+) -> MsgGenerator:
     """
     Plan to align the s5s6 slits with the straight through beam
     and RASOR detector, it define where all the motor should be and call
@@ -112,17 +122,18 @@ def align_s5s6(det: StandardReadable | None = None) -> MsgGenerator:
     ----------
     det (optional): StandardReadable
         Detector that use for the alignments, default is rasor photodiode.
+    slits (optional): I10Slits
+        Slits used for alignment.
+    diffractometer (optional): Diffractometer
+        Diffractometer to move out of beam.
+    sample_stage (optional): XYZStage:
+        sample stage to move out of beam.
     """
-
-    if det is None:
-        det = get_rasor_default_det()
-
-    slit = slits()
-    yield from move_to_direct_beam_position()
+    yield from move_to_direct_beam_position(diffractometer, sample_stage)
 
     yield from align_slit(
         det=det,
-        slit=slit.s5,
+        slit=slits.s5,
         x_scan_size=0.1,
         x_final_size=0.65,
         x_range=2,
@@ -137,7 +148,7 @@ def align_s5s6(det: StandardReadable | None = None) -> MsgGenerator:
     LOGGER.info("Aligning s6")
     yield from align_slit(
         det=det,
-        slit=slit.s6,
+        slit=slits.s6,
         x_scan_size=0.1,
         x_final_size=0.45,
         x_range=2,
@@ -173,7 +184,7 @@ def align_slit(
     Parameters
     ----------
     det: StandardReadable
-        Detector to be use for alignment.
+        Detector to use for alignment.
     slit: Slits,
         x-y slits.
     x_scan_size: float,
@@ -237,18 +248,13 @@ def align_slit(
     yield from wait(group=group_wait)
 
 
-def move_to_direct_beam_position() -> MsgGenerator:
+def move_to_direct_beam_position(
+    diffractometer: Diffractometer = inject("diffractometer"),
+    sample_stage: XYZStage = inject("sample_stage"),
+) -> MsgGenerator:
     """Remove everything in the way of the beam"""
-    diff = diffractometer()
-    s_stage = sample_stage()
     group_wait = "diff group A"
-    yield from abs_set(diff.tth, 0, group=group_wait)
-    yield from abs_set(diff.th, 0, group=group_wait)  # type: ignore  # See: https://github.com/bluesky/bluesky/issues/1809
-    yield from abs_set(s_stage.y, -3, group=group_wait)  # type: ignore
+    yield from abs_set(diffractometer.tth, 0, group=group_wait)
+    yield from abs_set(diffractometer.th, 0, group=group_wait)
+    yield from abs_set(sample_stage.y, -3, group=group_wait)
     yield from wait(group=group_wait)
-
-
-def get_rasor_default_det() -> StandardReadable:
-    """Return default detector and its name."""
-    det = RASOR_DEFAULT_DET
-    return det
