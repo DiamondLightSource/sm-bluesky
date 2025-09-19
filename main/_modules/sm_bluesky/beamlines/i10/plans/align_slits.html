@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.beamlines.i10.plans.align_slits &#8212; sm-bluesky 0.0.2.dev196+g8d3fc9f34 documentation</title>
+    <title>sm_bluesky.beamlines.i10.plans.align_slits &#8212; sm-bluesky 0.0.2.dev206+g38649292d documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../../_static/documentation_options.js?v=ccb29d0d"></script>
+    <script src="../../../../../_static/documentation_options.js?v=5e7dc523"></script>
     <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -445,17 +445,14 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">abs_set</span><span class="p">,</span> <span class="n">mv</span><span class="p">,</span> <span class="n">wait</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.beamlines.i10</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">det_slits</span><span class="p">,</span>
-    <span class="n">diffractometer</span><span class="p">,</span>
-    <span class="n">sample_stage</span><span class="p">,</span>
-    <span class="n">slits</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.beamlines.i10</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetSlits</span><span class="p">,</span> <span class="n">I10Slits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">inject</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.common.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.i10.rasor.rasor_motors</span><span class="w"> </span><span class="kn">import</span> <span class="n">Diffractometer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.motors</span><span class="w"> </span><span class="kn">import</span> <span class="n">XYZStage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.slits</span><span class="w"> </span><span class="kn">import</span> <span class="n">Slits</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardReadable</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.beamlines.i10.configuration.default_setting</span><span class="w"> </span><span class="kn">import</span> <span class="n">RASOR_DEFAULT_DET</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.math_functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">cal_range_num</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">move_motor_with_look_up</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plans</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -480,11 +477,12 @@
     <span class="n">use_motor_position</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Move up stream detector slit either by it size in slit motor table or by motor</span>
 <span class="sd">    position.&quot;&quot;&quot;</span>
     <span class="k">yield from</span> <span class="n">move_motor_with_look_up</span><span class="p">(</span>
-        <span class="n">slit</span><span class="o">=</span><span class="n">det_slits</span><span class="p">()</span><span class="o">.</span><span class="n">upstream</span><span class="p">,</span>
+        <span class="n">slit</span><span class="o">=</span><span class="n">det_slits</span><span class="o">.</span><span class="n">upstream</span><span class="p">,</span>
         <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
         <span class="n">motor_table</span><span class="o">=</span><span class="n">slit_table</span><span class="p">,</span>
         <span class="n">use_motor_position</span><span class="o">=</span><span class="n">use_motor_position</span><span class="p">,</span>
@@ -502,11 +500,12 @@
     <span class="n">use_motor_position</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Move down stream detector slit either by it size in slit motor table or by motor</span>
 <span class="sd">    position.&quot;&quot;&quot;</span>
     <span class="k">yield from</span> <span class="n">move_motor_with_look_up</span><span class="p">(</span>
-        <span class="n">slit</span><span class="o">=</span><span class="n">det_slits</span><span class="p">()</span><span class="o">.</span><span class="n">downstream</span><span class="p">,</span>
+        <span class="n">slit</span><span class="o">=</span><span class="n">det_slits</span><span class="o">.</span><span class="n">downstream</span><span class="p">,</span>
         <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
         <span class="n">motor_table</span><span class="o">=</span><span class="n">slit_table</span><span class="p">,</span>
         <span class="n">use_motor_position</span><span class="o">=</span><span class="n">use_motor_position</span><span class="p">,</span>
@@ -518,12 +517,14 @@
 
 <div class="viewcode-block" id="align_dsu">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.align_dsu">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">align_dsu</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">align_dsu</span><span class="p">(</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Align the up stream detector slit&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">det</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">det</span> <span class="o">=</span> <span class="n">get_rasor_default_det</span><span class="p">()</span>
     <span class="k">yield from</span> <span class="n">align_slit_with_look_up</span><span class="p">(</span>
-        <span class="n">motor</span><span class="o">=</span><span class="n">det_slits</span><span class="p">()</span><span class="o">.</span><span class="n">upstream</span><span class="p">,</span>
+        <span class="n">motor</span><span class="o">=</span><span class="n">det_slits</span><span class="o">.</span><span class="n">upstream</span><span class="p">,</span>
         <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
         <span class="n">slit_table</span><span class="o">=</span><span class="n">DSU</span><span class="p">,</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
@@ -536,13 +537,12 @@
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.align_dsd">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">align_dsd</span><span class="p">(</span>
     <span class="n">size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Align the down stream detector slit&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">det</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">det</span> <span class="o">=</span> <span class="n">get_rasor_default_det</span><span class="p">()</span>
     <span class="k">yield from</span> <span class="n">align_slit_with_look_up</span><span class="p">(</span>
-        <span class="n">motor</span><span class="o">=</span><span class="n">det_slits</span><span class="p">()</span><span class="o">.</span><span class="n">downstream</span><span class="p">,</span>
+        <span class="n">motor</span><span class="o">=</span><span class="n">det_slits</span><span class="o">.</span><span class="n">downstream</span><span class="p">,</span>
         <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
         <span class="n">slit_table</span><span class="o">=</span><span class="n">DSD</span><span class="p">,</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
@@ -551,14 +551,24 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">align_pa_slit</span><span class="p">(</span><span class="n">dsd_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">dsu_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">align_pa_slit</span><span class="p">(</span>
+    <span class="n">dsd_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">dsu_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Align both detector slits&quot;&quot;&quot;</span>
-    <span class="k">yield from</span> <span class="n">move_dsd</span><span class="p">(</span><span class="mi">5000</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">align_dsu</span><span class="p">(</span><span class="n">dsu_size</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">align_dsd</span><span class="p">(</span><span class="n">dsd_size</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">move_dsd</span><span class="p">(</span><span class="mi">5000</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">det_slits</span><span class="o">=</span><span class="n">det_slits</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">align_dsu</span><span class="p">(</span><span class="n">dsu_size</span><span class="p">,</span> <span class="n">det</span><span class="p">,</span> <span class="n">det_slits</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">align_dsd</span><span class="p">(</span><span class="n">dsd_size</span><span class="p">,</span> <span class="n">det</span><span class="p">,</span> <span class="n">det_slits</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">align_s5s6</span><span class="p">(</span><span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">align_s5s6</span><span class="p">(</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
+    <span class="n">slits</span><span class="p">:</span> <span class="n">I10Slits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;slits&quot;</span><span class="p">),</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
+    <span class="n">sample_stage</span><span class="p">:</span> <span class="n">XYZStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;sample_stage&quot;</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plan to align the s5s6 slits with the straight through beam</span>
 <span class="sd">    and RASOR detector, it define where all the motor should be and call</span>
@@ -568,17 +578,18 @@
 <span class="sd">    ----------</span>
 <span class="sd">    det (optional): StandardReadable</span>
 <span class="sd">        Detector that use for the alignments, default is rasor photodiode.</span>
+<span class="sd">    slits (optional): I10Slits</span>
+<span class="sd">        Slits used for alignment.</span>
+<span class="sd">    diffractometer (optional): Diffractometer</span>
+<span class="sd">        Diffractometer to move out of beam.</span>
+<span class="sd">    sample_stage (optional): XYZStage:</span>
+<span class="sd">        sample stage to move out of beam.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="n">det</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">det</span> <span class="o">=</span> <span class="n">get_rasor_default_det</span><span class="p">()</span>
-
-    <span class="n">slit</span> <span class="o">=</span> <span class="n">slits</span><span class="p">()</span>
-    <span class="k">yield from</span> <span class="n">move_to_direct_beam_position</span><span class="p">()</span>
+    <span class="k">yield from</span> <span class="n">move_to_direct_beam_position</span><span class="p">(</span><span class="n">diffractometer</span><span class="p">,</span> <span class="n">sample_stage</span><span class="p">)</span>
 
     <span class="k">yield from</span> <span class="n">align_slit</span><span class="p">(</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
-        <span class="n">slit</span><span class="o">=</span><span class="n">slit</span><span class="o">.</span><span class="n">s5</span><span class="p">,</span>
+        <span class="n">slit</span><span class="o">=</span><span class="n">slits</span><span class="o">.</span><span class="n">s5</span><span class="p">,</span>
         <span class="n">x_scan_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
         <span class="n">x_final_size</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
         <span class="n">x_range</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
@@ -593,7 +604,7 @@
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Aligning s6&quot;</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">align_slit</span><span class="p">(</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
-        <span class="n">slit</span><span class="o">=</span><span class="n">slit</span><span class="o">.</span><span class="n">s6</span><span class="p">,</span>
+        <span class="n">slit</span><span class="o">=</span><span class="n">slits</span><span class="o">.</span><span class="n">s6</span><span class="p">,</span>
         <span class="n">x_scan_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
         <span class="n">x_final_size</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span>
         <span class="n">x_range</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
@@ -629,7 +640,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    det: StandardReadable</span>
-<span class="sd">        Detector to be use for alignment.</span>
+<span class="sd">        Detector to use for alignment.</span>
 <span class="sd">    slit: Slits,</span>
 <span class="sd">        x-y slits.</span>
 <span class="sd">    x_scan_size: float,</span>
@@ -693,21 +704,16 @@
     <span class="k">yield from</span> <span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">move_to_direct_beam_position</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">move_to_direct_beam_position</span><span class="p">(</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
+    <span class="n">sample_stage</span><span class="p">:</span> <span class="n">XYZStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;sample_stage&quot;</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove everything in the way of the beam&quot;&quot;&quot;</span>
-    <span class="n">diff</span> <span class="o">=</span> <span class="n">diffractometer</span><span class="p">()</span>
-    <span class="n">s_stage</span> <span class="o">=</span> <span class="n">sample_stage</span><span class="p">()</span>
     <span class="n">group_wait</span> <span class="o">=</span> <span class="s2">&quot;diff group A&quot;</span>
-    <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">tth</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">th</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>  <span class="c1"># type: ignore  # See: https://github.com/bluesky/bluesky/issues/1809</span>
-    <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">s_stage</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+    <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">diffractometer</span><span class="o">.</span><span class="n">tth</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">diffractometer</span><span class="o">.</span><span class="n">th</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">get_rasor_default_det</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">StandardReadable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return default detector and its name.&quot;&quot;&quot;</span>
-    <span class="n">det</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET</span>
-    <span class="k">return</span> <span class="n">det</span>
 </pre></div>
 
                 </article>

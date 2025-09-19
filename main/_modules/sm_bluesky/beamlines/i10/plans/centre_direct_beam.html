@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.beamlines.i10.plans.centre_direct_beam &#8212; sm-bluesky 0.0.2.dev196+g8d3fc9f34 documentation</title>
+    <title>sm_bluesky.beamlines.i10.plans.centre_direct_beam &#8212; sm-bluesky 0.0.2.dev206+g38649292d documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../../_static/documentation_options.js?v=ccb29d0d"></script>
+    <script src="../../../../../_static/documentation_options.js?v=5e7dc523"></script>
     <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -445,15 +445,13 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bps</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.beamlines.i10</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">diffractometer</span><span class="p">,</span>
-    <span class="n">sample_stage</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">inject</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.common.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.i10.rasor.rasor_motors</span><span class="w"> </span><span class="kn">import</span> <span class="n">Diffractometer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.motors</span><span class="w"> </span><span class="kn">import</span> <span class="n">XYZStage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardReadable</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.beamlines.i10.configuration.default_setting</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">RASOR_DEFAULT_DET</span><span class="p">,</span>
     <span class="n">RASOR_DEFAULT_DET_NAME_EXTENSION</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plans</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatPosition</span><span class="p">,</span> <span class="n">step_scan_and_move_fit</span>
@@ -462,17 +460,18 @@
 <div class="viewcode-block" id="centre_tth">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.centre_tth">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">centre_tth</span><span class="p">(</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET</span><span class="p">,</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
     <span class="n">det_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET_NAME_EXTENSION</span><span class="p">,</span>
     <span class="n">start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Centre two theta using Rasor dector.&quot;&quot;&quot;</span>
 
     <span class="k">yield from</span> <span class="n">step_scan_and_move_fit</span><span class="p">(</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
-        <span class="n">motor</span><span class="o">=</span><span class="n">diffractometer</span><span class="p">()</span><span class="o">.</span><span class="n">tth</span><span class="p">,</span>
+        <span class="n">motor</span><span class="o">=</span><span class="n">diffractometer</span><span class="o">.</span><span class="n">tth</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
         <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
         <span class="n">num</span><span class="o">=</span><span class="n">num</span><span class="p">,</span>
@@ -485,16 +484,17 @@
 <div class="viewcode-block" id="centre_alpha">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.centre_alpha">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">centre_alpha</span><span class="p">(</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET</span><span class="p">,</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
     <span class="n">det_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET_NAME_EXTENSION</span><span class="p">,</span>
     <span class="n">start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.8</span><span class="p">,</span>
     <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
     <span class="n">num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Centre rasor alpha using Rasor dector.&quot;&quot;&quot;</span>
     <span class="k">yield from</span> <span class="n">step_scan_and_move_fit</span><span class="p">(</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
-        <span class="n">motor</span><span class="o">=</span><span class="n">diffractometer</span><span class="p">()</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span>
+        <span class="n">motor</span><span class="o">=</span><span class="n">diffractometer</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
         <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
         <span class="n">num</span><span class="o">=</span><span class="n">num</span><span class="p">,</span>
@@ -507,25 +507,30 @@
 <div class="viewcode-block" id="centre_det_angles">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.centre_det_angles">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">centre_det_angles</span><span class="p">(</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET</span><span class="p">,</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
     <span class="n">det_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET_NAME_EXTENSION</span><span class="p">,</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Centre both two theta and alpha angle on Rasor&quot;&quot;&quot;</span>
-    <span class="k">yield from</span> <span class="n">centre_tth</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">det_name</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">centre_alpha</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">det_name</span><span class="p">)</span></div>
+    <span class="k">yield from</span> <span class="n">centre_tth</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">det_name</span><span class="p">,</span> <span class="n">diffractometer</span><span class="o">=</span><span class="n">diffractometer</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">centre_alpha</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">det_name</span><span class="p">,</span> <span class="n">diffractometer</span><span class="o">=</span><span class="n">diffractometer</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="move_pin_origin">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.move_pin_origin">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">move_pin_origin</span><span class="p">(</span><span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">move_pin_origin</span><span class="p">(</span>
+    <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sample_stage</span><span class="p">:</span> <span class="n">XYZStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;sample_stage&quot;</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Move the point to the centre of rotation.&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">wait</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">group</span> <span class="o">=</span> <span class="s2">&quot;move_pin_origin&quot;</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="p">()</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
         <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span></div>
 

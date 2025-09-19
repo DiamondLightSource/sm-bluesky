@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.beamlines.i10.plans.open_beam_path &#8212; sm-bluesky 0.0.2.dev196+g8d3fc9f34 documentation</title>
+    <title>sm_bluesky.beamlines.i10.plans.open_beam_path &#8212; sm-bluesky 0.0.2.dev206+g38649292d documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../../_static/documentation_options.js?v=ccb29d0d"></script>
+    <script src="../../../../../_static/documentation_options.js?v=5e7dc523"></script>
     <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -445,8 +445,11 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bps</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.beamlines.i10</span><span class="w"> </span><span class="kn">import</span> <span class="n">det_slits</span><span class="p">,</span> <span class="n">pa_stage</span><span class="p">,</span> <span class="n">pin_hole</span><span class="p">,</span> <span class="n">slits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">inject</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.common.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.i10.rasor.rasor_motors</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetSlits</span><span class="p">,</span> <span class="n">PaStage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.i10.slits</span><span class="w"> </span><span class="kn">import</span> <span class="n">I10Slits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.motors</span><span class="w"> </span><span class="kn">import</span> <span class="n">XYStage</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.beamlines.i10.configuration.default_setting</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DSD_DSU_OPENING_POS</span><span class="p">,</span>
@@ -460,7 +463,10 @@
 <div class="viewcode-block" id="open_s5s6">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.open_s5s6">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">open_s5s6</span><span class="p">(</span>
-    <span class="n">size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">S5S6_OPENING_SIZE</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">S5S6_OPENING_SIZE</span><span class="p">,</span>
+    <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">slits</span><span class="p">:</span> <span class="n">I10Slits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;slits&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Open up clean up slits s5 and s6.</span>
 
@@ -469,17 +475,19 @@
 <span class="sd">    size: float</span>
 <span class="sd">        The size of their opening both x and y will set to the same value.</span>
 <span class="sd">    wait: bool</span>
-<span class="sd">        If this is true it will set both slits to move and wait until it get to position</span>
-<span class="sd">        .</span>
+<span class="sd">        If this is true it will set both slits to move and wait until it get to</span>
+<span class="sd">        position.</span>
 <span class="sd">    group (optional): Hashable</span>
 <span class="sd">        If given this will be the group name that pass along to bluesky, which</span>
 <span class="sd">        can be use at a later time.</span>
+<span class="sd">    slits (optional): I10Stils</span>
+<span class="sd">        Slit to set tje soze of the opening to.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">wait</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">group</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slits</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">__wait&quot;</span>
-    <span class="k">yield from</span> <span class="n">set_slit_size</span><span class="p">(</span><span class="n">slits</span><span class="p">()</span><span class="o">.</span><span class="n">s5</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">set_slit_size</span><span class="p">(</span><span class="n">slits</span><span class="p">()</span><span class="o">.</span><span class="n">s6</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slits</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">__wait&quot;</span>
+    <span class="k">yield from</span> <span class="n">set_slit_size</span><span class="p">(</span><span class="n">slits</span><span class="o">.</span><span class="n">s5</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">set_slit_size</span><span class="p">(</span><span class="n">slits</span><span class="o">.</span><span class="n">s6</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
         <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Waiting for s5 and s6 to finish move.&quot;</span><span class="p">)</span>
         <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span></div>
@@ -492,6 +500,7 @@
     <span class="n">open_position</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DSD_DSU_OPENING_POS</span><span class="p">,</span>
     <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove both detector slits</span>
 
@@ -504,13 +513,15 @@
 <span class="sd">    group (optional): Hashable</span>
 <span class="sd">        If given this will be the group name that pass along to bluesky, which</span>
 <span class="sd">        can be use at a later time.</span>
+<span class="sd">    det_slits (optional): DetSlits</span>
+<span class="sd">        slits to move open_position to.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">wait</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">group</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">det_slits</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_wait&quot;</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">det_slits</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_wait&quot;</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Opening Dsd and dsu, very slow motor may take minutes.&quot;</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">det_slits</span><span class="p">()</span><span class="o">.</span><span class="n">upstream</span><span class="p">,</span> <span class="n">open_position</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">det_slits</span><span class="p">()</span><span class="o">.</span><span class="n">downstream</span><span class="p">,</span> <span class="n">open_position</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">det_slits</span><span class="o">.</span><span class="n">upstream</span><span class="p">,</span> <span class="n">open_position</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">det_slits</span><span class="o">.</span><span class="n">downstream</span><span class="p">,</span> <span class="n">open_position</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
         <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Waiting for dsd and dsu to finish move.&quot;</span><span class="p">)</span>
         <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span></div>
@@ -523,6 +534,7 @@
     <span class="n">open_position</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">PIN_HOLE_OPEING_POS</span><span class="p">,</span>
     <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pin_hole</span><span class="p">:</span> <span class="n">XYStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;pin_hole&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Move pin hole out of the way of the pin</span>
 
@@ -535,20 +547,26 @@
 <span class="sd">    group (optional): Hashable</span>
 <span class="sd">        If given this will be the group name that pass along to bluesky, which</span>
 <span class="sd">        can be use at a later time.</span>
+<span class="sd">    pin_hole (optional): XYStage</span>
+<span class="sd">        pin hole device to move.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">wait</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">group</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pin_hole</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_wait&quot;</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pin_hole</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_wait&quot;</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Removing pin hole.&quot;</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pin_hole</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">open_position</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pin_hole</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">open_position</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
-        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Waiting for </span><span class="si">{</span><span class="n">pin_hole</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to finish move.&quot;</span><span class="p">)</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Waiting for </span><span class="si">{</span><span class="n">pin_hole</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to finish move.&quot;</span><span class="p">)</span>
         <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="direct_beam_polan">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.direct_beam_polan">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">direct_beam_polan</span><span class="p">(</span><span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">direct_beam_polan</span><span class="p">(</span>
+    <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pa_stage</span><span class="p">:</span> <span class="n">PaStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;pa_stage&quot;</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Move polarization analyzer out of the way of the beam.</span>
 
 <span class="sd">    Parameters</span>
@@ -558,23 +576,32 @@
 <span class="sd">    group (optional): Hashable</span>
 <span class="sd">        If given this will be the group name that pass along to bluesky, which</span>
 <span class="sd">        can be use at a later time.</span>
+<span class="sd">    pa_stage (optional): PaStage</span>
+<span class="sd">        Polarisation analyser stage to move.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">wait</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">group</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pa_stage</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_wait&quot;</span>
-    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removing </span><span class="si">{</span><span class="n">pa_stage</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pa_stage</span><span class="p">()</span><span class="o">.</span><span class="n">eta</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pa_stage</span><span class="p">()</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pa_stage</span><span class="p">()</span><span class="o">.</span><span class="n">ttp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pa_stage</span><span class="p">()</span><span class="o">.</span><span class="n">thp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pa_stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_wait&quot;</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removing </span><span class="si">{</span><span class="n">pa_stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pa_stage</span><span class="o">.</span><span class="n">eta</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pa_stage</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pa_stage</span><span class="o">.</span><span class="n">ttp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">pa_stage</span><span class="o">.</span><span class="n">thp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
-        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Waiting for </span><span class="si">{</span><span class="n">pa_stage</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to finish move.&quot;</span><span class="p">)</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Waiting for </span><span class="si">{</span><span class="n">pa_stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to finish move.&quot;</span><span class="p">)</span>
         <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="clear_beam_path">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.clear_beam_path">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">clear_beam_path</span><span class="p">(</span><span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_beam_path</span><span class="p">(</span>
+    <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">slits</span><span class="p">:</span> <span class="n">I10Slits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;slits&quot;</span><span class="p">),</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
+    <span class="n">pin_hole</span><span class="p">:</span> <span class="n">XYStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;pin_hole&quot;</span><span class="p">),</span>
+    <span class="n">pa_stage</span><span class="p">:</span> <span class="n">PaStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;pa_stage&quot;</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Move everything out of the way of the direct beam</span>
 
 <span class="sd">    Parameters</span>
@@ -584,14 +611,21 @@
 <span class="sd">    group (optional): Hashable</span>
 <span class="sd">        If given this will be the group name that pass along to bluesky, which</span>
 <span class="sd">        can be use at a later time.</span>
-
+<span class="sd">    slits (optional): I10Slits</span>
+<span class="sd">        Slits to open.</span>
+<span class="sd">    det_selts (optional): DetSlits</span>
+<span class="sd">        Detector slits to open.</span>
+<span class="sd">    pin_hole (optional): XYStage</span>
+<span class="sd">        Pin hole to move out of the way of pin.</span>
+<span class="sd">    pa_stage (optional): PaStage</span>
+<span class="sd">        Polarisation analyser stage to move out of the way of the beam.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">group</span> <span class="o">=</span> <span class="s2">&quot;clear_beam_path&quot;</span>
-    <span class="k">yield from</span> <span class="n">open_s5s6</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">open_dsd_dsu</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">remove_pin_hole</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">direct_beam_polan</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">open_s5s6</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="n">slits</span><span class="o">=</span><span class="n">slits</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">open_dsd_dsu</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="n">det_slits</span><span class="o">=</span><span class="n">det_slits</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">remove_pin_hole</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="n">pin_hole</span><span class="o">=</span><span class="n">pin_hole</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">direct_beam_polan</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="n">pa_stage</span><span class="o">=</span><span class="n">pa_stage</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">wait</span><span class="p">:</span>
         <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span></div>
 
