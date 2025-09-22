@@ -20,7 +20,7 @@ List of supported beamlines:
 - i17 Coherent Soft X-ray Imaging and Diffraction (CSXID) (Diamond II Flagship beamline)
 - i21 Resonant Inelastic soft X-ray Scattering
 - b07 Versatile Soft X-ray (VerSoX) Beamline
-- p99
+- p99 Mapping Test Rig
 - p60
 - k07 Future of b07-1 beamline
 
