@@ -73,7 +73,7 @@ def analyser_nd_step() -> Callable:
     return run_engine_setup_decorator(aps.analyser_nd_step)
 
 
-def fake_status(region=None):
+def fake_status(region=None) -> Status:
     status = Status()
     status.set_finished()
     return status
