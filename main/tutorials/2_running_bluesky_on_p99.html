@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Running Bluesky on p99 &#8212; sm-bluesky 0.0.2.dev206+g38649292d documentation</title>
+    <title>Running Bluesky on p99 &#8212; sm-bluesky 0.0.2.dev211+g43e8fb1cd documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=5e7dc523"></script>
+    <script src="../_static/documentation_options.js?v=39a0ed07"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -491,7 +491,7 @@
 </section>
 <section id="local-blueapi">
 <h2>Local blueAPI<a class="headerlink" href="#local-blueapi" title="Link to this heading">#</a></h2>
-<p>To run blueAPI locally, you must first start a RabbitMQ instance, you can do this by running the blueAPI script <a class="reference external" href="https://github.com/DiamondLightSource/blueapi/blob/main/src/script/start_rabbitmq.sh">here</a>.</p>
+<p>To run blueAPI locally, you must first start a RabbitMQ instance, Please follow instruction at  <a class="reference external" href="https://diamondlightsource.github.io/blueapi/main/tutorials/run-bus.html">Start RabbitQM</a> to set up RabbitMQ.</p>
 <p>Once RabbitMQ is running, execute the following command from the project root directory:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">blueapi</span> <span class="o">--</span><span class="n">config</span> <span class="o">./</span><span class="n">src</span><span class="o">/</span><span class="n">yaml_config</span><span class="o">/</span><span class="n">blueapi_config</span><span class="o">.</span><span class="n">yaml</span> <span class="n">serve</span>
 </pre></div>
