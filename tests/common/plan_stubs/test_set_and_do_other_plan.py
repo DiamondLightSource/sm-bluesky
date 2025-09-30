@@ -6,7 +6,7 @@ from bluesky.plans import count
 from bluesky.protocols import Location, Reading
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
-from ophyd_async.core import init_devices
+from ophyd_async.core import SignalRW, init_devices
 from ophyd_async.epics.core import epics_signal_rw
 from ophyd_async.testing import assert_emitted
 
