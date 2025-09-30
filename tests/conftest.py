@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 from bluesky.run_engine import RunEngine
+from bluesky.simulators import RunEngineSimulator
 from dodal.common.beamlines.beamline_utils import (
     set_path_provider,
 )
@@ -12,7 +13,6 @@ from dodal.common.visit import (
     StaticVisitPathProvider,
 )
 from dodal.devices.motors import XYZStage
-from dodal.utils import make_all_devices
 from ophyd_async.core import (
     FilenameProvider,
     StaticFilenameProvider,
@@ -46,7 +46,7 @@ set_path_provider(
 
 
 @pytest.fixture(scope="session")
-def RE(request):
+def RE(request: pytest.FixtureRequest):
     loop = asyncio.new_event_loop()
     loop.set_debug(True)
     re = RunEngine({}, call_returns_result=True, loop=loop)
@@ -65,11 +65,16 @@ def RE(request):
     return re
 
 
+@pytest.fixture
+def sim_run_engine() -> RunEngineSimulator:
+    return RunEngineSimulator()
+
+
 A_BIT = 0.5
 
 
 @pytest.fixture
-def static_filename_provider():
+def static_filename_provider() -> StaticFilenameProvider:
     return StaticFilenameProvider("ophyd_async_tests")
 
 
@@ -90,7 +95,7 @@ def static_path_provider(
 
 
 @pytest.fixture
-async def sim_motor():
+async def sim_motor() -> XYZStage:
     async with init_devices(mock=True):
         sim_motor = XYZStage("BLxxI-MO-TABLE-01:X", name="sim_motor")
     set_mock_value(sim_motor.x.velocity, 2.78)
@@ -119,19 +124,18 @@ async def sim_motor():
     set_mock_value(sim_motor.z.motor_done_move, True)
     set_mock_value(sim_motor.z.max_velocity, 100)
 
-    yield sim_motor
+    return sim_motor
 
 
 @pytest.fixture
-async def sim_motor_step():
+async def sim_motor_step() -> SimStage:
     async with init_devices(mock=True):
         sim_motor_step = SimStage(name="sim_motor_step", instant=True)
-
-    yield sim_motor_step
+    return sim_motor_step
 
 
 @pytest.fixture
-async def sim_motor_delay():
+async def sim_motor_delay() -> SimStage:
     async with init_devices(mock=True):
         sim_motor_delay = SimStage(name="sim_motor_delay", instant=False)
     set_mock_value(sim_motor_delay.x.velocity, 88.88)
@@ -140,23 +144,15 @@ async def sim_motor_delay():
     set_mock_value(sim_motor_delay.y.acceleration_time, 0.01)
     set_mock_value(sim_motor_delay.z.velocity, 88.88)
     set_mock_value(sim_motor_delay.z.acceleration_time, 0.01)
-    yield sim_motor_delay
+    return sim_motor_delay
 
 
 @pytest.fixture
-async def fake_detector():
+async def fake_detector() -> SimDetector:
     async with init_devices(mock=True):
         fake_detector = SimDetector(prefix="fake_Pv", name="fake_detector")
     set_mock_value(fake_detector.value, 0)
-    yield fake_detector
-
-
-@pytest.fixture
-async def fake_i10():
-    fake_i10, _ = make_all_devices(
-        "dodal.beamlines.i10", connect_immediately=True, mock=True
-    )
-    yield fake_i10
+    return fake_detector
 
 
 # area detector that is use for testing
