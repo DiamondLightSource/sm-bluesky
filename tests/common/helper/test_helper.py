@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Any
 
 import pytest
 from bluesky.plan_stubs import sleep
@@ -20,7 +21,7 @@ DEFAULT_METADATA = {
 async def test_add_meta_success_with_no_meta(
     RE: RunEngine,
     sim_motor_step: XYZStage,
-):
+) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
     docs = defaultdict(list)
 
@@ -39,11 +40,11 @@ async def test_add_meta_success_with_no_meta(
 async def test_add_meta_success_with_meta(
     RE: RunEngine,
     sim_motor_step: XYZStage,
-):
+) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any):
         docs[name].append(doc)
 
     RE(
@@ -59,7 +60,7 @@ async def test_add_meta_success_with_meta(
 async def test_add_meta_success_with_no_extra_meta(
     RE: RunEngine,
     sim_motor_step: XYZStage,
-):
+) -> None:
     count_meta = add_default_metadata(count)
     docs = defaultdict(list)
 
@@ -79,7 +80,7 @@ def some_plan(md: float):
 
 async def test_add_meta_fail(
     RE: RunEngine,
-):
+) -> None:
     count_meta = add_default_metadata(some_plan, DEFAULT_METADATA)
     docs = defaultdict(list)
 
@@ -90,14 +91,14 @@ async def test_add_meta_fail(
         RE(count_meta(md=1), capture_emitted, wait=True)
 
 
-def test_add_extra_names_to_meta_with_empty_dictionary():
+def test_add_extra_names_to_meta_with_empty_dictionary() -> None:
     md = {}
     md = add_extra_names_to_meta(md=md, key="Bound", names=["James"])
 
     assert md == {"Bound": ["James"]}
 
 
-def test_add_extra_names_to_meta_dictionary():
+def test_add_extra_names_to_meta_dictionary() -> None:
     md = {"Bound": ["Hun"]}
     print(md)
     md = add_extra_names_to_meta(md=md, key="Bound", names=["James", "more"])
@@ -106,7 +107,7 @@ def test_add_extra_names_to_meta_dictionary():
     assert md == {"Bound": ["Hun", "James", "more"]}
 
 
-def test_add_extra_names_to_meta_dictionary_fail_value_not_list():
+def test_add_extra_names_to_meta_dictionary_fail_value_not_list() -> None:
     md = {"Bound": some_plan}
     with pytest.raises(TypeError):
         md = add_extra_names_to_meta(md=md, key="Bound", names=["James"])

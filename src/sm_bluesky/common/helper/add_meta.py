@@ -38,7 +38,9 @@ def add_default_metadata(
     return cast(TCallable, inner)
 
 
-def add_extra_names_to_meta(md: dict, key: str, names: list[str]):
+def add_extra_names_to_meta(
+    md: dict[str, Any], key: str, names: list[str]
+) -> dict[str, Any]:
     if key in md:
         md[key] = md[key] + names
         return md

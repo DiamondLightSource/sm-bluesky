@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -16,12 +17,13 @@ A_BIT = 0.001
 
 
 @pytest.fixture
-def det():
-    det = SynPeriodicSignal(name="rand", labels={"detectors"})
-    return det
+def det() -> SynPeriodicSignal:
+    return SynPeriodicSignal(name="rand", labels={"detectors"})
 
 
-async def test_fast_scan_1d_fail_limit_check(sim_motor: XYZStage, RE: RunEngine, det):
+async def test_fast_scan_1d_fail_limit_check(
+    sim_motor: XYZStage, RE: RunEngine, det: SynPeriodicSignal
+) -> None:
     """Testing both high and low limits making sure nothing get run if it is exceeded"""
     docs = defaultdict(list)
 
@@ -29,24 +31,26 @@ async def test_fast_scan_1d_fail_limit_check(sim_motor: XYZStage, RE: RunEngine,
         docs[name].append(doc)
 
     with pytest.raises(ValueError):
-        RE(fast_scan_1d([det], sim_motor.x, 8, 20, 10), capture_emitted)
+        RE(fast_scan_1d([det], sim_motor.x, 8, 20, 10), capture_emitted)  # type:ignore
 
     with pytest.raises(ValueError):
-        RE(fast_scan_1d([det], sim_motor.x, -208, 0, 10), capture_emitted)
+        RE(fast_scan_1d([det], sim_motor.x, -208, 0, 10), capture_emitted)  # type:ignore
 
     assert 0 == get_mock_put(sim_motor.x.user_setpoint).call_count
     assert 0 == get_mock_put(sim_motor.x.velocity).call_count
     assert_emitted(docs, start=2, stop=2)
 
 
-async def test_fast_scan_1d_success(sim_motor: XYZStage, RE: RunEngine, det):
+async def test_fast_scan_1d_success(
+    sim_motor: XYZStage, RE: RunEngine, det: SynPeriodicSignal
+) -> None:
     docs = defaultdict(list)
     det.start_simulation()
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
-    RE(fast_scan_1d([det], sim_motor.x, 5, -1, 8.0), capture_emitted)
+    RE(fast_scan_1d([det], sim_motor.x, 5, -1, 8.0), capture_emitted)  # type:ignore
 
     assert 2.78 == await sim_motor.x.velocity.get_value()
     assert 2 == get_mock_put(sim_motor.x.user_setpoint).call_count
@@ -64,11 +68,11 @@ async def test_fast_scan_1d_success(sim_motor: XYZStage, RE: RunEngine, det):
 
 
 async def test_fast_scan_1d_success_without_speed(
-    sim_motor_delay: XYZStage, RE: RunEngine, det
-):
+    sim_motor_delay: XYZStage, RE: RunEngine
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     RE(fast_scan_1d([sim_motor_delay.y], sim_motor_delay.x, 1, 5), capture_emitted)
@@ -89,10 +93,12 @@ async def test_fast_scan_1d_success_without_speed(
     assert_emitted(docs, start=1, descriptor=1, event=mock.ANY, stop=1)
 
 
-async def test_fast_scan_2d_success(sim_motor: XYZStage, RE: RunEngine, det):
+async def test_fast_scan_2d_success(
+    sim_motor: XYZStage, RE: RunEngine, det: SynPeriodicSignal
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     x_start = 0
@@ -104,7 +110,7 @@ async def test_fast_scan_2d_success(sim_motor: XYZStage, RE: RunEngine, det):
     snake_axes = False
     RE(
         fast_scan_grid(
-            [det],
+            [det],  # type:ignore
             sim_motor.x,
             x_start,
             x_end,
@@ -144,10 +150,12 @@ async def test_fast_scan_2d_success(sim_motor: XYZStage, RE: RunEngine, det):
     assert_emitted(docs, start=1, descriptor=1, event=num_step, stop=1)
 
 
-async def test_fast_scan_2d_snake_success(sim_motor: XYZStage, RE: RunEngine, det):
+async def test_fast_scan_2d_snake_success(
+    sim_motor: XYZStage, RE: RunEngine, det: SynPeriodicSignal
+) -> None:
     docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
+    def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
 
     x_start = 0
@@ -159,7 +167,7 @@ async def test_fast_scan_2d_snake_success(sim_motor: XYZStage, RE: RunEngine, de
     snake_axes = True
     RE(
         fast_scan_grid(
-            [det],
+            [det],  # type:ignore
             sim_motor.x,
             x_start,
             x_end,

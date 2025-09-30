@@ -86,7 +86,7 @@ asyncio_mode = "auto"
 
 
 [tool.coverage.run]
-omit = ["src/sm_bluesky/__main__.py"]
+patch = ["subprocess"]
 data_file = "/tmp/sm_bluesky.coverage"
 
 [tool.coverage.paths]
@@ -130,6 +130,9 @@ lint.select = [
     "I",   # isort - https://docs.astral.sh/ruff/rules/#isort-i
     "UP",  # pyupgrade - https://docs.astral.sh/ruff/rules/#pyupgrade-up
     "SLF", # self - https://docs.astral.sh/ruff/settings/#lintflake8-self
+]
+lint.extend-ignore = [
+    "B008", # Allow inject("device")
 ]
 
 
