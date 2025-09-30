@@ -114,7 +114,7 @@ async def test_set_and_wait_within_tolerance_with_count(
 
 
 async def test_set_and_wait_within_tolerance_without_readback(
-    sim_rw_signal, RE: RunEngine
+    sim_rw_signal: SignalRW[float], RE: RunEngine
 ):
     docs = defaultdict(list)
 
