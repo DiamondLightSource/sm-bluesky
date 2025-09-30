@@ -16,10 +16,9 @@ from sm_bluesky.common.plan_stubs.set_and_do_other_plan import (
 
 
 @pytest.fixture
-async def sim_rw_signal():
+async def sim_rw_signal() -> SignalRW[float]:
     async with init_devices(mock=True):
         sim_rw_signal = epics_signal_rw(float, read_pv="BL007", write_pv="write")
-
     return sim_rw_signal
 
 
