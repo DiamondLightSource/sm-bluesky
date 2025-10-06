@@ -2,7 +2,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar, cast
 
-from blueapi.core import MsgGenerator
+from bluesky.utils import MsgGenerator
 
 TCallable = TypeVar("TCallable", bound=Callable[..., MsgGenerator])
 
