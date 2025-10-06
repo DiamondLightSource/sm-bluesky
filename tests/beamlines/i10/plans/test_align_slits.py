@@ -146,7 +146,6 @@ def test_align_slit(
     msgs = check_msg_set(msgs=msgs, obj=slit.y_centre, value=y_cen)
     msgs = check_mv_wait(msgs=msgs, wait_group=ANY)
     msgs = check_msg_set(msgs=msgs, obj=slit.y_gap, value=y_scan_size)
-
     msgs = check_msg_set(msgs=msgs, obj=slit.x_gap, value=x_open_size)
     msgs = check_msg_wait(msgs=msgs, wait_group="slits group")
     msgs = check_msg_set(msgs=msgs, obj=slit.x_gap, value=x_final_size)

@@ -15,7 +15,12 @@ def check_msg_wait(msgs: list[Msg], wait_group: str, wait: bool = False) -> list
     wait_msg = (
         {"group": wait_group}
         if wait
-        else {"group": wait_group, "error_on_timeout": True, "timeout": None}
+        else {
+            "group": wait_group,
+            "error_on_timeout": True,
+            "timeout": None,
+            "watch": (),
+        }
     )
     return assert_message_and_return_remaining(
         msgs,
@@ -32,5 +37,9 @@ def check_mv_wait(
         msgs,
         lambda msg: msg.command == "wait"
         and msg.obj is None
-        and msg.kwargs == {"group": wait_group, "timeout": timeout},
+        and msg.kwargs
+        == {
+            "group": wait_group,
+            "timeout": timeout,
+        },
     )

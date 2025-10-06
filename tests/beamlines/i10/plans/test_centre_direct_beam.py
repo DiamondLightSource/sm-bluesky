@@ -34,7 +34,10 @@ async def test_centre_tth(
     rasor_femto_pa_scaler_det: CurrentAmpDet,
     diffractometer: Diffractometer,
 ) -> None:
-    RE(centre_tth(rasor_femto_pa_scaler_det, diffractometer=diffractometer), docs)
+    RE(
+        centre_tth(rasor_femto_pa_scaler_det, diffractometer=diffractometer),
+        capture_emitted,
+    )
     fake_step_scan_and_move_fit.assert_called_once_with(
         det=rasor_femto_pa_scaler_det,
         motor=diffractometer.tth,
