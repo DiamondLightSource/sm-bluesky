@@ -6,7 +6,7 @@ import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
 from numpy import linspace
-from ophyd.sim import SynPeriodicSignal
+from ophyd_async.sim import SimPointDetector
 from ophyd_async.testing import assert_emitted, get_mock_put
 
 from sm_bluesky.common.plans.fast_scan import fast_scan_1d, fast_scan_grid
@@ -17,12 +17,12 @@ A_BIT = 0.001
 
 
 @pytest.fixture
-def det() -> SynPeriodicSignal:
-    return SynPeriodicSignal(name="rand", labels={"detectors"})
+def det() -> SimPointDetector:
+    return SimPointDetector(name="rand", pattern_generator=None, num_channels=1)
 
 
 async def test_fast_scan_1d_fail_limit_check(
-    sim_motor: XYZStage, RE: RunEngine, det: SynPeriodicSignal
+    sim_motor: XYZStage, RE: RunEngine, det: SimPointDetector
 ) -> None:
     """Testing both high and low limits making sure nothing get run if it is exceeded"""
     docs = defaultdict(list)
@@ -42,10 +42,9 @@ async def test_fast_scan_1d_fail_limit_check(
 
 
 async def test_fast_scan_1d_success(
-    sim_motor: XYZStage, RE: RunEngine, det: SynPeriodicSignal
+    sim_motor: XYZStage, RE: RunEngine, det: SimPointDetector
 ) -> None:
     docs = defaultdict(list)
-    det.start_simulation()
 
     def capture_emitted(name: str, doc: Any) -> None:
         docs[name].append(doc)
@@ -94,7 +93,7 @@ async def test_fast_scan_1d_success_without_speed(
 
 
 async def test_fast_scan_2d_success(
-    sim_motor: XYZStage, RE: RunEngine, det: SynPeriodicSignal
+    sim_motor: XYZStage, RE: RunEngine, det: SimPointDetector
 ) -> None:
     docs = defaultdict(list)
 
@@ -151,7 +150,7 @@ async def test_fast_scan_2d_success(
 
 
 async def test_fast_scan_2d_snake_success(
-    sim_motor: XYZStage, RE: RunEngine, det: SynPeriodicSignal
+    sim_motor: XYZStage, RE: RunEngine, det: SimPointDetector
 ) -> None:
     docs = defaultdict(list)
 
