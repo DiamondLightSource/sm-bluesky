@@ -1,6 +1,5 @@
 import pytest
 from bluesky.run_engine import RunEngine
-from dodal.devices.motors import XYZStage
 from dodal.devices.slits import Slits
 from ophyd_async.core import init_devices
 from ophyd_async.epics.motor import Motor
@@ -12,11 +11,12 @@ from sm_bluesky.common.plan_stubs import (
     move_motor_with_look_up,
     set_slit_size,
 )
+from tests.sim_devices import SimStage
 
 fake_motor_look_up = {"5000": 1.8, "1000": 8, "-500": 8.8, "100": 55, "50": -34.3}
 
 
-def test_check_within_limit(sim_motor_step: XYZStage, run_engine: RunEngine) -> None:
+def test_check_within_limit(sim_motor_step: SimStage, run_engine: RunEngine) -> None:
     set_mock_value(sim_motor_step.x.low_limit_travel, -10)
     set_mock_value(sim_motor_step.x.high_limit_travel, 20)
 
@@ -30,7 +30,7 @@ def test_check_within_limit(sim_motor_step: XYZStage, run_engine: RunEngine) -> 
 
 
 def test_motor_with_look_up_fail(
-    run_engine: RunEngine, sim_motor_step: XYZStage
+    run_engine: RunEngine, sim_motor_step: SimStage
 ) -> None:
     size = 400
     with pytest.raises(ValueError) as e:
@@ -46,7 +46,7 @@ def test_motor_with_look_up_fail(
 
 
 def test_motor_with_look_up_fail_invalid_table(
-    run_engine: RunEngine, sim_motor_step: XYZStage
+    run_engine: RunEngine, sim_motor_step: SimStage
 ) -> None:
     bad_motor_look_up = {"5000": 1.8, "1000": 8, "-500": 8.8, "100": "sdsf", "50": 34.3}
 
@@ -65,7 +65,7 @@ def test_motor_with_look_up_fail_invalid_table(
 )
 async def test_motor_with_look_up_move_using_table_success(
     run_engine: RunEngine,
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
     test_input: float,
     expected_centre: float,
 ) -> None:
@@ -83,7 +83,7 @@ async def test_motor_with_look_up_move_using_table_success(
 )
 async def test_motor_with_look_up_move_using_motor_position_success(
     run_engine: RunEngine,
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
     test_input: float,
     expected_centre: float,
 ) -> None:

@@ -12,6 +12,7 @@ from ophyd_async.testing import assert_emitted, set_mock_value
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
 from sm_bluesky.common.plans.grid_scan import grid_fast_scan, grid_step_scan
+from sm_bluesky.common.sim_devices import SimStage
 
 
 async def test_grid_fast_zero_velocity_fail(
@@ -363,7 +364,7 @@ async def test_grid_fast_unknown_step_snake_with_point_correction(
 async def test_grid_step_with_home(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
     andor2: Andor2Detector,
 ) -> None:
     await sim_motor_step.x.set(-1)
@@ -373,11 +374,11 @@ async def test_grid_step_with_home(
         grid_step_scan(
             dets=[andor2],
             count_time=0.2,
-            x_step_motor=sim_motor_step.x,
+            x_step_motor=sim_motor_step.x,  # type: ignore
             x_step_start=0,
             x_step_end=2,
             x_step_size=0.2,
-            y_step_motor=sim_motor_step.y,
+            y_step_motor=sim_motor_step.y,  # type: ignore
             y_step_start=-1,
             y_step_end=1,
             y_step_size=0.25,
@@ -402,7 +403,7 @@ async def test_grid_step_with_home(
 async def test_grid_step_without_home_with_readable(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
 ) -> None:
     await sim_motor_step.x.set(-1)
     await sim_motor_step.y.set(-2)
@@ -412,11 +413,11 @@ async def test_grid_step_without_home_with_readable(
         grid_step_scan(
             dets=[sim_motor_step.z],
             count_time=0.2,
-            x_step_motor=sim_motor_step.x,
+            x_step_motor=sim_motor_step.x,  # type: ignore
             x_step_start=0,
             x_step_end=x_step_end,
             x_step_size=0.2,
-            y_step_motor=sim_motor_step.y,
+            y_step_motor=sim_motor_step.y,  # type: ignore
             y_step_start=-1,
             y_step_end=y_step_end,
             y_step_size=0.25,

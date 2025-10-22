@@ -4,7 +4,7 @@ import pytest
 from bluesky.plan_stubs import sleep
 from bluesky.plans import count
 from bluesky.run_engine import RunEngine
-from dodal.devices.motors import XYZStage
+from tests.sim_devices import SimStage
 
 from sm_bluesky.common.helper.add_meta import (
     add_default_metadata,
@@ -20,7 +20,7 @@ DEFAULT_METADATA = {
 async def test_add_meta_success_with_no_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
 ) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
 
@@ -38,7 +38,7 @@ async def test_add_meta_success_with_no_meta(
 async def test_add_meta_success_with_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
 ) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
     run_engine(
@@ -56,7 +56,7 @@ async def test_add_meta_success_with_meta(
 async def test_add_meta_success_with_no_extra_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
 ) -> None:
     count_meta = add_default_metadata(count)
 

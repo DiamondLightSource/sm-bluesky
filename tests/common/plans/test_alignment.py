@@ -4,7 +4,6 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 from bluesky.run_engine import RunEngine
-from dodal.devices.motors import XYZStage
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
 
 from sm_bluesky.common.math_functions import cal_range_num
@@ -15,7 +14,7 @@ from sm_bluesky.common.plans import (
     step_scan_and_move_fit,
 )
 from tests.helpers import gaussian
-from tests.sim_devices import SimDetector
+from tests.sim_devices import SimDetector, SimStage
 
 
 @pytest.mark.parametrize(
@@ -38,7 +37,7 @@ from tests.sim_devices import SimDetector
 async def test_scan_and_move_cen_success_with_gaussian(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
     fake_detector: SimDetector,
     test_input: tuple[float, float, int, float],
     expected_centre: float,
@@ -75,7 +74,7 @@ async def test_scan_and_move_cen_success_with_gaussian(
     x_data1 = np.array([])
     for i in run_engine_documents["event"]:
         y_data1 = np.append(y_data1, i["data"]["fake_detector-value"])
-        x_data1 = np.append(x_data1, i["data"]["sim_motor_step-x-user_readback"])
+        x_data1 = np.append(x_data1, i["data"]["sim_motor_step-x"])
     assert await sim_motor_step.x.user_setpoint.get_value() == pytest.approx(
         expected_centre, 0.01
     )
@@ -101,7 +100,7 @@ def step_function(x_data, step_centre: float) -> list[float]:
 async def test_scan_and_move_cen_success_with_step(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
     fake_detector: SimDetector,
     test_input: tuple[float, float, int],
     expected_centre: float,
@@ -137,7 +136,7 @@ async def test_scan_and_move_cen_success_with_step(
     x_data1 = np.array([])
     for i in run_engine_documents["event"]:
         y_data1 = np.append(y_data1, i["data"]["fake_detector-value"])
-        x_data1 = np.append(x_data1, i["data"]["sim_motor_step-x-user_readback"])
+        x_data1 = np.append(x_data1, i["data"]["sim_motor_step-x"])
     assert await sim_motor_step.x.user_setpoint.get_value() == pytest.approx(
         expected_centre, 0.05
     )
@@ -145,7 +144,7 @@ async def test_scan_and_move_cen_success_with_step(
 
 async def test_scan_and_move_cen_fail_to_with_wrong_name(
     run_engine: RunEngine,
-    sim_motor: XYZStage,
+    sim_motor: SimStage,
     fake_detector: SimDetector,
 ) -> None:
     rbv_mocks = Mock()
@@ -183,7 +182,7 @@ async def test_scan_and_move_cen_fail_to_with_wrong_name(
 )
 async def test_scan_and_move_cen_failed_with_no_peak_in_range(
     run_engine: RunEngine,
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
     fake_detector: SimDetector,
     test_input: tuple[float, float, int, float],
     expected_centre: float,
@@ -234,7 +233,7 @@ FAKEDSU = {"5000": 16.7, "1000": 21.7, "500": 25.674, "100": 31.7, "50": 36.7}
 async def test_align_slit_with_look_up(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
     fake_detector: SimDetector,
     size: float,
     expected_centre: float,
@@ -259,7 +258,7 @@ async def test_align_slit_with_look_up(
     )
     run_engine(
         align_slit_with_look_up(
-            motor=sim_motor_step.y,
+            motor=sim_motor_step.y,  # type: ignore
             size=size,
             slit_table=FAKEDSU,
             det=fake_detector,
@@ -276,14 +275,14 @@ async def test_align_slit_with_look_up(
 
 async def test_align_slit_with_look_up_fail_wrong_key(
     run_engine: RunEngine,
-    sim_motor_step: XYZStage,
+    sim_motor_step: SimStage,
     fake_detector: SimDetector,
 ) -> None:
     size = 555
     with pytest.raises(ValueError) as e:
         run_engine(
             align_slit_with_look_up(
-                motor=sim_motor_step.y,
+                motor=sim_motor_step.y,  # type: ignore
                 size=size,
                 slit_table=FAKEDSU,
                 det=fake_detector,
