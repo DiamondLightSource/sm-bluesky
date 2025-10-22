@@ -25,7 +25,7 @@ async def sim_rw_signal() -> SignalRW[float]:
 async def test_set_and_wait_within_tolerance(
     sim_motor: XYZStage,
     run_engine: RunEngine,
-):
+) -> None:
     sim_motor.x.user_readback.read = AsyncMock()
     sim_motor.x.user_readback.read.side_effect = [
         Reading(value={"value": i})  # type: ignore
@@ -48,7 +48,7 @@ async def test_set_and_wait_within_tolerance_with_count_kwargs(
     sim_motor: XYZStage,
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-):
+) -> None:
     sim_motor.x.user_readback.read = AsyncMock()
     sim_motor.x.user_readback.read.side_effect = [
         Reading(value={"value": i})  # type: ignore
@@ -80,7 +80,7 @@ async def test_set_and_wait_within_tolerance_with_count(
     sim_motor: XYZStage,
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-):
+) -> None:
     sim_motor.x.user_readback.read = AsyncMock()
     sim_motor.x.user_readback.read.side_effect = [
         Reading(value={"value": i})  # type: ignore
@@ -113,7 +113,7 @@ async def test_set_and_wait_within_tolerance_without_readback(
     sim_rw_signal: SignalRW[float],
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-):
+) -> None:
     setpoint = 10
     sim_rw_signal.locate = AsyncMock()
     sim_rw_signal.locate.side_effect = [

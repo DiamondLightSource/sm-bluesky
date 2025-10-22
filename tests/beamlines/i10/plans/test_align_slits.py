@@ -45,7 +45,7 @@ def test_align_pa_slit(
     sim_run_engine: RunEngineSimulator,
     rasor_femto_pa_scaler_det: CurrentAmpDet,
     det_slits: DetSlits,
-):
+) -> None:
     msgs = sim_run_engine.simulate_plan(
         align_pa_slit(
             dsd_size=50, dsu_size=50, det=rasor_femto_pa_scaler_det, det_slits=det_slits
@@ -68,7 +68,7 @@ def test_align_s5s6(
     slits: I10Slits,
     diffractometer: Diffractometer,
     sample_stage: XYZStage,
-):
+) -> None:
     msgs = sim_run_engine.simulate_plan(
         align_s5s6(
             det=rasor_femto_pa_scaler_det,
