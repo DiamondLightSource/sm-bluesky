@@ -20,7 +20,7 @@ class MotorTable(RootModel):
 
 @plan
 def move_motor_with_look_up(
-    slit: Motor,
+    slit: Motor | SimMotorExtra,
     size: float,
     motor_table: dict[str, float],
     use_motor_position: bool = False,
