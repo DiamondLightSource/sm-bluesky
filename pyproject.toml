@@ -135,6 +135,10 @@ lint.extend-ignore = [
     "B008", # Allow inject("device")
 ]
 
+[tool.ruff.lint.flake8-import-conventions.extend-aliases]
+# We often shorten "Annotated" to "A" for brevity
+"typing.Annotated" = "A"
+
 
 [tool.ruff.lint.per-file-ignores]
 # By default, private member access is allowed in tests
