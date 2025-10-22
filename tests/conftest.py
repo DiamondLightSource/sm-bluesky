@@ -25,7 +25,7 @@ from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.epics.adcore import ADBaseIO, SingleTriggerDetector
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
 
-from tests.sim_devices import SimDetector, SimStage
+from sm_bluesky.common.sim_devices import SimDetector, SimStage
 
 RECORD = str(Path(__file__).parent / "panda" / "db" / "panda.db")
 INCOMPLETE_BLOCK_RECORD = str(

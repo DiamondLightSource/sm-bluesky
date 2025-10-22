@@ -4,12 +4,12 @@ import pytest
 from bluesky.plan_stubs import sleep
 from bluesky.plans import count
 from bluesky.run_engine import RunEngine
-from tests.sim_devices import SimStage
 
 from sm_bluesky.common.helper.add_meta import (
     add_default_metadata,
     add_extra_names_to_meta,
 )
+from sm_bluesky.common.sim_devices import SimStage
 
 DEFAULT_METADATA = {
     "energy": {"value": 1.8, "unit": "eV"},

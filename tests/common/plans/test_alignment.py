@@ -13,8 +13,8 @@ from sm_bluesky.common.plans import (
     fast_scan_and_move_fit,
     step_scan_and_move_fit,
 )
+from sm_bluesky.common.sim_devices import SimDetector, SimStage
 from tests.helpers import gaussian
-from tests.sim_devices import SimDetector, SimStage
 
 
 @pytest.mark.parametrize(

@@ -11,7 +11,7 @@ from sm_bluesky.common.plan_stubs import (
     move_motor_with_look_up,
     set_slit_size,
 )
-from tests.sim_devices import SimStage
+from sm_bluesky.common.sim_devices import SimStage
 
 fake_motor_look_up = {"5000": 1.8, "1000": 8, "-500": 8.8, "100": 55, "50": -34.3}
 
