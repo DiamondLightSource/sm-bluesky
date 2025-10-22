@@ -1,5 +1,3 @@
-from collections import defaultdict
-from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
@@ -23,12 +21,6 @@ from sm_bluesky.beamlines.i10.plans.align_slits import (
     move_dsu,
 )
 from tests.helpers import check_msg_set, check_msg_wait, check_mv_wait
-
-docs = defaultdict(list)
-
-
-def capture_emitted(name: str, doc: Any) -> None:
-    docs[name].append(doc)
 
 
 def test_move_dsu(sim_run_engine: RunEngineSimulator, det_slits: DetSlits) -> None:

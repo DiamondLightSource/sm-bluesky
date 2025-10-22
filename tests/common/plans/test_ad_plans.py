@@ -1,5 +1,4 @@
-from collections import defaultdict
-from typing import Any
+from collections.abc import Mapping
 
 from bluesky.plans import scan
 from bluesky.run_engine import RunEngine
@@ -14,20 +13,14 @@ from ophyd_async.testing import assert_emitted, set_mock_value
 from sm_bluesky.common.plans import trigger_img
 
 
-async def test_Andor2_trigger_img(
-    RE: RunEngine, andor2: Andor2Detector, static_path_provider: StaticPathProvider
+async def test_andor2_trigger_img(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    andor2: Andor2Detector,
+    static_path_provider: StaticPathProvider,
 ) -> None:
-    docs = defaultdict(list)
-
-    def capture_emitted(name: str, doc: Any) -> None:
-        docs[name].append(doc)
-
-    RE.subscribe(capture_emitted)
-
     set_mock_value(andor2.driver.detector_state, ADState.IDLE)
-
-    RE(trigger_img(andor2, 4))
-
+    run_engine(trigger_img(andor2, 4))
     assert (
         f"{static_path_provider._directory_path}/"
         == await andor2.fileio.file_path.get_value()
@@ -37,24 +30,25 @@ async def test_Andor2_trigger_img(
         == await andor2.fileio.full_file_name.get_value()
     )
     assert_emitted(
-        docs, start=1, descriptor=1, stream_resource=1, stream_datum=1, event=1, stop=1
+        run_engine_documents,  # type: ignore
+        start=1,
+        descriptor=1,
+        stream_resource=1,
+        stream_datum=1,
+        event=1,
+        stop=1,
     )
 
 
-async def test_Andor2_scan(
-    RE: RunEngine,
+async def test_andor2_scan(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
     andor2: Andor2Detector,
     static_path_provider: StaticPathProvider,
     sim_motor: XYZStage,
 ) -> None:
-    docs = defaultdict(list)
-
-    def capture_emitted(name: str, doc: Any) -> None:
-        docs[name].append(doc)
-
-    RE.subscribe(capture_emitted)
     set_mock_value(andor2.driver.detector_state, ADState.IDLE)
-    RE(scan([andor2], sim_motor.y, -3, 3, 10))
+    run_engine(scan([andor2], sim_motor.y, -3, 3, 10))
     assert (
         f"{static_path_provider._directory_path}/"
         == await andor2.fileio.file_path.get_value()
@@ -64,7 +58,7 @@ async def test_Andor2_scan(
         == await andor2.fileio.full_file_name.get_value()
     )
     assert_emitted(
-        docs,
+        run_engine_documents,  # type: ignore
         start=1,
         descriptor=1,
         stream_resource=1,
