@@ -1,6 +1,5 @@
-from blueapi.core import MsgGenerator
 from bluesky.plan_stubs import abs_set
-from bluesky.utils import plan
+from bluesky.utils import MsgGenerator, plan
 from ophyd_async.epics.adcore import AreaDetector, SingleTriggerDetector
 
 

@@ -15,7 +15,7 @@ from dodal.devices.electron_analyser import (
     GenericElectronAnalyserDetector,
     GenericElectronAnalyserRegionDetector,
 )
-from ophyd.status import Status
+from ophyd_async.core import AsyncStatus
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
@@ -73,9 +73,8 @@ def analyser_nd_step() -> Callable:
     return run_engine_setup_decorator(aps.analyser_nd_step)
 
 
-def fake_status(region=None) -> Status:
-    status = Status()
-    status.set_finished()
+def fake_status(region=None) -> AsyncStatus:
+    status = AsyncStatus(asyncio.sleep(0.0))
     return status
 
 

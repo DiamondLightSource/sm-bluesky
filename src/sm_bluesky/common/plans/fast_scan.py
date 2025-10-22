@@ -2,12 +2,11 @@ from typing import Any
 
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
-from blueapi.core import MsgGenerator
 from bluesky.preprocessors import (
     finalize_wrapper,
 )
 from bluesky.protocols import Readable
-from bluesky.utils import plan, short_uid
+from bluesky.utils import MsgGenerator, plan, short_uid
 from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
 from numpy import linspace
 from ophyd_async.core import FlyMotorInfo

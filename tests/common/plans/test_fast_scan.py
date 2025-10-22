@@ -5,7 +5,7 @@ import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
 from numpy import linspace
-from ophyd.sim import SynPeriodicSignal
+from ophyd_async.sim import SimPointDetector
 from ophyd_async.testing import assert_emitted, get_mock_put
 
 from sm_bluesky.common.plans.fast_scan import fast_scan_1d, fast_scan_grid
@@ -16,22 +16,22 @@ A_BIT = 0.001
 
 
 @pytest.fixture
-def det() -> SynPeriodicSignal:
-    return SynPeriodicSignal(name="rand", labels={"detectors"})
+def det() -> SimPointDetector:
+    return SimPointDetector(name="rand", pattern_generator=None, num_channels=1)
 
 
 async def test_fast_scan_1d_fail_limit_check(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     sim_motor: XYZStage,
-    det: SynPeriodicSignal,
+    det: SimPointDetector,
 ) -> None:
     """Testing both high and low limits making sure nothing get run if it is exceeded"""
     with pytest.raises(ValueError):
-        run_engine(fast_scan_1d([det], sim_motor.x, 8, 20, 10))  # type:ignore
+        run_engine(fast_scan_1d([det], sim_motor.x, 8, 20, 10))
 
     with pytest.raises(ValueError):
-        run_engine(fast_scan_1d([det], sim_motor.x, -208, 0, 10))  # type:ignore
+        run_engine(fast_scan_1d([det], sim_motor.x, -208, 0, 10))
 
     assert 0 == get_mock_put(sim_motor.x.user_setpoint).call_count
     assert 0 == get_mock_put(sim_motor.x.velocity).call_count
@@ -42,10 +42,9 @@ async def test_fast_scan_1d_success(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     sim_motor: XYZStage,
-    det: SynPeriodicSignal,
+    det: SimPointDetector,
 ) -> None:
-    det.start_simulation()
-    run_engine(fast_scan_1d([det], sim_motor.x, 5, -1, 8.0))  # type:ignore
+    run_engine(fast_scan_1d([det], sim_motor.x, 5, -1, 8.0))
 
     assert 2.78 == await sim_motor.x.velocity.get_value()
     assert 2 == get_mock_put(sim_motor.x.user_setpoint).call_count
@@ -88,7 +87,7 @@ async def test_fast_scan_2d_success(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     sim_motor: XYZStage,
-    det: SynPeriodicSignal,
+    det: SimPointDetector,
 ) -> None:
     x_start = 0
     x_end = 2
@@ -99,7 +98,7 @@ async def test_fast_scan_2d_success(
     snake_axes = False
     run_engine(
         fast_scan_grid(
-            [det],  # type:ignore
+            [det],
             sim_motor.x,
             x_start,
             x_end,
@@ -142,7 +141,7 @@ async def test_fast_scan_2d_snake_success(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     sim_motor: XYZStage,
-    det: SynPeriodicSignal,
+    det: SimPointDetector,
 ) -> None:
     x_start = 0
     x_end = 2
@@ -153,7 +152,7 @@ async def test_fast_scan_2d_snake_success(
     snake_axes = True
     run_engine(
         fast_scan_grid(
-            [det],  # type:ignore
+            [det],
             sim_motor.x,
             x_start,
             x_end,

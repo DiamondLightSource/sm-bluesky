@@ -7,7 +7,7 @@ from dodal.testing.electron_analyser import create_detector
 from ophyd_async.core import init_devices
 from ophyd_async.sim import SimMotor
 
-from tests.electron_analyser.util import (
+from tests.electron_analyser.test_data import (
     TEST_SPECS_SEQUENCE,
     TEST_VGSCIENTA_SEQUENCE,
 )
