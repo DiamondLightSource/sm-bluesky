@@ -64,19 +64,19 @@ async def test_fast_scan_1d_success(
 async def test_fast_scan_1d_success_without_speed(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_delay: XYZStage,
+    sim_stage_delay: XYZStage,
 ) -> None:
-    run_engine(fast_scan_1d([sim_motor_delay.y], sim_motor_delay.x, 1, 5))
+    run_engine(fast_scan_1d([sim_stage_delay.y], sim_stage_delay.x, 1, 5))
 
-    assert 88.88 == await sim_motor_delay.x.velocity.get_value()
-    assert 2 == get_mock_put(sim_motor_delay.x.user_setpoint).call_count
-    assert 3 == get_mock_put(sim_motor_delay.x.velocity).call_count
+    assert 88.88 == await sim_stage_delay.x.velocity.get_value()
+    assert 2 == get_mock_put(sim_stage_delay.x.user_setpoint).call_count
+    assert 3 == get_mock_put(sim_stage_delay.x.velocity).call_count
     # check speed is set and reset
     assert [
         mock.call(pytest.approx(0), wait=True),  # SimMotor fast move to start
         mock.call(pytest.approx(88.88), wait=True),
         mock.call(pytest.approx(88.88), wait=True),
-    ] == get_mock_put(sim_motor_delay.x.velocity).call_args_list
+    ] == get_mock_put(sim_stage_delay.x.velocity).call_args_list
 
     """Only 1 event as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""  #

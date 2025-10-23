@@ -440,7 +440,7 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     andor2_point: SingleTriggerDetector,
-    sim_motor_delay: XYZStage,
+    sim_stage_delay: XYZStage,
 ) -> None:
     plan_time = 1.5
     count_time = 0.2
@@ -451,10 +451,10 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
         grid_fast_scan(
             dets=[andor2_point],
             count_time=count_time,
-            step_motor=sim_motor_delay.x,
+            step_motor=sim_stage_delay.x,
             step_start=step_start,
             step_end=step_end,
-            scan_motor=sim_motor_delay.y,
+            scan_motor=sim_stage_delay.y,
             scan_start=1,
             scan_end=2,
             plan_time=plan_time,
@@ -477,7 +477,7 @@ async def test_grid_fast_sim_flyable_motor(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     andor2: Andor2Detector,
-    sim_motor_delay: XYZStage,
+    sim_stage_delay: XYZStage,
 ) -> None:
     plan_time = 1.5
     count_time = 0.2
@@ -488,10 +488,10 @@ async def test_grid_fast_sim_flyable_motor(
         grid_fast_scan(
             dets=[andor2],
             count_time=count_time,
-            step_motor=sim_motor_delay.x,
+            step_motor=sim_stage_delay.x,
             step_start=step_start,
             step_end=step_end,
-            scan_motor=sim_motor_delay.y,
+            scan_motor=sim_stage_delay.y,
             scan_start=1,
             scan_end=2,
             plan_time=plan_time,
