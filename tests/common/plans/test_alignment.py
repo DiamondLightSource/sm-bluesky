@@ -4,6 +4,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 from bluesky.run_engine import RunEngine
+from dodal.devices.motors import XYZStage
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
 
 from sm_bluesky.common.math_functions import cal_range_num
@@ -144,7 +145,7 @@ async def test_scan_and_move_cen_success_with_step(
 
 async def test_scan_and_move_cen_fail_to_with_wrong_name(
     run_engine: RunEngine,
-    sim_motor: SimStage,
+    sim_motor: XYZStage,
     fake_detector: SimDetector,
 ) -> None:
     rbv_mocks = Mock()
