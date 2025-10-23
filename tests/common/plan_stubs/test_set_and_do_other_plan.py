@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections.abc import Mapping
 from unittest.mock import AsyncMock
 
 import pytest
@@ -22,19 +22,17 @@ async def sim_rw_signal() -> SignalRW[float]:
     return sim_rw_signal
 
 
-async def test_set_and_wait_within_tolerance(sim_motor: XYZStage, RE: RunEngine):
-    docs = defaultdict(list)
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
+async def test_set_and_wait_within_tolerance(
+    sim_motor: XYZStage,
+    run_engine: RunEngine,
+) -> None:
     sim_motor.x.user_readback.read = AsyncMock()
     sim_motor.x.user_readback.read.side_effect = [
         Reading(value={"value": i})  # type: ignore
         for i in range(0, 200)
     ]
 
-    RE(
+    run_engine(
         set_and_wait_within_tolerance(
             set_signal=sim_motor.x.user_setpoint,
             value=10,
@@ -42,26 +40,22 @@ async def test_set_and_wait_within_tolerance(sim_motor: XYZStage, RE: RunEngine)
             tolerance=0.1,
             time=0.0,
         ),
-        capture_emitted,
     )
     assert sim_motor.x.user_readback.read.call_count == 10 + 2
 
 
 async def test_set_and_wait_within_tolerance_with_count_kwargs(
-    sim_motor: XYZStage, RE: RunEngine
-):
-    docs = defaultdict(list)
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
+    sim_motor: XYZStage,
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+) -> None:
     sim_motor.x.user_readback.read = AsyncMock()
     sim_motor.x.user_readback.read.side_effect = [
         Reading(value={"value": i})  # type: ignore
         for i in range(0, 200)
     ]
     setpoint = 10
-    RE(
+    run_engine(
         set_and_wait_within_tolerance(
             set_signal=sim_motor.x.user_setpoint,
             value=setpoint,
@@ -71,29 +65,29 @@ async def test_set_and_wait_within_tolerance_with_count_kwargs(
             detectors=[sim_motor],
             num=2,
         ),
-        capture_emitted,
     )
     assert sim_motor.x.user_readback.read.call_count == setpoint + 2
     assert_emitted(
-        docs, start=setpoint, descriptor=setpoint, event=setpoint * 2, stop=setpoint
+        run_engine_documents,  # type: ignore
+        start=setpoint,
+        descriptor=setpoint,
+        event=setpoint * 2,
+        stop=setpoint,
     )
 
 
 async def test_set_and_wait_within_tolerance_with_count(
-    sim_motor: XYZStage, RE: RunEngine
-):
-    docs = defaultdict(list)
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
+    sim_motor: XYZStage,
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+) -> None:
     sim_motor.x.user_readback.read = AsyncMock()
     sim_motor.x.user_readback.read.side_effect = [
         Reading(value={"value": i})  # type: ignore
         for i in range(0, 200)
     ]
     setpoint = 10
-    RE(
+    run_engine(
         set_and_wait_within_tolerance(
             sim_motor.x.user_setpoint,
             setpoint,
@@ -104,22 +98,22 @@ async def test_set_and_wait_within_tolerance_with_count(
             [sim_motor],
             2,
         ),
-        capture_emitted,
     )
     assert sim_motor.x.user_readback.read.call_count == setpoint + 2
     assert_emitted(
-        docs, start=setpoint, descriptor=setpoint, event=setpoint * 2, stop=setpoint
+        run_engine_documents,  # type: ignore
+        start=setpoint,
+        descriptor=setpoint,
+        event=setpoint * 2,
+        stop=setpoint,
     )
 
 
 async def test_set_and_wait_within_tolerance_without_readback(
-    sim_rw_signal: SignalRW[float], RE: RunEngine
-):
-    docs = defaultdict(list)
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
+    sim_rw_signal: SignalRW[float],
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+) -> None:
     setpoint = 10
     sim_rw_signal.locate = AsyncMock()
     sim_rw_signal.locate.side_effect = [
@@ -127,7 +121,7 @@ async def test_set_and_wait_within_tolerance_without_readback(
         for i in range(0, 200)
     ]
 
-    RE(
+    run_engine(
         set_and_wait_within_tolerance(
             set_signal=sim_rw_signal,
             value=setpoint,
@@ -136,9 +130,12 @@ async def test_set_and_wait_within_tolerance_without_readback(
             detectors=[sim_rw_signal],
             num=2,
         ),
-        capture_emitted,
     )
     assert sim_rw_signal.locate.call_count == setpoint + 2
     assert_emitted(
-        docs, start=setpoint, descriptor=setpoint, event=setpoint * 2, stop=setpoint
+        run_engine_documents,  # type: ignore
+        start=setpoint,
+        descriptor=setpoint,
+        event=setpoint * 2,
+        stop=setpoint,
     )

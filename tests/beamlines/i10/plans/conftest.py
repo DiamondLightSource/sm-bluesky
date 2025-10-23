@@ -1,5 +1,4 @@
 import pytest
-from bluesky import RunEngine
 from dodal.devices.current_amplifiers import CurrentAmpDet
 from dodal.devices.i10.rasor.rasor_current_amp import RasorFemto
 from dodal.devices.i10.rasor.rasor_motors import (
@@ -15,7 +14,7 @@ from ophyd_async.core import init_devices
 
 
 @pytest.fixture
-def slits(RE: RunEngine) -> I10Slits:
+def slits() -> I10Slits:
     with init_devices(mock=True):
         slits = I10Slits("TEST:")
     patch_all_motors(slits)
@@ -23,7 +22,7 @@ def slits(RE: RunEngine) -> I10Slits:
 
 
 @pytest.fixture
-def det_slits(RE: RunEngine) -> DetSlits:
+def det_slits() -> DetSlits:
     with init_devices(mock=True):
         det_slits = DetSlits("TEST:")
     patch_all_motors(det_slits)
@@ -31,7 +30,7 @@ def det_slits(RE: RunEngine) -> DetSlits:
 
 
 @pytest.fixture
-def pa_stage(RE: RunEngine) -> PaStage:
+def pa_stage() -> PaStage:
     with init_devices(mock=True):
         pa_stage = PaStage("TEST:")
     patch_all_motors(pa_stage)
@@ -39,7 +38,7 @@ def pa_stage(RE: RunEngine) -> PaStage:
 
 
 @pytest.fixture
-def pin_hole(RE: RunEngine) -> XYStage:
+def pin_hole() -> XYStage:
     with init_devices(mock=True):
         pin_hole = XYStage("TEST:")
     patch_motor(pin_hole.y)
@@ -54,7 +53,7 @@ def pin_hole(RE: RunEngine) -> XYStage:
 
 
 @pytest.fixture
-def diffractometer(RE: RunEngine) -> Diffractometer:
+def diffractometer() -> Diffractometer:
     with init_devices(mock=True):
         diffractometer = Diffractometer("TEST:")
     patch_all_motors(diffractometer)
@@ -62,7 +61,7 @@ def diffractometer(RE: RunEngine) -> Diffractometer:
 
 
 @pytest.fixture
-def sample_stage(RE: RunEngine) -> XYZStage:
+def sample_stage() -> XYZStage:
     with init_devices(mock=True):
         sample_stage = XYZStage("TEST:")
     patch_all_motors(sample_stage)
@@ -70,7 +69,7 @@ def sample_stage(RE: RunEngine) -> XYZStage:
 
 
 @pytest.fixture
-def rasor_det_scalers(RE: RunEngine) -> RasorScalerCard1:
+def rasor_det_scalers() -> RasorScalerCard1:
     with init_devices(mock=True):
         rasor_det_scalers = RasorScalerCard1("TEST:")
     patch_all_motors(rasor_det_scalers)
@@ -78,7 +77,7 @@ def rasor_det_scalers(RE: RunEngine) -> RasorScalerCard1:
 
 
 @pytest.fixture
-def rasor_femto(RE: RunEngine) -> RasorFemto:
+def rasor_femto() -> RasorFemto:
     with init_devices(mock=True):
         rasor_femto = RasorFemto("TEST:")
     patch_all_motors(rasor_femto)
@@ -87,7 +86,7 @@ def rasor_femto(RE: RunEngine) -> RasorFemto:
 
 @pytest.fixture
 def rasor_femto_pa_scaler_det(
-    RE: RunEngine, rasor_det_scalers: RasorScalerCard1, rasor_femto: RasorFemto
+    rasor_det_scalers: RasorScalerCard1, rasor_femto: RasorFemto
 ) -> CurrentAmpDet:
     with init_devices(mock=True):
         rasor_femto_pa_scaler_det = CurrentAmpDet(

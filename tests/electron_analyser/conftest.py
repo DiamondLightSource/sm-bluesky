@@ -1,5 +1,4 @@
 import pytest
-from bluesky import RunEngine
 from dodal.beamlines import b07, i09
 from dodal.devices.electron_analyser import DualEnergySource, ElectronAnalyserDetector
 from dodal.devices.electron_analyser.specs import SpecsDetector
@@ -15,14 +14,14 @@ from tests.electron_analyser.test_data import (
 
 
 @pytest.fixture
-async def pgm_energy(RE: RunEngine) -> SimMotor:
+async def pgm_energy() -> SimMotor:
     with init_devices():
         pgm_energy = SimMotor()
     return pgm_energy
 
 
 @pytest.fixture
-async def dcm_energy(RE: RunEngine) -> SimMotor:
+async def dcm_energy() -> SimMotor:
     with init_devices():
         dcm_energy = SimMotor()
     return dcm_energy
@@ -30,7 +29,7 @@ async def dcm_energy(RE: RunEngine) -> SimMotor:
 
 @pytest.fixture
 async def dual_energy_source(
-    dcm_energy: SimMotor, pgm_energy: SimMotor, RE: RunEngine
+    dcm_energy: SimMotor, pgm_energy: SimMotor
 ) -> DualEnergySource:
     with init_devices():
         dual_energy_source = DualEnergySource(
@@ -48,7 +47,6 @@ async def dual_energy_source(
 async def sim_analyser(
     request: pytest.FixtureRequest,
     dual_energy_source: DualEnergySource,
-    RE: RunEngine,
 ) -> ElectronAnalyserDetector:
     with init_devices(mock=True):
         sim_analyser = await create_detector(
