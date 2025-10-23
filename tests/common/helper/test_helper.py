@@ -20,12 +20,12 @@ DEFAULT_METADATA = {
 async def test_add_meta_success_with_no_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
 ) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
 
     run_engine(
-        count_meta([sim_motor_step.x]),
+        count_meta([sim_stage_step.x]),
     )
     assert run_engine_documents["start"][0]["energy"] == DEFAULT_METADATA["energy"]
     assert (
@@ -38,11 +38,11 @@ async def test_add_meta_success_with_no_meta(
 async def test_add_meta_success_with_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
 ) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
     run_engine(
-        count_meta([sim_motor_step.x], md={"bah": "bah"}),
+        count_meta([sim_stage_step.x], md={"bah": "bah"}),
     )
     assert run_engine_documents["start"][0]["energy"] == DEFAULT_METADATA["energy"]
     assert (
@@ -56,11 +56,11 @@ async def test_add_meta_success_with_meta(
 async def test_add_meta_success_with_no_extra_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
 ) -> None:
     count_meta = add_default_metadata(count)
 
-    run_engine(count_meta([sim_motor_step.x]))
+    run_engine(count_meta([sim_stage_step.x]))
     assert run_engine_documents["start"][0]["plan_name"] == "count"
 
 

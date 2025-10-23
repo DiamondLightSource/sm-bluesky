@@ -16,27 +16,27 @@ from sm_bluesky.common.sim_devices import SimStage
 fake_motor_look_up = {"5000": 1.8, "1000": 8, "-500": 8.8, "100": 55, "50": -34.3}
 
 
-def test_check_within_limit(sim_motor_step: SimStage, run_engine: RunEngine) -> None:
-    set_mock_value(sim_motor_step.x.low_limit_travel, -10)
-    set_mock_value(sim_motor_step.x.high_limit_travel, 20)
+def test_check_within_limit(sim_stage_step: SimStage, run_engine: RunEngine) -> None:
+    set_mock_value(sim_stage_step.x.low_limit_travel, -10)
+    set_mock_value(sim_stage_step.x.high_limit_travel, 20)
 
     with pytest.raises(ValueError):
-        run_engine(check_within_limit([-11], sim_motor_step.x))
+        run_engine(check_within_limit([-11], sim_stage_step.x))
 
     with pytest.raises(ValueError):
-        run_engine(check_within_limit([21], sim_motor_step.x))
+        run_engine(check_within_limit([21], sim_stage_step.x))
 
-    run_engine(check_within_limit([18], sim_motor_step.x))
+    run_engine(check_within_limit([18], sim_stage_step.x))
 
 
 def test_motor_with_look_up_fail(
-    run_engine: RunEngine, sim_motor_step: SimStage
+    run_engine: RunEngine, sim_stage_step: SimStage
 ) -> None:
     size = 400
     with pytest.raises(ValueError) as e:
         run_engine(
             move_motor_with_look_up(
-                sim_motor_step.z, size=size, motor_table=fake_motor_look_up
+                sim_stage_step.z, size=size, motor_table=fake_motor_look_up
             )
         )
     assert (
@@ -46,7 +46,7 @@ def test_motor_with_look_up_fail(
 
 
 def test_motor_with_look_up_fail_invalid_table(
-    run_engine: RunEngine, sim_motor_step: SimStage
+    run_engine: RunEngine, sim_stage_step: SimStage
 ) -> None:
     bad_motor_look_up = {"5000": 1.8, "1000": 8, "-500": 8.8, "100": "sdsf", "50": 34.3}
 
@@ -54,7 +54,7 @@ def test_motor_with_look_up_fail_invalid_table(
     with pytest.raises(ValueError):
         run_engine(
             move_motor_with_look_up(
-                sim_motor_step.z, size=size, motor_table=bad_motor_look_up
+                sim_stage_step.z, size=size, motor_table=bad_motor_look_up
             )
         )
 
@@ -65,16 +65,16 @@ def test_motor_with_look_up_fail_invalid_table(
 )
 async def test_motor_with_look_up_move_using_table_success(
     run_engine: RunEngine,
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
     test_input: float,
     expected_centre: float,
 ) -> None:
     run_engine(
         move_motor_with_look_up(
-            sim_motor_step.z, size=test_input, motor_table=fake_motor_look_up
+            sim_stage_step.z, size=test_input, motor_table=fake_motor_look_up
         )
     )
-    assert await sim_motor_step.z.user_readback.get_value() == expected_centre
+    assert await sim_stage_step.z.user_readback.get_value() == expected_centre
 
 
 @pytest.mark.parametrize(
@@ -83,19 +83,19 @@ async def test_motor_with_look_up_move_using_table_success(
 )
 async def test_motor_with_look_up_move_using_motor_position_success(
     run_engine: RunEngine,
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
     test_input: float,
     expected_centre: float,
 ) -> None:
     run_engine(
         move_motor_with_look_up(
-            sim_motor_step.z,
+            sim_stage_step.z,
             size=test_input,
             motor_table=fake_motor_look_up,
             use_motor_position=True,
         )
     )
-    assert await sim_motor_step.z.user_readback.get_value() == expected_centre
+    assert await sim_stage_step.z.user_readback.get_value() == expected_centre
 
 
 @pytest.fixture

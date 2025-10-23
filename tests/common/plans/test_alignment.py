@@ -38,7 +38,7 @@ from tests.helpers import gaussian
 async def test_scan_and_move_cen_success_with_gaussian(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
     fake_detector: SimDetector,
     test_input: tuple[float, float, int, float],
     expected_centre: float,
@@ -57,13 +57,13 @@ async def test_scan_and_move_cen_success_with_gaussian(
     y_data = np.array(y_data, dtype=np.float64)
     rbv_mocks.get.side_effect = y_data
     callback_on_mock_put(
-        sim_motor_step.x.user_setpoint,
+        sim_stage_step.x.user_setpoint,
         lambda *_, **__: set_mock_value(fake_detector.value, value=rbv_mocks.get()),
     )
     run_engine(
         step_scan_and_move_fit(
             fake_detector,
-            sim_motor_step.x,
+            sim_stage_step.x,
             StatPosition.COM,
             "value",
             start,
@@ -75,8 +75,8 @@ async def test_scan_and_move_cen_success_with_gaussian(
     x_data1 = np.array([])
     for i in run_engine_documents["event"]:
         y_data1 = np.append(y_data1, i["data"]["fake_detector-value"])
-        x_data1 = np.append(x_data1, i["data"]["sim_motor_step-x"])
-    assert await sim_motor_step.x.user_setpoint.get_value() == pytest.approx(
+        x_data1 = np.append(x_data1, i["data"]["sim_stage_step-x"])
+    assert await sim_stage_step.x.user_setpoint.get_value() == pytest.approx(
         expected_centre, 0.01
     )
 
@@ -101,7 +101,7 @@ def step_function(x_data, step_centre: float) -> list[float]:
 async def test_scan_and_move_cen_success_with_step(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
     fake_detector: SimDetector,
     test_input: tuple[float, float, int],
     expected_centre: float,
@@ -119,13 +119,13 @@ async def test_scan_and_move_cen_success_with_step(
     y_data = np.array(y_data, dtype=np.float64)
     rbv_mocks.get.side_effect = y_data
     callback_on_mock_put(
-        sim_motor_step.x.user_setpoint,
+        sim_stage_step.x.user_setpoint,
         lambda *_, **__: set_mock_value(fake_detector.value, value=rbv_mocks.get()),
     )
     run_engine(
         step_scan_and_move_fit(
             det=fake_detector,
-            motor=sim_motor_step.x,
+            motor=sim_stage_step.x,
             start=start,
             detname_suffix="value",
             end=end,
@@ -137,8 +137,8 @@ async def test_scan_and_move_cen_success_with_step(
     x_data1 = np.array([])
     for i in run_engine_documents["event"]:
         y_data1 = np.append(y_data1, i["data"]["fake_detector-value"])
-        x_data1 = np.append(x_data1, i["data"]["sim_motor_step-x"])
-    assert await sim_motor_step.x.user_setpoint.get_value() == pytest.approx(
+        x_data1 = np.append(x_data1, i["data"]["sim_stage_step-x"])
+    assert await sim_stage_step.x.user_setpoint.get_value() == pytest.approx(
         expected_centre, 0.05
     )
 
@@ -183,7 +183,7 @@ async def test_scan_and_move_cen_fail_to_with_wrong_name(
 )
 async def test_scan_and_move_cen_failed_with_no_peak_in_range(
     run_engine: RunEngine,
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
     fake_detector: SimDetector,
     test_input: tuple[float, float, int, float],
     expected_centre: float,
@@ -202,14 +202,14 @@ async def test_scan_and_move_cen_failed_with_no_peak_in_range(
     y_data = np.array(y_data, dtype=np.float64)
     rbv_mocks.get.side_effect = y_data
     callback_on_mock_put(
-        sim_motor_step.x.user_setpoint,
+        sim_stage_step.x.user_setpoint,
         lambda *_, **__: set_mock_value(fake_detector.value, value=rbv_mocks.get()),
     )
     with pytest.raises(ValueError) as e:
         run_engine(
             step_scan_and_move_fit(
                 det=fake_detector,
-                motor=sim_motor_step.x,
+                motor=sim_stage_step.x,
                 detname_suffix="value",
                 start=start,
                 end=end,
@@ -234,7 +234,7 @@ FAKEDSU = {"5000": 16.7, "1000": 21.7, "500": 25.674, "100": 31.7, "50": 36.7}
 async def test_align_slit_with_look_up(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
     fake_detector: SimDetector,
     size: float,
     expected_centre: float,
@@ -254,12 +254,12 @@ async def test_align_slit_with_look_up(
     y_data = np.array(y_data, dtype=np.float64)
     rbv_mocks.get.side_effect = y_data
     callback_on_mock_put(
-        sim_motor_step.y.user_setpoint,
+        sim_stage_step.y.user_setpoint,
         lambda *_, **__: set_mock_value(fake_detector.value, value=rbv_mocks.get()),
     )
     run_engine(
         align_slit_with_look_up(
-            motor=sim_motor_step.y,  # type: ignore
+            motor=sim_stage_step.y,  # type: ignore
             size=size,
             slit_table=FAKEDSU,
             det=fake_detector,
@@ -270,20 +270,20 @@ async def test_align_slit_with_look_up(
     x_data1 = np.array([])
     for i in run_engine_documents["event"]:
         y_data1 = np.append(y_data1, i["data"]["fake_detector-value"])
-        x_data1 = np.append(x_data1, i["data"]["sim_motor_step-y"])
+        x_data1 = np.append(x_data1, i["data"]["sim_stage_step-y"])
     assert FAKEDSU[str(size)] == pytest.approx(expected_centre + offset, 0.01)
 
 
 async def test_align_slit_with_look_up_fail_wrong_key(
     run_engine: RunEngine,
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
     fake_detector: SimDetector,
 ) -> None:
     size = 555
     with pytest.raises(ValueError) as e:
         run_engine(
             align_slit_with_look_up(
-                motor=sim_motor_step.y,  # type: ignore
+                motor=sim_stage_step.y,  # type: ignore
                 size=size,
                 slit_table=FAKEDSU,
                 det=fake_detector,

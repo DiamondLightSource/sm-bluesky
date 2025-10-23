@@ -364,21 +364,21 @@ async def test_grid_fast_unknown_step_snake_with_point_correction(
 async def test_grid_step_with_home(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
     andor2: Andor2Detector,
 ) -> None:
-    await sim_motor_step.x.set(-1)
-    await sim_motor_step.y.set(-2)
+    await sim_stage_step.x.set(-1)
+    await sim_stage_step.y.set(-2)
 
     run_engine(
         grid_step_scan(
             dets=[andor2],
             count_time=0.2,
-            x_step_motor=sim_motor_step.x,  # type: ignore
+            x_step_motor=sim_stage_step.x,  # type: ignore
             x_step_start=0,
             x_step_end=2,
             x_step_size=0.2,
-            y_step_motor=sim_motor_step.y,  # type: ignore
+            y_step_motor=sim_stage_step.y,  # type: ignore
             y_step_start=-1,
             y_step_end=1,
             y_step_size=0.25,
@@ -396,28 +396,28 @@ async def test_grid_step_with_home(
         event=99,
         stop=1,
     )
-    assert -1 == await sim_motor_step.x.user_readback.get_value()
-    assert -2 == await sim_motor_step.y.user_readback.get_value()
+    assert -1 == await sim_stage_step.x.user_readback.get_value()
+    assert -2 == await sim_stage_step.y.user_readback.get_value()
 
 
 async def test_grid_step_without_home_with_readable(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_motor_step: SimStage,
+    sim_stage_step: SimStage,
 ) -> None:
-    await sim_motor_step.x.set(-1)
-    await sim_motor_step.y.set(-2)
+    await sim_stage_step.x.set(-1)
+    await sim_stage_step.y.set(-2)
     y_step_end = 1
     x_step_end = 2
     run_engine(
         grid_step_scan(
-            dets=[sim_motor_step.z],
+            dets=[sim_stage_step.z],
             count_time=0.2,
-            x_step_motor=sim_motor_step.x,  # type: ignore
+            x_step_motor=sim_stage_step.x,  # type: ignore
             x_step_start=0,
             x_step_end=x_step_end,
             x_step_size=0.2,
-            y_step_motor=sim_motor_step.y,  # type: ignore
+            y_step_motor=sim_stage_step.y,  # type: ignore
             y_step_start=-1,
             y_step_end=y_step_end,
             y_step_size=0.25,
@@ -432,8 +432,8 @@ async def test_grid_step_without_home_with_readable(
         event=99,
         stop=1,
     )
-    assert x_step_end == await sim_motor_step.x.user_readback.get_value()
-    assert y_step_end == await sim_motor_step.y.user_readback.get_value()
+    assert x_step_end == await sim_stage_step.x.user_readback.get_value()
+    assert y_step_end == await sim_stage_step.y.user_readback.get_value()
 
 
 async def test_grid_fast_sim_flyable_motor_with_andor_point(

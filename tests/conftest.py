@@ -139,10 +139,10 @@ async def sim_motor() -> XYZStage:
 
 
 @pytest.fixture
-async def sim_motor_step() -> SimStage:
+async def sim_stage_step() -> SimStage:
     async with init_devices(mock=True):
-        sim_motor_step = SimStage(name="sim_motor_step", instant=True)
-    return sim_motor_step
+        sim_stage_step = SimStage(name="sim_stage_step", instant=True)
+    return sim_stage_step
 
 
 @pytest.fixture
