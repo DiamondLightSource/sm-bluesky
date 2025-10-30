@@ -68,7 +68,7 @@ async def test_set_and_wait_within_tolerance_with_count_kwargs(
     )
     assert sim_motor.x.user_readback.read.call_count == setpoint + 2
     assert_emitted(
-        run_engine_documents,  # type: ignore
+        run_engine_documents,
         start=setpoint,
         descriptor=setpoint,
         event=setpoint * 2,
@@ -101,7 +101,7 @@ async def test_set_and_wait_within_tolerance_with_count(
     )
     assert sim_motor.x.user_readback.read.call_count == setpoint + 2
     assert_emitted(
-        run_engine_documents,  # type: ignore
+        run_engine_documents,
         start=setpoint,
         descriptor=setpoint,
         event=setpoint * 2,
@@ -133,7 +133,7 @@ async def test_set_and_wait_within_tolerance_without_readback(
     )
     assert sim_rw_signal.locate.call_count == setpoint + 2
     assert_emitted(
-        run_engine_documents,  # type: ignore
+        run_engine_documents,
         start=setpoint,
         descriptor=setpoint,
         event=setpoint * 2,
