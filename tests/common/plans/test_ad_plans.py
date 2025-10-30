@@ -30,7 +30,7 @@ async def test_andor2_trigger_img(
         == await andor2.fileio.full_file_name.get_value()
     )
     assert_emitted(
-        run_engine_documents,  # type: ignore
+        run_engine_documents,
         start=1,
         descriptor=1,
         stream_resource=1,
@@ -58,7 +58,7 @@ async def test_andor2_scan(
         == await andor2.fileio.full_file_name.get_value()
     )
     assert_emitted(
-        run_engine_documents,  # type: ignore
+        run_engine_documents,
         start=1,
         descriptor=1,
         stream_resource=1,

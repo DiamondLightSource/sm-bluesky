@@ -42,7 +42,7 @@ async def test_grid_fast_zero_velocity_fail(
             ),
         )
     # should do nothingdocs = defaultdict(list)
-    assert_emitted(run_engine_documents)  # type: ignore
+    assert_emitted(run_engine_documents)
 
 
 async def test_grid_fast(
@@ -74,7 +74,7 @@ async def test_grid_fast(
         ),
     )
     assert_emitted(
-        run_engine_documents,  # type:ignore
+        run_engine_documents,
         start=1,
         descriptor=1,
         stream_resource=1,
@@ -110,7 +110,7 @@ async def test_grid_fast_with_too_little_time_grid_become_1d(
         ),
     )
     assert_emitted(
-        run_engine_documents,  # type:ignore
+        run_engine_documents,
         start=1,
         descriptor=1,
         stream_resource=1,
@@ -182,7 +182,7 @@ async def test_grid_fast_with_speed_capped(
         ),
     )
     assert_emitted(
-        run_engine_documents,  # type:ignore
+        run_engine_documents,
         start=1,
         descriptor=1,
         stream_resource=1,
@@ -388,7 +388,7 @@ async def test_grid_step_with_home(
     )
 
     assert_emitted(
-        run_engine_documents,  # type: ignore
+        run_engine_documents,
         start=1,
         descriptor=1,
         stream_resource=1,
@@ -425,13 +425,7 @@ async def test_grid_step_without_home_with_readable(
             snake=False,
         ),
     )
-    assert_emitted(
-        run_engine_documents,  # type: ignore
-        start=1,
-        descriptor=1,
-        event=99,
-        stop=1,
-    )
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=99, stop=1)
     assert x_step_end == await sim_stage_step.x.user_readback.get_value()
     assert y_step_end == await sim_stage_step.y.user_readback.get_value()
 
@@ -464,13 +458,7 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
         ),
     )
     # The overhead is about 3 sec in pytest
-    assert_emitted(
-        run_engine_documents,  # type:ignore
-        start=1,
-        descriptor=1,
-        event=ANY,
-        stop=1,
-    )
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=ANY, stop=1)
 
 
 async def test_grid_fast_sim_flyable_motor(
@@ -503,7 +491,7 @@ async def test_grid_fast_sim_flyable_motor(
     # The overhead is about 3 sec in pytest
 
     assert_emitted(
-        run_engine_documents,  # type: ignore
+        run_engine_documents,
         start=1,
         descriptor=1,
         stream_resource=1,
