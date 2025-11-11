@@ -35,7 +35,7 @@ async def test_fast_scan_1d_fail_limit_check(
 
     assert 0 == get_mock_put(sim_motor.x.user_setpoint).call_count
     assert 0 == get_mock_put(sim_motor.x.velocity).call_count
-    assert_emitted(run_engine_documents, start=2, stop=2)  # type: ignore
+    assert_emitted(run_engine_documents, start=2, stop=2)
 
 
 async def test_fast_scan_1d_success(
@@ -58,7 +58,7 @@ async def test_fast_scan_1d_success(
 
     """Only 1 event as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
-    assert_emitted(run_engine_documents, start=1, descriptor=1, event=1, stop=1)  # type: ignore
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=1, stop=1)
 
 
 async def test_fast_scan_1d_success_without_speed(
@@ -80,7 +80,7 @@ async def test_fast_scan_1d_success_without_speed(
 
     """Only 1 event as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""  #
-    assert_emitted(run_engine_documents, start=1, descriptor=1, event=mock.ANY, stop=1)  # type: ignore
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=mock.ANY, stop=1)
 
 
 async def test_fast_scan_2d_success(
@@ -134,7 +134,7 @@ async def test_fast_scan_2d_success(
             assert motor_y == mock.call(y_end, wait=True)
     """Only 1 event per step as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
-    assert_emitted(run_engine_documents, start=1, descriptor=1, event=num_step, stop=1)  # type: ignore
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=num_step, stop=1)
 
 
 async def test_fast_scan_2d_snake_success(
@@ -196,4 +196,4 @@ async def test_fast_scan_2d_snake_success(
 
     """Only 1 event per step as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
-    assert_emitted(run_engine_documents, start=1, descriptor=1, event=num_step, stop=1)  # type: ignore
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=num_step, stop=1)
