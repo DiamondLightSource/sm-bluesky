@@ -1,16 +1,15 @@
-from collections import defaultdict
-from typing import Any
+from collections.abc import Mapping
 
 import pytest
 from bluesky.plan_stubs import sleep
 from bluesky.plans import count
 from bluesky.run_engine import RunEngine
-from dodal.devices.motors import XYZStage
 
 from sm_bluesky.common.helper.add_meta import (
     add_default_metadata,
     add_extra_names_to_meta,
 )
+from sm_bluesky.common.sim_devices import SimStage
 
 DEFAULT_METADATA = {
     "energy": {"value": 1.8, "unit": "eV"},
@@ -19,59 +18,50 @@ DEFAULT_METADATA = {
 
 
 async def test_add_meta_success_with_no_meta(
-    RE: RunEngine,
-    sim_motor_step: XYZStage,
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_stage_step: SimStage,
 ) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
-    docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
-    RE(
-        count_meta([sim_motor_step.x]),
-        capture_emitted,
+    run_engine(
+        count_meta([sim_stage_step.x]),
     )
-    assert docs["start"][0]["energy"] == DEFAULT_METADATA["energy"]
-    assert docs["start"][0]["detector_dist"] == DEFAULT_METADATA["detector_dist"]
-    assert docs["start"][0]["plan_name"] == "count"
+    assert run_engine_documents["start"][0]["energy"] == DEFAULT_METADATA["energy"]
+    assert (
+        run_engine_documents["start"][0]["detector_dist"]
+        == DEFAULT_METADATA["detector_dist"]
+    )
+    assert run_engine_documents["start"][0]["plan_name"] == "count"
 
 
 async def test_add_meta_success_with_meta(
-    RE: RunEngine,
-    sim_motor_step: XYZStage,
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_stage_step: SimStage,
 ) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
-    docs = defaultdict(list)
-
-    def capture_emitted(name: str, doc: Any):
-        docs[name].append(doc)
-
-    RE(
-        count_meta([sim_motor_step.x], md={"bah": "bah"}),
-        capture_emitted,
+    run_engine(
+        count_meta([sim_stage_step.x], md={"bah": "bah"}),
     )
-    assert docs["start"][0]["energy"] == DEFAULT_METADATA["energy"]
-    assert docs["start"][0]["detector_dist"] == DEFAULT_METADATA["detector_dist"]
-    assert docs["start"][0]["bah"] == "bah"
-    assert docs["start"][0]["plan_name"] == "count"
+    assert run_engine_documents["start"][0]["energy"] == DEFAULT_METADATA["energy"]
+    assert (
+        run_engine_documents["start"][0]["detector_dist"]
+        == DEFAULT_METADATA["detector_dist"]
+    )
+    assert run_engine_documents["start"][0]["bah"] == "bah"
+    assert run_engine_documents["start"][0]["plan_name"] == "count"
 
 
 async def test_add_meta_success_with_no_extra_meta(
-    RE: RunEngine,
-    sim_motor_step: XYZStage,
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_stage_step: SimStage,
 ) -> None:
     count_meta = add_default_metadata(count)
-    docs = defaultdict(list)
 
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
-    RE(
-        count_meta([sim_motor_step.x]),
-        capture_emitted,
-    )
-    assert docs["start"][0]["plan_name"] == "count"
+    run_engine(count_meta([sim_stage_step.x]))
+    assert run_engine_documents["start"][0]["plan_name"] == "count"
 
 
 def some_plan(md: float):
@@ -79,16 +69,12 @@ def some_plan(md: float):
 
 
 async def test_add_meta_fail(
-    RE: RunEngine,
+    run_engine: RunEngine,
 ) -> None:
     count_meta = add_default_metadata(some_plan, DEFAULT_METADATA)
-    docs = defaultdict(list)
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
 
     with pytest.raises(ValueError, match="md is reserved for meta data."):
-        RE(count_meta(md=1), capture_emitted, wait=True)
+        run_engine(count_meta(md=1), wait=True)
 
 
 def test_add_extra_names_to_meta_with_empty_dictionary() -> None:

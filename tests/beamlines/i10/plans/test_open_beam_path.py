@@ -1,4 +1,3 @@
-from collections import defaultdict
 from unittest.mock import ANY, Mock, patch
 
 from bluesky.run_engine import RunEngine
@@ -25,12 +24,6 @@ from sm_bluesky.beamlines.i10.plans import (
     remove_pin_hole,
 )
 from tests.helpers import check_msg_set, check_msg_wait
-
-docs = defaultdict(list)
-
-
-def capture_emitted(name, doc):
-    docs[name].append(doc)
 
 
 async def test_open_s5s6_with_default(
@@ -107,13 +100,15 @@ async def test_open_dsd_dsu_with_no_wait(
     assert len(msgs) == 1
 
 
-async def test_remove_pin_hole_with_default(RE: RunEngine, pin_hole: XYStage) -> None:
+async def test_remove_pin_hole_with_default(
+    run_engine: RunEngine, pin_hole: XYStage
+) -> None:
     callback_on_mock_put(
         pin_hole.x.user_setpoint,
         lambda *_, **__: set_mock_value(pin_hole.x.user_readback, PIN_HOLE_OPEING_POS),
     )
 
-    RE(remove_pin_hole(pin_hole=pin_hole))
+    run_engine(remove_pin_hole(pin_hole=pin_hole))
     get_mock_put(pin_hole.x.user_setpoint).assert_called_once_with(
         PIN_HOLE_OPEING_POS, wait=ANY
     )
@@ -167,13 +162,13 @@ async def test_clear_beam_path(
     open_dsd_dsu: Mock,
     open_s5s6: Mock,
     remove_pin_hole: Mock,
-    RE: RunEngine,
+    run_engine: RunEngine,
     slits: I10Slits,
     det_slits: DetSlits,
     pin_hole: XYStage,
     pa_stage: PaStage,
 ) -> None:
-    RE(
+    run_engine(
         clear_beam_path(
             slits=slits, det_slits=det_slits, pin_hole=pin_hole, pa_stage=pa_stage
         )

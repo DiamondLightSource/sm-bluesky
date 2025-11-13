@@ -1,5 +1,3 @@
-from collections import defaultdict
-from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
@@ -24,12 +22,6 @@ from sm_bluesky.beamlines.i10.plans.align_slits import (
 )
 from tests.helpers import check_msg_set, check_msg_wait, check_mv_wait
 
-docs = defaultdict(list)
-
-
-def capture_emitted(name: str, doc: Any) -> None:
-    docs[name].append(doc)
-
 
 def test_move_dsu(sim_run_engine: RunEngineSimulator, det_slits: DetSlits) -> None:
     msgs = sim_run_engine.simulate_plan(move_dsu(5000, det_slits=det_slits))
@@ -53,7 +45,7 @@ def test_align_pa_slit(
     sim_run_engine: RunEngineSimulator,
     rasor_femto_pa_scaler_det: CurrentAmpDet,
     det_slits: DetSlits,
-):
+) -> None:
     msgs = sim_run_engine.simulate_plan(
         align_pa_slit(
             dsd_size=50, dsu_size=50, det=rasor_femto_pa_scaler_det, det_slits=det_slits
@@ -76,7 +68,7 @@ def test_align_s5s6(
     slits: I10Slits,
     diffractometer: Diffractometer,
     sample_stage: XYZStage,
-):
+) -> None:
     msgs = sim_run_engine.simulate_plan(
         align_s5s6(
             det=rasor_femto_pa_scaler_det,
@@ -146,7 +138,6 @@ def test_align_slit(
     msgs = check_msg_set(msgs=msgs, obj=slit.y_centre, value=y_cen)
     msgs = check_mv_wait(msgs=msgs, wait_group=ANY)
     msgs = check_msg_set(msgs=msgs, obj=slit.y_gap, value=y_scan_size)
-
     msgs = check_msg_set(msgs=msgs, obj=slit.x_gap, value=x_open_size)
     msgs = check_msg_wait(msgs=msgs, wait_group="slits group")
     msgs = check_msg_set(msgs=msgs, obj=slit.x_gap, value=x_final_size)

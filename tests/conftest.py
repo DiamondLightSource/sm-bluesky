@@ -1,10 +1,7 @@
-import asyncio
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from bluesky.run_engine import RunEngine
-from bluesky.simulators import RunEngineSimulator
 from dodal.common.beamlines.beamline_utils import (
     set_path_provider,
 )
@@ -22,9 +19,8 @@ from ophyd_async.core import (
 from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.epics.adcore import ADBaseIO, SingleTriggerDetector
 from ophyd_async.testing import callback_on_mock_put, set_mock_value
-from super_state_machine.errors import TransitionError
 
-from .sim_devices import SimDetector, SimStage
+from sm_bluesky.common.sim_devices import SimDetector, SimStage
 
 RECORD = str(Path(__file__).parent / "panda" / "db" / "panda.db")
 INCOMPLETE_BLOCK_RECORD = str(
@@ -44,33 +40,10 @@ set_path_provider(
     )
 )
 
-
-@pytest.fixture(scope="session")
-def RE(request: pytest.FixtureRequest):
-    loop = asyncio.new_event_loop()
-    loop.set_debug(True)
-    re = RunEngine({}, call_returns_result=True, loop=loop)
-
-    def clean_event_loop():
-        if re.state not in ("idle", "panicked"):
-            try:
-                re.halt()
-            except TransitionError:
-                pass
-        loop.call_soon_threadsafe(loop.stop)
-        re._th.join()
-        loop.close()
-
-    request.addfinalizer(clean_event_loop)
-    return re
-
-
-@pytest.fixture
-def sim_run_engine() -> RunEngineSimulator:
-    return RunEngineSimulator()
-
-
 A_BIT = 0.5
+
+
+pytest_plugins = ["dodal.testing.fixtures.run_engine"]
 
 
 @pytest.fixture
@@ -128,23 +101,23 @@ async def sim_motor() -> XYZStage:
 
 
 @pytest.fixture
-async def sim_motor_step() -> SimStage:
+async def sim_stage_step() -> SimStage:
     async with init_devices(mock=True):
-        sim_motor_step = SimStage(name="sim_motor_step", instant=True)
-    return sim_motor_step
+        sim_stage_step = SimStage(name="sim_stage_step", instant=True)
+    return sim_stage_step
 
 
 @pytest.fixture
-async def sim_motor_delay() -> SimStage:
+async def sim_stage_delay() -> SimStage:
     async with init_devices(mock=True):
-        sim_motor_delay = SimStage(name="sim_motor_delay", instant=False)
-    set_mock_value(sim_motor_delay.x.velocity, 88.88)
-    set_mock_value(sim_motor_delay.x.acceleration_time, 0.01)
-    set_mock_value(sim_motor_delay.y.velocity, 88.88)
-    set_mock_value(sim_motor_delay.y.acceleration_time, 0.01)
-    set_mock_value(sim_motor_delay.z.velocity, 88.88)
-    set_mock_value(sim_motor_delay.z.acceleration_time, 0.01)
-    return sim_motor_delay
+        sim_stage_delay = SimStage(name="sim_stage_delay", instant=False)
+    set_mock_value(sim_stage_delay.x.velocity, 88.88)
+    set_mock_value(sim_stage_delay.x.acceleration_time, 0.01)
+    set_mock_value(sim_stage_delay.y.velocity, 88.88)
+    set_mock_value(sim_stage_delay.y.acceleration_time, 0.01)
+    set_mock_value(sim_stage_delay.z.velocity, 88.88)
+    set_mock_value(sim_stage_delay.z.acceleration_time, 0.01)
+    return sim_stage_delay
 
 
 @pytest.fixture

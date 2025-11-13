@@ -5,10 +5,26 @@
 
 # sm_bluesky
 
-Bluesky code for Diamond's surface and magnetic materials beamline.
+This module is a collection of custom Bluesky plans and utilities specific to 
+Materials and Magnetism Village (MMG) and 
+Surface and Structure Interface Village (SSG) 
+of Diamond Light Source.
 
-This is where you should write a short paragraph that describes what your module does,
-how it does it, and why people should use it.
+List of supported beamlines:
+- i05 Angular Resolved Photoelectron Emission Spectroscopy
+- i06 Nanoscience
+- i07 Surface and Interface Diffraction
+- i09 Surface and Interface Structural Analysis
+- i10 Advanced Dichroism Experiments
+- i16 Materials and Magnetism
+- i17 Coherent Soft X-ray Imaging and Diffraction (CSXID) (Diamond II Flagship beamline)
+- i21 Resonant Inelastic soft X-ray Scattering
+- b07 Versatile Soft X-ray (VerSoX) Beamline
+- p99 Mapping Test Rig
+- p60
+- k07 Future of b07-1 beamline
+
+Core beamline configurations and device logic can be found in <https://github.com/DiamondLightSource/dodal>
 
 Source          | <https://github.com/DiamondLightSource/sm-bluesky>
 :---:           | :---:
@@ -16,21 +32,6 @@ PyPI            | `pip install sm_bluesky`
 Documentation   | <https://diamondlightsource.github.io/sm-bluesky>
 Releases        | <https://github.com/DiamondLightSource/sm-bluesky/releases>
 
-This is where you should put some images or code snippets that illustrate
-some relevant examples. If it is a library then you might put some
-introductory code here:
-
-```python
-from sm_bluesky import __version__
-
-print(f"Hello sm_bluesky {__version__}")
-```
-
-Or if it is a commandline tool then you might put some example commands here:
-
-```
-python -m sm_bluesky --version
-```
 
 <!-- README only content. Anything below this line won't be included in index.md -->
 

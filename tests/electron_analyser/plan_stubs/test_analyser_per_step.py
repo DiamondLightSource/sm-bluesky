@@ -15,7 +15,7 @@ from dodal.devices.electron_analyser import (
     GenericElectronAnalyserDetector,
     GenericElectronAnalyserRegionDetector,
 )
-from ophyd.status import Status
+from ophyd_async.core import AsyncStatus
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
@@ -73,27 +73,26 @@ def analyser_nd_step() -> Callable:
     return run_engine_setup_decorator(aps.analyser_nd_step)
 
 
-def fake_status(region=None) -> Status:
-    status = Status()
-    status.set_finished()
+def fake_status(region=None) -> AsyncStatus:
+    status = AsyncStatus(asyncio.sleep(0.0))
     return status
 
 
 def test_analyser_nd_step_func_has_expected_driver_set_calls(
+    run_engine: RunEngine,
     analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
     sim_analyser: GenericElectronAnalyserDetector,
     region_detectors: Sequence[GenericElectronAnalyserRegionDetector],
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
-    RE: RunEngine,
 ) -> None:
     # Mock driver.set to track expected calls
     driver = sim_analyser.driver
     driver.set = AsyncMock(side_effect=fake_status)
     expected_driver_set_calls = [call(r_det.region) for r_det in region_detectors]
 
-    RE(analyser_nd_step(all_detectors, step, pos_cache))
+    run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
     # Our driver instance is shared between each region detector instance.
     # Check that each driver.set was called once with the correct region
@@ -101,13 +100,13 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
 
 
 async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
+    run_engine: RunEngine,
     analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
     other_detectors: Sequence[Readable],
     region_detectors: Sequence[GenericElectronAnalyserRegionDetector],
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
-    RE: RunEngine,
 ) -> None:
     for det in other_detectors:
         if isinstance(det, Triggerable):
@@ -123,7 +122,7 @@ async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
         r_det.trigger = MagicMock(side_effect=fake_status)
         r_det.read = MagicMock(return_value=r_det.read())
 
-    RE(analyser_nd_step(all_detectors, step, pos_cache))
+    run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
     for r_det in region_detectors:
         r_det.trigger.assert_called_once()  # type: ignore
@@ -138,11 +137,11 @@ async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
 
 
 async def test_analyser_nd_step_func_moves_motors_before_detector_trigger(
+    run_engine: RunEngine,
     analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
     step: dict[SimMotor, Any],
     pos_cache: dict[SimMotor, Any],
-    RE: RunEngine,
 ) -> None:
     shared_mock = MagicMock(side_effect=fake_status)
     for det in all_detectors:
@@ -152,7 +151,7 @@ async def test_analyser_nd_step_func_moves_motors_before_detector_trigger(
     for m in motors:
         m.set = shared_mock
 
-    RE(analyser_nd_step(all_detectors, step, pos_cache))
+    run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
     # Check to see motor.set was called before any r_det.trigger was called.
     for value in step.values():
@@ -162,15 +161,15 @@ async def test_analyser_nd_step_func_moves_motors_before_detector_trigger(
 
 
 async def test_analyser_nd_step_func_moves_motors_correctly(
+    run_engine: RunEngine,
     analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
     step: dict[SimMotor, Any],
     pos_cache: dict[SimMotor, Any],
-    RE: RunEngine,
 ) -> None:
     motors = list(step.keys())
 
-    RE(analyser_nd_step(all_detectors, step, pos_cache))
+    run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
     # Check motors moved to correct position
     for m in motors:
