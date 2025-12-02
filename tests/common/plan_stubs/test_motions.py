@@ -1,9 +1,8 @@
 import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.slits import Slits
-from ophyd_async.core import init_devices
+from ophyd_async.core import callback_on_mock_put, init_devices, set_mock_value
 from ophyd_async.epics.motor import Motor
-from ophyd_async.testing import callback_on_mock_put, set_mock_value
 
 from sm_bluesky.common.plan_stubs import (
     check_within_limit,

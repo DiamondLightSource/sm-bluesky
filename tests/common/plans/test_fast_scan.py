@@ -5,8 +5,9 @@ import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
 from numpy import linspace
+from ophyd_async.core import get_mock_put
 from ophyd_async.sim import SimPointDetector
-from ophyd_async.testing import assert_emitted, get_mock_put
+from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.plans.fast_scan import fast_scan_1d, fast_scan_grid
 

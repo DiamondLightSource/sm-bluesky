@@ -2,7 +2,7 @@ from dodal.devices.electron_analyser import (
     ElectronAnalyserDetector,
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector
-from ophyd_async.testing import set_mock_value
+from ophyd_async.core import set_mock_value
 
 
 def analyser_setup_for_scan(sim_analyser: ElectronAnalyserDetector):

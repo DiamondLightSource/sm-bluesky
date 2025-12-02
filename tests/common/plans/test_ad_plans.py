@@ -3,12 +3,10 @@ from collections.abc import Mapping
 from bluesky.plans import scan
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
-from ophyd_async.core import (
-    StaticPathProvider,
-)
+from ophyd_async.core import StaticPathProvider, set_mock_value
 from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.epics.adcore import ADState
-from ophyd_async.testing import assert_emitted, set_mock_value
+from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.plans import trigger_img
 
