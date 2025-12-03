@@ -5,7 +5,7 @@ from bluesky.simulators import RunEngineSimulator
 from dodal.devices.i10.rasor.rasor_motors import DetSlits, PaStage
 from dodal.devices.i10.slits import I10Slits
 from dodal.devices.motors import XYStage
-from ophyd_async.testing import (
+from ophyd_async.core import (
     callback_on_mock_put,
     get_mock_put,
     set_mock_value,

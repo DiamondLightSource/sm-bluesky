@@ -14,11 +14,12 @@ from ophyd_async.core import (
     FilenameProvider,
     StaticFilenameProvider,
     StaticPathProvider,
+    callback_on_mock_put,
     init_devices,
+    set_mock_value,
 )
 from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.epics.adcore import ADBaseIO, SingleTriggerDetector
-from ophyd_async.testing import callback_on_mock_put, set_mock_value
 
 from sm_bluesky.common.sim_devices import SimDetector, SimStage
 

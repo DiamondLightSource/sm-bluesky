@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
-from ophyd_async.testing import callback_on_mock_put, set_mock_value
+from ophyd_async.core import callback_on_mock_put, set_mock_value
 
 from sm_bluesky.common.math_functions import cal_range_num
 from sm_bluesky.common.plans import (
