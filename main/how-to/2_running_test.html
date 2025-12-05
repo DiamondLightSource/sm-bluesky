@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Build and Test &#8212; sm-bluesky 1.0.1.dev30+gff3f9ee3a documentation</title>
+    <title>Build and Test &#8212; sm-bluesky 1.0.1.dev31+ga7861c5be documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=4cf66c08"></script>
+    <script src="../_static/documentation_options.js?v=10842a0c"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -475,11 +475,14 @@
 <section id="understanding-tox">
 <h2>Understanding <code class="docutils literal notranslate"><span class="pre">tox</span></code><a class="headerlink" href="#understanding-tox" title="Link to this heading">#</a></h2>
 <p>In the <code class="docutils literal notranslate"><span class="pre">sm-bluesky</span></code> project, <code class="docutils literal notranslate"><span class="pre">tox</span></code> is configured to run a series of commands defined in the <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> file. These commands can also be executed individually in your terminal.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">commands</span> <span class="o">=</span>
-    <span class="n">pre</span><span class="o">-</span><span class="n">commit</span><span class="p">:</span> <span class="n">pre</span><span class="o">-</span><span class="n">commit</span> <span class="n">run</span> <span class="o">--</span><span class="nb">all</span><span class="o">-</span><span class="n">files</span> <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">diff</span><span class="o">-</span><span class="n">on</span><span class="o">-</span><span class="n">failure</span> <span class="p">{</span><span class="n">posargs</span><span class="p">}</span>
-    <span class="nb">type</span><span class="o">-</span><span class="n">checking</span><span class="p">:</span> <span class="n">pyright</span> <span class="n">src</span> <span class="n">tests</span> <span class="p">{</span><span class="n">posargs</span><span class="p">}</span>
-    <span class="n">tests</span><span class="p">:</span> <span class="n">pytest</span> <span class="o">--</span><span class="n">cov</span><span class="o">=</span><span class="n">sm_bluesky</span> <span class="o">--</span><span class="n">cov</span><span class="o">-</span><span class="n">report</span> <span class="n">term</span> <span class="o">--</span><span class="n">cov</span><span class="o">-</span><span class="n">report</span> <span class="n">xml</span><span class="p">:</span><span class="n">cov</span><span class="o">.</span><span class="n">xml</span> <span class="p">{</span><span class="n">posargs</span><span class="p">}</span>
-    <span class="n">docs</span><span class="p">:</span> <span class="n">sphinx</span><span class="o">-</span><span class="p">{</span><span class="n">posargs</span><span class="p">:</span><span class="n">build</span> <span class="o">-</span><span class="n">EW</span> <span class="o">--</span><span class="n">keep</span><span class="o">-</span><span class="n">going</span><span class="p">}</span> <span class="o">-</span><span class="n">T</span> <span class="n">docs</span> <span class="n">build</span><span class="o">/</span><span class="n">html</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">commands</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;pre-commit&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;run&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--all-files&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--show-diff-on-failure&quot;</span><span class="p">,</span>
+        <span class="p">{</span> <span class="n">replace</span> <span class="o">=</span> <span class="s2">&quot;posargs&quot;</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">],</span> <span class="n">extend</span> <span class="o">=</span> <span class="n">true</span> <span class="p">},</span>
 </pre></div>
 </div>
 </section>
