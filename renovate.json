@@ -4,27 +4,35 @@
     "config:best-practices",
     ":automergeMinor"
   ],
+  "lockFileMaintenance": {
+    "description": "Keep uv.lock up to date, merging if tests pass",
+    "enabled": true,
+    "automerge": true
+  },
   "packageRules": [
     {
-      "groupName": "Templated CI",
-      "matchDepNames": [
-        "actions/checkout",
-        "actions/download-artifact",
-        "actions/setup-python",
-        "actions/upload-artifact",
-        "codecov/codecov-action",
-        "docker/build-push-action",
-        "docker/login-action",
-        "docker/metadata-action",
-        "docker/setup-buildx-action",
-        "peaceiris/actions-gh-pages",
-        "pypa/gh-action-pypi-publish",
-        "softprops/action-gh-release"
+      "description": "Disable python version as that is managed by python-copier-template",
+      "matchManagers": [
+        "pyenv"
       ],
-      "enabled": false,
-      "description": [
-        "Group and update GitHub actions through the copier template to prevent merge conflicts"
-      ]
+      "enabled": false
     },
+    {
+      "description": "Disable github actions that are managed by python-copier-template",
+      "matchPackageNames": [
+        "actions/checkout",
+        "astral-sh/setup-uv",
+        "actions/upload-artifact",
+        "actions/download-artifact",
+        "softprops/action-gh-release",
+        "codecov/codecov-action",
+        "pypa/gh-action-pypi-publish",
+        "peaceiris/actions-gh-pages"
+      ],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "enabled": false
+    }
   ]
 }
