@@ -2,7 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:best-practices",
-    ":automergeMinor"
+    ":automergeMinor",
+    ":automergePatch"
   ],
   "lockFileMaintenance": {
     "description": "Keep uv.lock up to date, merging if tests pass",
@@ -10,6 +11,14 @@
     "automerge": true
   },
   "packageRules": [
+    {
+      "description": "Automerge digest updates (e.g. Docker image SHAs)",
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "automerge": true,
+      "automergeType": "pr"
+    },
     {
       "description": "Disable python version as that is managed by python-copier-template",
       "matchManagers": [
