@@ -18,7 +18,7 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal>=1.59.1",
+    "dls-dodal>=1.68.0",
     "ophyd-async[sim]",
     "scanspec",
 ]
@@ -131,7 +131,7 @@ commands = [
 description = "Run tests with coverage"
 commands = [
     [
-        "pytest", 
+        "pytest",
         "--cov=sm_bluesky",
         "--cov-report",
         "term",

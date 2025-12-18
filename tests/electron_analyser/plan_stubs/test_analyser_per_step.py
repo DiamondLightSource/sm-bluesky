@@ -9,7 +9,7 @@ import pytest
 from bluesky import RunEngine
 from bluesky import plan_stubs as bps
 from bluesky.protocols import Movable, Readable, Triggerable
-from dodal.devices.electron_analyser import (
+from dodal.devices.electron_analyser.base import (
     ElectronAnalyserDetector,
     ElectronAnalyserRegionDetector,
     GenericElectronAnalyserDetector,
@@ -88,15 +88,15 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     pos_cache: dict[Movable, Any],
 ) -> None:
     # Mock driver.set to track expected calls
-    driver = sim_analyser.driver
-    driver.set = AsyncMock(side_effect=fake_status)
+    controller = sim_analyser._controller
+    controller.setup_with_region = AsyncMock(side_effect=fake_status)
     expected_driver_set_calls = [call(r_det.region) for r_det in region_detectors]
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
     # Our driver instance is shared between each region detector instance.
     # Check that each driver.set was called once with the correct region
-    assert driver.set.call_args_list == expected_driver_set_calls
+    assert controller.setup_with_region.call_args_list == expected_driver_set_calls
 
 
 async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(

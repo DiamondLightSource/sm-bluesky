@@ -3,7 +3,7 @@ from collections.abc import Sequence
 import pytest
 from bluesky import RunEngine
 from bluesky.protocols import Readable
-from dodal.devices.electron_analyser import (
+from dodal.devices.electron_analyser.base import (
     ElectronAnalyserDetector,
     ElectronAnalyserRegionDetector,
     GenericElectronAnalyserDetector,
