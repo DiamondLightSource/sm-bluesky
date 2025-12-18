@@ -1,4 +1,4 @@
-from dodal.devices.electron_analyser import (
+from dodal.devices.electron_analyser.base import (
     ElectronAnalyserDetector,
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector

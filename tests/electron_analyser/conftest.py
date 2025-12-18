@@ -1,6 +1,9 @@
 import pytest
 from dodal.beamlines import b07, i09
-from dodal.devices.electron_analyser import DualEnergySource, ElectronAnalyserDetector
+from dodal.devices.electron_analyser.base import (
+    DualEnergySource,
+    ElectronAnalyserDetector,
+)
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
 from dodal.testing.electron_analyser import create_detector
@@ -49,7 +52,7 @@ async def sim_analyser(
     dual_energy_source: DualEnergySource,
 ) -> ElectronAnalyserDetector:
     with init_devices(mock=True):
-        sim_analyser = await create_detector(
+        sim_analyser = create_detector(
             request.param,
             prefix="TEST:",
             energy_source=dual_energy_source,

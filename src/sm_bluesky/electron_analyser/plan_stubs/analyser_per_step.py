@@ -10,7 +10,7 @@ from bluesky.utils import (
     MsgGenerator,
     plan,
 )
-from dodal.devices.electron_analyser import (
+from dodal.devices.electron_analyser.base import (
     ElectronAnalyserRegionDetector,
     GenericElectronAnalyserRegionDetector,
 )
