@@ -4,6 +4,7 @@ from sm_bluesky.common.plans import grid_fast_scan, grid_step_scan
 P99_DEFAULT_METADATA = {
     "energy": {"value": 1.8, "unit": "eV"},
     "detector_dist": {"value": 88, "unit": "mm"},
+    "pixel_size": {"value": 16, "unit": "µm"},
 }
 
 stxm_step = add_default_metadata(grid_step_scan, P99_DEFAULT_METADATA)

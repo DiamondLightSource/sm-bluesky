@@ -1,15 +1,8 @@
-import os
-
-from dodal.devices.electron_analyser import (
+from dodal.devices.electron_analyser.base import (
     ElectronAnalyserDetector,
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector
-from ophyd_async.testing import set_mock_value
-
-TEST_DATA_PATH = "tests/test_data/electron_analyser/"
-
-TEST_VGSCIENTA_SEQUENCE = os.path.join(TEST_DATA_PATH, "vgscienta_sequence.seq")
-TEST_SPECS_SEQUENCE = os.path.join(TEST_DATA_PATH, "specs_sequence.seq")
+from ophyd_async.core import set_mock_value
 
 
 def analyser_setup_for_scan(sim_analyser: ElectronAnalyserDetector):
