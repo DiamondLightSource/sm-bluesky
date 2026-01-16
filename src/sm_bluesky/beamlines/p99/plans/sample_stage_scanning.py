@@ -71,7 +71,7 @@ def trajectory_fly_scan(
         duration
         @ (
             Line(motor_slow, slow_start, slow_stop, slow_num)  # type: ignore
-            * ~Line(motor_slow, fast_start, fast_stop, fast_num)  # type: ignore
+            * ~Line(motor_fast, fast_start, fast_stop, fast_num)  # type: ignore
         )  # type: ignore
     )
 
