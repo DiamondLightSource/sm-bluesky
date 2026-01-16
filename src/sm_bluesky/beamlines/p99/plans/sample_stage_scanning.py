@@ -25,7 +25,7 @@ from scanspec.specs import Fly, Line
 X_MOTOR_RESOLUTION = -2 / 100000
 
 
-def calculate_stuff(start, stop, num):
+def calculate_pcomp_info(start, stop, num):
     width = (stop - start) / (num - 1)
     direction_of_sweep = (
         PandaPcompDirection.POSITIVE
@@ -82,7 +82,7 @@ def trajectory_fly_scan(
     @bpp.run_decorator()
     @bpp.stage_decorator([panda, panda_pcomp1, panda_pcomp2])
     def inner_plan():
-        width, _, _, direction_of_sweep = calculate_stuff(
+        width, _, _, direction_of_sweep = calculate_pcomp_info(
             fast_start, fast_stop, fast_num
         )
         dir1 = direction_of_sweep
