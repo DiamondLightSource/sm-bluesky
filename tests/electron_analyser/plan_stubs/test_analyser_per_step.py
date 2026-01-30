@@ -9,25 +9,27 @@ import pytest
 from bluesky import RunEngine
 from bluesky import plan_stubs as bps
 from bluesky.protocols import Movable, Readable, Triggerable
-from dodal.devices.electron_analyser.base import (
-    ElectronAnalyserDetector,
-    ElectronAnalyserRegionDetector,
-    GenericElectronAnalyserDetector,
-    GenericElectronAnalyserRegionDetector,
-)
+from dodal.devices.electron_analyser.base import GenericElectronAnalyserDetector
 from ophyd_async.core import AsyncStatus
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
-from tests.electron_analyser.util import analyser_setup_for_scan
 
 
 @pytest.fixture
-def region_detectors(
-    sim_analyser: ElectronAnalyserDetector, sequence_file: str
-) -> Sequence[ElectronAnalyserRegionDetector]:
-    analyser_setup_for_scan(sim_analyser)
-    return sim_analyser.create_region_detector_list(sequence_file)
+async def analyser_with_sequence(
+    sim_analyser: GenericElectronAnalyserDetector, sequence_file: str
+) -> GenericElectronAnalyserDetector:
+    await sim_analyser.sequence_loader.set(sequence_file)
+    assert sim_analyser.sequence_loader.sequence is not None
+    return sim_analyser
+
+
+@pytest.fixture
+def number_of_regions(analyser_with_sequence: GenericElectronAnalyserDetector) -> float:
+    sequence = analyser_with_sequence.sequence_loader.sequence
+    assert sequence is not None
+    return len(sequence.get_enabled_regions())
 
 
 @pytest.fixture(params=[0, 1, 2])
@@ -39,9 +41,10 @@ def other_detectors(
 
 @pytest.fixture
 def all_detectors(
-    region_detectors: Sequence[Readable], other_detectors: Sequence[Readable]
+    analyser_with_sequence: GenericElectronAnalyserDetector,
+    other_detectors: Sequence[Readable],
 ) -> Sequence[Readable]:
-    return list(region_detectors) + list(other_detectors)
+    return [analyser_with_sequence] + list(other_detectors)
 
 
 @pytest.fixture
@@ -83,32 +86,33 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
     sim_analyser: GenericElectronAnalyserDetector,
-    region_detectors: Sequence[GenericElectronAnalyserRegionDetector],
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
 ) -> None:
     # Mock driver.set to track expected calls
     controller = sim_analyser._controller
     controller.setup_with_region = AsyncMock(side_effect=fake_status)
-    expected_driver_set_calls = [call(r_det.region) for r_det in region_detectors]
+    sequence = sim_analyser.sequence_loader.sequence
+    assert sequence is not None
+    expected_driver_set_calls = [
+        call(region) for region in sequence.get_enabled_regions()
+    ]
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
-    # Our driver instance is shared between each region detector instance.
-    # Check that each driver.set was called once with the correct region
+    # Check that controller method was called with the number of regions.
     assert controller.setup_with_region.call_args_list == expected_driver_set_calls
 
 
 async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
     run_engine: RunEngine,
     analyser_nd_step: Callable,
+    sim_analyser: GenericElectronAnalyserDetector,
     all_detectors: Sequence[Readable],
-    other_detectors: Sequence[Readable],
-    region_detectors: Sequence[GenericElectronAnalyserRegionDetector],
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
 ) -> None:
-    for det in other_detectors:
+    for det in all_detectors:
         if isinstance(det, Triggerable):
             det.trigger = MagicMock(side_effect=fake_status)
 
@@ -118,22 +122,17 @@ async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
         else:
             det.read = MagicMock(return_value=det.read())
 
-    for r_det in region_detectors:
-        r_det.trigger = MagicMock(side_effect=fake_status)
-        r_det.read = MagicMock(return_value=r_det.read())
-
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
-    for r_det in region_detectors:
-        r_det.trigger.assert_called_once()  # type: ignore
-        r_det.read.assert_called_once()  # type: ignore
+    sequence = sim_analyser.sequence_loader.sequence
+    assert sequence is not None
+    n_regions = len(sequence.get_enabled_regions())
 
-    # Check that the other detectors are triggered and read by the number of region
-    # detectors.
-    for det in other_detectors:
+    # Check that alldetectors are triggered and read by the number of regions.
+    for det in all_detectors:
         if isinstance(det, Triggerable):
-            assert det.trigger.call_count == len(region_detectors)  # type: ignore
-        assert det.read.call_count == len(region_detectors)  # type: ignore
+            assert det.trigger.call_count == n_regions  # type: ignore
+        assert det.read.call_count == n_regions  # type: ignore
 
 
 async def test_analyser_nd_step_func_moves_motors_before_detector_trigger(

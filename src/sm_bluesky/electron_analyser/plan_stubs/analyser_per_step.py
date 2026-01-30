@@ -1,25 +1,23 @@
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, TypeVar
 
-from bluesky.plan_stubs import (
-    move_per_step,
-    trigger_and_read,
-)
+from bluesky.plan_stubs import move_per_step, mv, trigger_and_read
 from bluesky.protocols import Movable, Readable
 from bluesky.utils import (
     MsgGenerator,
     plan,
 )
-from dodal.devices.electron_analyser.base import (
-    ElectronAnalyserRegionDetector,
-    GenericElectronAnalyserRegionDetector,
-)
+from dodal.devices.electron_analyser.base import ElectronAnalyserDetector
 from dodal.log import LOGGER
 
+T = TypeVar("T")
 
-@plan
-def analyser_shot(detectors: Sequence[Readable], *args) -> MsgGenerator:
-    yield from analyser_nd_step(detectors, {}, {}, *args)
+
+def get_first_of_type(objects: Iterable[Any], target_type: type[T]) -> T:
+    for obj in objects:
+        if isinstance(obj, target_type):
+            return obj
+    raise ValueError(f"Cannot find object from {objects} with type {target_type}")
 
 
 @plan
@@ -46,14 +44,6 @@ def analyser_nd_step(
         mapping motors to their last-set positions
     """
 
-    analyser_detectors: list[GenericElectronAnalyserRegionDetector] = []
-    other_detectors = []
-    for det in detectors:
-        if isinstance(det, ElectronAnalyserRegionDetector):
-            analyser_detectors.append(det)
-        else:
-            other_detectors.append(det)
-
     # Step provides the map of motors to single position to move to. Move motors to
     # required positions.
     yield from move_per_step(step, pos_cache)
@@ -62,16 +52,20 @@ def analyser_nd_step(
     # them Readable so positions can be measured.
     motors: list[Readable] = [s for s in step.keys() if isinstance(s, Readable)]
 
-    # To get energy sources and open paired shutters, they need to be given in this
-    # plan. They could possibly come from step but we then have to extract them out.
-    # It would also mean forcefully adding in the devices at the wrapper level.
-    # It would easier if they are part of the detector and the plan just calls the
-    # common methods so it is more dynamic and configuration only for device.
-    for analyser_det in analyser_detectors:
-        dets = [analyser_det] + list(other_detectors) + list(motors)
+    readables = list(detectors) + motors
 
-        LOGGER.info(f"Scanning region {analyser_det.region.name}.")
-        yield from trigger_and_read(
-            dets,
-            name=analyser_det.region.name,
-        )
+    analyser = get_first_of_type(detectors, ElectronAnalyserDetector)
+
+    sequence = analyser.sequence_loader.sequence
+    if sequence is None:
+        raise ValueError(f"{analyser.sequence_loader.name}.sequence is None.")
+
+    for region in sequence.get_enabled_regions():
+        LOGGER.info(f"Scanning region {region.name}.")
+        yield from mv(analyser, region)
+        yield from trigger_and_read(readables, name=region.name)
+
+
+@plan
+def analyser_shot(detectors: Sequence[Readable], *args) -> MsgGenerator:
+    yield from analyser_nd_step(detectors, {}, {}, *args)
