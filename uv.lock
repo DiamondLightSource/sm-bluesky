@@ -1191,8 +1191,8 @@ wheels = [
 
 [[package]]
 name = "dls-dodal"
-version = "1.69.1.dev42+g52a3620d7"
-source = { git = "https://github.com/DiamondLightSource/dodal.git?rev=move_beamline_devices#52a3620d767319bba7fd1416d1b696871b924b66" }
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
     { name = "aiohttp" },
@@ -1213,6 +1213,10 @@ dependencies = [
     { name = "requests" },
     { name = "scanspec" },
     { name = "zocalo" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/55/bf/21598dcb19839a465fe0c1e592afa8e2b392178df16b2f7ea3230357aafb/dls_dodal-2.0.0.tar.gz", hash = "sha256:8acc075b7a0bf7c767ec330f3c8d7ba0f71921672ca7a8af18766c30f6d3071c", size = 1612683, upload-time = "2026-02-04T15:53:31.595Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/e6/22a9957c11d8e0fbdbd432ab8d22906b065e2aa385d615a969424b58f946/dls_dodal-2.0.0-py3-none-any.whl", hash = "sha256:a3523ec1649d63c90657af4fa0e10dcc6ced5c02fa0826dbf748e007b0fe9ebc", size = 366008, upload-time = "2026-02-04T15:53:29.939Z" },
 ]
 
 [[package]]
@@ -5361,7 +5365,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "bluesky" },
-    { name = "dls-dodal", git = "https://github.com/DiamondLightSource/dodal.git?rev=move_beamline_devices" },
+    { name = "dls-dodal", specifier = ">=2.0.0" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "scanspec" },
 ]
