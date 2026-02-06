@@ -18,7 +18,7 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal>=1.68.0",
+    "dls-dodal>=2.0.0",
     "ophyd-async[sim]",
     "scanspec",
 ]
@@ -51,7 +51,6 @@ dev = [
     "numpy",
     "pyepics",
     "blueapi",
-
 ]
 
 [project.scripts]

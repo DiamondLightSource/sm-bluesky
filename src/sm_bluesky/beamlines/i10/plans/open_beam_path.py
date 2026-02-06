@@ -3,8 +3,8 @@ from collections.abc import Hashable
 import bluesky.plan_stubs as bps
 from dodal.common import inject
 from dodal.common.types import MsgGenerator
-from dodal.devices.i10.rasor.rasor_motors import DetSlits, PaStage
-from dodal.devices.i10.slits import I10Slits
+from dodal.devices.beamlines.i10.rasor.rasor_motors import DetSlits, PaStage
+from dodal.devices.beamlines.i10.slits import I10Slits
 from dodal.devices.motors import XYStage
 
 from sm_bluesky.beamlines.i10.configuration.default_setting import (

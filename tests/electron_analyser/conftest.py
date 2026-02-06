@@ -6,6 +6,7 @@ from dodal.devices.electron_analyser.base import (
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
+from dodal.devices.selectable_source import SourceSelector
 from dodal.testing.electron_analyser import create_detector
 from ophyd_async.core import init_devices
 from ophyd_async.sim import SimMotor
@@ -31,12 +32,21 @@ async def dcm_energy() -> SimMotor:
 
 
 @pytest.fixture
+async def source_selector() -> SourceSelector:
+    with init_devices():
+        source_selector = SourceSelector()
+    return source_selector
+
+
+@pytest.fixture
 async def dual_energy_source(
-    dcm_energy: SimMotor, pgm_energy: SimMotor
+    source_selector: SourceSelector, dcm_energy: SimMotor, pgm_energy: SimMotor
 ) -> DualEnergySource:
     with init_devices():
         dual_energy_source = DualEnergySource(
-            dcm_energy.user_readback, pgm_energy.user_readback
+            dcm_energy.user_readback,
+            pgm_energy.user_readback,
+            source_selector.selected_source,
         )
     return dual_energy_source
 
