@@ -1,4 +1,4 @@
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock, patch
 
 from bluesky.run_engine import RunEngine
 from bluesky.simulators import RunEngineSimulator
@@ -109,9 +109,7 @@ async def test_remove_pin_hole_with_default(
     )
 
     run_engine(remove_pin_hole(pin_hole=pin_hole))
-    get_mock_put(pin_hole.x.user_setpoint).assert_called_once_with(
-        PIN_HOLE_OPEING_POS, wait=ANY
-    )
+    get_mock_put(pin_hole.x.user_setpoint).assert_called_once_with(PIN_HOLE_OPEING_POS)
     assert await pin_hole.x.user_readback.get_value() == PIN_HOLE_OPEING_POS
 
 
@@ -119,9 +117,7 @@ async def test_remove_pin_hole_with_other_value(
     sim_run_engine: RunEngineSimulator, pin_hole: XYStage
 ) -> None:
     other_value = 0.5
-    msgs = sim_run_engine.simulate_plan(
-        remove_pin_hole(other_value, wait=True, pin_hole=pin_hole)
-    )
+    msgs = sim_run_engine.simulate_plan(remove_pin_hole(other_value, pin_hole=pin_hole))
     msgs = check_msg_set(msgs=msgs, obj=pin_hole.x, value=other_value)
     group = f"{pin_hole.name}_wait"
     msgs = check_msg_wait(msgs=msgs, wait_group=group)
