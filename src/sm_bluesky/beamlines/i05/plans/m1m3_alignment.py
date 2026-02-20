@@ -51,7 +51,7 @@ def m1es_pitch_1600(
 i05_devices.include(alignment_devices)
 
 
-def map_m1_m3_mirrors_800(
+def map_m1_m3_mirrors(
     m1_start: float,
     m1_end: float,
     m1_num: int,
