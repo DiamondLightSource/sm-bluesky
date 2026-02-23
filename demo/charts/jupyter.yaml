@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: jupyter
+    spec:
+      ports:
+        - name: http
+          port: 8888
+          protocol: TCP
+          targetPort: 8888
+      selector:
+        app: jupyter
+      type: LoadBalancer
+      loadBalancerIP: #optional field for a specific IP. You can omit this
+      externalTrafficPolicy: Cluster
+
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: jupyter-home-pvc
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1.5Gi
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: jupyter
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: jupyter
+      template:
+        metadata:
+          labels:
+            app: jupyter
+        spec:
+          volumes:
+            - name: shared-packages
+              emptyDir: {}
+            - name: jupyter-home
+              persistentVolumeClaim:
+                claimName: jupyter-home-pvc
+          initContainers:
+            - name: install-dependencies
+              image: jupyter/base-notebook
+              env:
+                - name: PYTHONPATH
+                  value: /usr/local/lib/shared-packages
+              command: ["/bin/bash"]
+              args:
+                - "-c"
+                - "pip install sm-bluesky backports.tarfile>=1.2 databroker matplotlib -t /usr/local/lib/shared-packages && echo 'Dependencies installed successfully.'"
+              volumeMounts:
+                - name: shared-packages
+                  mountPath: /usr/local/lib/shared-packages
+
+          containers:
+            - name: jupyter
+              image: jupyter/base-notebook
+              env:
+                - name: JUPYTER_PORT
+                  value: "8888"
+                - name: NOTEBOOK_PORT
+                  value: "8888"
+                - name: JUPYTER_TOKEN
+                  value: $PASSWORD #Password goes here.
+                - name: PYTHONPATH
+                  value: /usr/local/lib/shared-packages
+              ports:
+                - name: http
+                  containerPort: 8888
+              volumeMounts:
+                - name: shared-packages
+                  mountPath: /usr/local/lib/shared-packages
+                - name: jupyter-home
+                  mountPath: /home/jovyan/work
