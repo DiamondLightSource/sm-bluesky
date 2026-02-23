@@ -3,11 +3,10 @@ from collections.abc import Sequence
 import pytest
 from bluesky import RunEngine
 from bluesky.protocols import Readable
+from dodal.common.data_util import JsonModelLoader
 from dodal.devices.electron_analyser.base import (
+    AbstractBaseSequence,
     ElectronAnalyserDetector,
-    ElectronAnalyserRegionDetector,
-    GenericElectronAnalyserDetector,
-    GenericElectronAnalyserRegionDetector,
 )
 from ophyd_async.sim import SimMotor
 
@@ -15,9 +14,7 @@ from sm_bluesky.electron_analyser.plans.analyser_scans import (
     analysercount,
     analyserscan,
     grid_analyserscan,
-    process_detectors_for_analyserscan,
 )
-from tests.electron_analyser.util import analyser_setup_for_scan
 
 
 @pytest.fixture(params=[0, 1, 2])
@@ -27,53 +24,13 @@ def extra_detectors(
     return [SimMotor("det" + str(i + 1)) for i in range(request.param)]
 
 
-@pytest.fixture
-def all_detectors(
-    sim_analyser: ElectronAnalyserDetector, extra_detectors: list[Readable]
-) -> Sequence[Readable]:
-    return [sim_analyser] + extra_detectors
-
-
-async def test_process_detectors_for_analyserscan_func_correctly_replaces_detectors(
-    sequence_file: str,
-    sim_analyser: GenericElectronAnalyserDetector,
-    extra_detectors: Sequence[Readable],
-    all_detectors: Sequence[Readable],
-) -> None:
-    sequence = sim_analyser.load_sequence(sequence_file)
-
-    analyserscan_detectors: Sequence[Readable] = process_detectors_for_analyserscan(
-        all_detectors, sequence_file
-    )
-    # Check analyser detector is removed from detector list
-    assert sim_analyser not in analyserscan_detectors
-    # Check all extra detectors are still present in detector list
-    for extra_det in extra_detectors:
-        assert extra_det in analyserscan_detectors
-
-    region_detectors: list[GenericElectronAnalyserRegionDetector] = [
-        ad
-        for ad in analyserscan_detectors
-        if isinstance(ad, ElectronAnalyserRegionDetector)
-    ]
-
-    # Check length of region_detectors list is length of sequence enabled regions
-    assert len(region_detectors) == len(sequence.get_enabled_region_names())
-
-    # ToDo - We cannot compare that the region detectors are the same without override
-    # equals method. For now, just compare that region name is the same.
-    for region_det in region_detectors:
-        assert region_det.region.name in sequence.get_enabled_region_names()
-
-
 async def test_analysercount(
     run_engine: RunEngine,
     sim_analyser: ElectronAnalyserDetector,
-    sequence_file: str,
-    all_detectors: Sequence[Readable],
+    load_sequence: JsonModelLoader[AbstractBaseSequence],
+    extra_detectors: Sequence[Readable],
 ) -> None:
-    analyser_setup_for_scan(sim_analyser)
-    run_engine(analysercount(all_detectors, sequence_file))
+    run_engine(analysercount(sim_analyser, load_sequence(), extra_detectors))
 
 
 @pytest.mark.parametrize(
@@ -86,12 +43,13 @@ async def test_analysercount(
 async def test_analyserscan(
     run_engine: RunEngine,
     sim_analyser: ElectronAnalyserDetector,
-    sequence_file: str,
-    all_detectors: Sequence[Readable],
+    load_sequence: JsonModelLoader[AbstractBaseSequence],
+    extra_detectors: Sequence[Readable],
     args: list[SimMotor | int],
 ) -> None:
-    analyser_setup_for_scan(sim_analyser)
-    run_engine(analyserscan(all_detectors, sequence_file, *args, num=10))
+    run_engine(
+        analyserscan(sim_analyser, load_sequence(), extra_detectors, *args, num=10)
+    )
 
 
 @pytest.mark.parametrize(
@@ -104,9 +62,8 @@ async def test_analyserscan(
 async def test_grid_analyserscan(
     run_engine: RunEngine,
     sim_analyser: ElectronAnalyserDetector,
-    sequence_file: str,
-    all_detectors: Sequence[Readable],
+    load_sequence: JsonModelLoader[AbstractBaseSequence],
+    extra_detectors: Sequence[Readable],
     args: list[SimMotor | int],
 ) -> None:
-    analyser_setup_for_scan(sim_analyser)
-    run_engine(grid_analyserscan(all_detectors, sequence_file, *args))
+    run_engine(grid_analyserscan(sim_analyser, load_sequence(), extra_detectors, *args))
