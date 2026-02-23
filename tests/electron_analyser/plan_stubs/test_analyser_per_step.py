@@ -9,7 +9,9 @@ import pytest
 from bluesky import RunEngine
 from bluesky import plan_stubs as bps
 from bluesky.protocols import Movable, Readable, Triggerable
+from dodal.common.data_util import JsonModelLoader
 from dodal.devices.electron_analyser.base import (
+    AbstractBaseSequence,
     ElectronAnalyserDetector,
     ElectronAnalyserRegionDetector,
     GenericElectronAnalyserDetector,
@@ -19,15 +21,16 @@ from ophyd_async.core import AsyncStatus
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
-from tests.electron_analyser.util import analyser_setup_for_scan
 
 
 @pytest.fixture
 def region_detectors(
-    sim_analyser: ElectronAnalyserDetector, sequence_file: str
+    sim_analyser: ElectronAnalyserDetector,
+    load_sequence: JsonModelLoader[AbstractBaseSequence],
 ) -> Sequence[ElectronAnalyserRegionDetector]:
-    analyser_setup_for_scan(sim_analyser)
-    return sim_analyser.create_region_detector_list(sequence_file)
+    return sim_analyser.create_region_detector_list(
+        load_sequence().get_enabled_regions()
+    )
 
 
 @pytest.fixture(params=[0, 1, 2])
