@@ -43,6 +43,8 @@ dev = [
     "tox-uv",
     "types-mock",
     "pytest-asyncio",
+    # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
+    "chardet==5.2.0",
 
     #usefull stuff for testing
     "jupyter",
