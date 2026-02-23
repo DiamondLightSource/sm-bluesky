@@ -10,6 +10,8 @@ from dodal.devices.pgm import PlaneGratingMonochromator
 from ophyd_async.core import StandardReadable, StrictEnum
 
 from sm_bluesky.beamlines.i05.configuration.constants import (
+    M3MJ6_PITCH_POLY_800,
+    M3MJ6_PITCH_POLY_1600,
     M3MJ6_X_POLY_800,
     M3MJ6_X_POLY_1600,
 )
@@ -60,6 +62,38 @@ def m1_m3_x_1600(
         m1_collimating_mirror.pitch,
         {
             m3mj6_switching_mirror.x: M3MJ6_X_POLY_1600,
+        },
+    )
+
+
+# This is a final polynomial compound motor that maps the m1es_pitch to the
+# m3mj6_x for and m3 pitch.
+@alignment_devices.factory()
+def m1_m3_x_pitch_800(
+    m1_collimating_mirror: XYZPitchYawRollStage,
+    m3mj6_switching_mirror: XYZPiezoSwitchingMirror,
+) -> PolynomCompoundMotors:
+    return PolynomCompoundMotors(
+        m1_collimating_mirror.pitch,
+        {
+            m3mj6_switching_mirror.x: M3MJ6_X_POLY_800,
+            m3mj6_switching_mirror.pitch: M3MJ6_PITCH_POLY_800,
+        },
+    )
+
+
+# This is a final polynomial compound motor that maps the m1es_pitch to the
+# m3mj6_x for and m3 pitch.
+@alignment_devices.factory()
+def m1_m3_x_pitch_1600(
+    m1_collimating_mirror: XYZPitchYawRollStage,
+    m3mj6_switching_mirror: XYZPiezoSwitchingMirror,
+) -> PolynomCompoundMotors:
+    return PolynomCompoundMotors(
+        m1_collimating_mirror.pitch,
+        {
+            m3mj6_switching_mirror.x: M3MJ6_X_POLY_1600,
+            m3mj6_switching_mirror.pitch: M3MJ6_PITCH_POLY_1600,
         },
     )
 
