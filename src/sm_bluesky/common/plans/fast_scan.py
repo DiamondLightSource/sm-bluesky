@@ -7,7 +7,7 @@ from bluesky.preprocessors import (
 )
 from bluesky.protocols import Readable
 from bluesky.utils import MsgGenerator, plan, short_uid
-from dodal.devices.apple2_undulator import EnergySetter
+from dodal.devices.insertion_device import BeamEnergy
 from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
 from numpy import linspace
 from ophyd_async.core import FlyMotorInfo
@@ -269,7 +269,7 @@ def _fast_scan_1d(
 @attach_data_session_metadata_decorator()
 def soft_fly_energy_scan(
     dets: list[Readable],
-    energy_device: EnergySetter,
+    energy_device: BeamEnergy,
     energy_start: float,
     energy_end: float,
     energy_step: float,
@@ -277,7 +277,10 @@ def soft_fly_energy_scan(
     md: dict[str, Any] | None = None,
 ) -> MsgGenerator:
     old_speeds = yield from cache_speed(
-        [energy_device.pgm_ref().energy, energy_device.id.gap]
+        [
+            energy_device._mono_energy(),
+            energy_device._id_energy()._id_controller().apple2().gap(),
+        ]
     )
 
     fly_info = FlyMotorInfo(
@@ -289,7 +292,7 @@ def soft_fly_energy_scan(
     @bpp.stage_decorator(dets)
     @bpp.run_decorator(md=md)
     def inn_fly_energy_scan(
-        energy_device: EnergySetter,
+        energy_device: BeamEnergy,
         fly_info: FlyMotorInfo,
         dets: list[Readable],
     ) -> MsgGenerator:

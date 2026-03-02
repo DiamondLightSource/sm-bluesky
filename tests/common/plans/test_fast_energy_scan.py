@@ -9,8 +9,7 @@ from dodal.devices.apple2_undulator import (
     UndulatorGateStatus,
 )
 from dodal.devices.i10.i10_apple2 import I10Apple2
-from dodal.devices.pgm import PGM
-from dodal.testing import patch_all_motors
+from dodal.devices.pgm import PlaneGratingMonochromator
 from ophyd_async.core import (
     Device,
     StrictEnum,
@@ -44,7 +43,7 @@ async def mock_pgm(prefix: str = "BLXX-EA-DET-007:") -> FakePGM:
 
 
 @pytest.fixture
-async def mock_energy(mock_pgm: PGM) -> EnergySetter:
+async def mock_energy(mock_pgm: PlaneGratingMonochromator) -> EnergySetter:
     async with init_devices(mock=True):
         mock_energy = EnergySetter(
             id=I10Apple2(
@@ -65,7 +64,6 @@ async def mock_energy(mock_pgm: PGM) -> EnergySetter:
     set_mock_value(mock_energy.id.gap.velocity, 2)
     set_mock_value(mock_energy.id.gap.max_velocity, 200)
     set_mock_value(mock_energy.id.gap.min_velocity, 0.0)
-    patch_all_motors(mock_energy.id.phase)
     set_mock_value(mock_energy.pgm_ref().energy.acceleration_time, 0.1)
     set_mock_value(mock_energy.pgm_ref().energy.user_readback, 500)
     set_mock_value(mock_energy.pgm_ref().energy.user_setpoint, 500)
