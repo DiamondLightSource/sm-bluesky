@@ -3,7 +3,7 @@ from collections.abc import Sequence
 import pytest
 from bluesky import RunEngine
 from bluesky.protocols import Readable
-from dodal.devices.electron_analyser import (
+from dodal.devices.electron_analyser.base import (
     ElectronAnalyserDetector,
     ElectronAnalyserRegionDetector,
     GenericElectronAnalyserDetector,
@@ -39,7 +39,7 @@ async def test_process_detectors_for_analyserscan_func_correctly_replaces_detect
     sim_analyser: GenericElectronAnalyserDetector,
     extra_detectors: Sequence[Readable],
     all_detectors: Sequence[Readable],
-):
+) -> None:
     sequence = sim_analyser.load_sequence(sequence_file)
 
     analyserscan_detectors: Sequence[Readable] = process_detectors_for_analyserscan(
@@ -67,13 +67,13 @@ async def test_process_detectors_for_analyserscan_func_correctly_replaces_detect
 
 
 async def test_analysercount(
-    RE: RunEngine,
+    run_engine: RunEngine,
     sim_analyser: ElectronAnalyserDetector,
     sequence_file: str,
     all_detectors: Sequence[Readable],
 ) -> None:
     analyser_setup_for_scan(sim_analyser)
-    RE(analysercount(all_detectors, sequence_file))
+    run_engine(analysercount(all_detectors, sequence_file))
 
 
 @pytest.mark.parametrize(
@@ -84,14 +84,14 @@ async def test_analysercount(
     ],
 )
 async def test_analyserscan(
-    RE: RunEngine,
+    run_engine: RunEngine,
     sim_analyser: ElectronAnalyserDetector,
     sequence_file: str,
     all_detectors: Sequence[Readable],
     args: list[SimMotor | int],
 ) -> None:
     analyser_setup_for_scan(sim_analyser)
-    RE(analyserscan(all_detectors, sequence_file, *args, num=10))
+    run_engine(analyserscan(all_detectors, sequence_file, *args, num=10))
 
 
 @pytest.mark.parametrize(
@@ -102,11 +102,11 @@ async def test_analyserscan(
     ],
 )
 async def test_grid_analyserscan(
-    RE: RunEngine,
+    run_engine: RunEngine,
     sim_analyser: ElectronAnalyserDetector,
     sequence_file: str,
     all_detectors: Sequence[Readable],
     args: list[SimMotor | int],
 ) -> None:
     analyser_setup_for_scan(sim_analyser)
-    RE(grid_analyserscan(all_detectors, sequence_file, *args))
+    run_engine(grid_analyserscan(all_detectors, sequence_file, *args))

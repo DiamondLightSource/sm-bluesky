@@ -2,7 +2,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar, cast
 
-from blueapi.core import MsgGenerator
+from bluesky.utils import MsgGenerator
 
 TCallable = TypeVar("TCallable", bound=Callable[..., MsgGenerator])
 
@@ -38,7 +38,9 @@ def add_default_metadata(
     return cast(TCallable, inner)
 
 
-def add_extra_names_to_meta(md: dict, key: str, names: list[str]):
+def add_extra_names_to_meta(
+    md: dict[str, Any], key: str, names: list[str]
+) -> dict[str, Any]:
     if key in md:
         md[key] = md[key] + names
         return md

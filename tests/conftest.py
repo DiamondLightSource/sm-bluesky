@@ -1,9 +1,7 @@
-import asyncio
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from bluesky.run_engine import RunEngine
 from dodal.common.beamlines.beamline_utils import (
     set_path_provider,
 )
@@ -12,20 +10,18 @@ from dodal.common.visit import (
     StaticVisitPathProvider,
 )
 from dodal.devices.motors import XYZStage
-from dodal.utils import make_all_devices
-from ophyd.sim import SynPeriodicSignal
 from ophyd_async.core import (
     FilenameProvider,
     StaticFilenameProvider,
     StaticPathProvider,
+    callback_on_mock_put,
     init_devices,
+    set_mock_value,
 )
 from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.epics.adcore import ADBaseIO, SingleTriggerDetector
-from ophyd_async.testing import callback_on_mock_put, set_mock_value
-from super_state_machine.errors import TransitionError
 
-from .sim_devices import SimDetector, SimStage
+from sm_bluesky.common.sim_devices import SimDetector, SimStage
 
 RECORD = str(Path(__file__).parent / "panda" / "db" / "panda.db")
 INCOMPLETE_BLOCK_RECORD = str(
@@ -45,32 +41,14 @@ set_path_provider(
     )
 )
 
-
-@pytest.fixture(scope="session")
-def RE(request):
-    loop = asyncio.new_event_loop()
-    loop.set_debug(True)
-    re = RunEngine({}, call_returns_result=True, loop=loop)
-
-    def clean_event_loop():
-        if re.state not in ("idle", "panicked"):
-            try:
-                re.halt()
-            except TransitionError:
-                pass
-        loop.call_soon_threadsafe(loop.stop)
-        re._th.join()
-        loop.close()
-
-    request.addfinalizer(clean_event_loop)
-    return re
-
-
 A_BIT = 0.5
 
 
+pytest_plugins = ["dodal.testing.fixtures.run_engine"]
+
+
 @pytest.fixture
-def static_filename_provider():
+def static_filename_provider() -> StaticFilenameProvider:
     return StaticFilenameProvider("ophyd_async_tests")
 
 
@@ -91,7 +69,7 @@ def static_path_provider(
 
 
 @pytest.fixture
-async def sim_motor():
+async def sim_motor() -> XYZStage:
     async with init_devices(mock=True):
         sim_motor = XYZStage("BLxxI-MO-TABLE-01:X", name="sim_motor")
     set_mock_value(sim_motor.x.velocity, 2.78)
@@ -120,44 +98,35 @@ async def sim_motor():
     set_mock_value(sim_motor.z.motor_done_move, True)
     set_mock_value(sim_motor.z.max_velocity, 100)
 
-    yield sim_motor
+    return sim_motor
 
 
 @pytest.fixture
-async def sim_motor_step():
+async def sim_stage_step() -> SimStage:
     async with init_devices(mock=True):
-        sim_motor_step = SimStage(name="sim_motor_step", instant=True)
-
-    yield sim_motor_step
+        sim_stage_step = SimStage(name="sim_stage_step", instant=True)
+    return sim_stage_step
 
 
 @pytest.fixture
-async def sim_motor_delay():
+async def sim_stage_delay() -> SimStage:
     async with init_devices(mock=True):
-        sim_motor_delay = SimStage(name="sim_motor_delay", instant=False)
-    set_mock_value(sim_motor_delay.x.velocity, 88.88)
-    set_mock_value(sim_motor_delay.x.acceleration_time, 0.01)
-    set_mock_value(sim_motor_delay.y.velocity, 88.88)
-    set_mock_value(sim_motor_delay.y.acceleration_time, 0.01)
-    set_mock_value(sim_motor_delay.z.velocity, 88.88)
-    set_mock_value(sim_motor_delay.z.acceleration_time, 0.01)
-    yield sim_motor_delay
+        sim_stage_delay = SimStage(name="sim_stage_delay", instant=False)
+    set_mock_value(sim_stage_delay.x.velocity, 88.88)
+    set_mock_value(sim_stage_delay.x.acceleration_time, 0.01)
+    set_mock_value(sim_stage_delay.y.velocity, 88.88)
+    set_mock_value(sim_stage_delay.y.acceleration_time, 0.01)
+    set_mock_value(sim_stage_delay.z.velocity, 88.88)
+    set_mock_value(sim_stage_delay.z.acceleration_time, 0.01)
+    return sim_stage_delay
 
 
 @pytest.fixture
-async def fake_detector():
+async def fake_detector() -> SimDetector:
     async with init_devices(mock=True):
         fake_detector = SimDetector(prefix="fake_Pv", name="fake_detector")
     set_mock_value(fake_detector.value, 0)
-    yield fake_detector
-
-
-@pytest.fixture
-async def fake_i10():
-    fake_i10, _ = make_all_devices(
-        "dodal.beamlines.i10", connect_immediately=True, mock=True
-    )
-    yield fake_i10
+    return fake_detector
 
 
 # area detector that is use for testing
@@ -198,9 +167,3 @@ async def andor2_point() -> SingleTriggerDetector:
         andor2_point = SingleTriggerDetector(drv=ADBaseIO("p99"))
 
     return andor2_point
-
-
-@pytest.fixture
-def det() -> SynPeriodicSignal:
-    det = SynPeriodicSignal(name="rand", labels={"detectors"})
-    return det

@@ -1,11 +1,13 @@
-from collections import defaultdict
+from collections.abc import Mapping
 from unittest import mock
 
 import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
 from numpy import linspace
-from ophyd_async.testing import assert_emitted, get_mock_put
+from ophyd_async.core import get_mock_put
+from ophyd_async.sim import SimPointDetector
+from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.plans.fast_scan import fast_scan_1d, fast_scan_grid
 
@@ -14,80 +16,80 @@ from sm_bluesky.common.plans.fast_scan import fast_scan_1d, fast_scan_grid
 A_BIT = 0.001
 
 
-async def test_fast_scan_1d_fail_limit_check(sim_motor: XYZStage, RE: RunEngine, det):
+@pytest.fixture
+def det() -> SimPointDetector:
+    return SimPointDetector(name="rand", pattern_generator=None, num_channels=1)
+
+
+async def test_fast_scan_1d_fail_limit_check(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_motor: XYZStage,
+    det: SimPointDetector,
+) -> None:
     """Testing both high and low limits making sure nothing get run if it is exceeded"""
-    docs = defaultdict(list)
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
+    with pytest.raises(ValueError):
+        run_engine(fast_scan_1d([det], sim_motor.x, 8, 20, 10))
 
     with pytest.raises(ValueError):
-        RE(fast_scan_1d([det], sim_motor.x, 8, 20, 10), capture_emitted)
-
-    with pytest.raises(ValueError):
-        RE(fast_scan_1d([det], sim_motor.x, -208, 0, 10), capture_emitted)
+        run_engine(fast_scan_1d([det], sim_motor.x, -208, 0, 10))
 
     assert 0 == get_mock_put(sim_motor.x.user_setpoint).call_count
     assert 0 == get_mock_put(sim_motor.x.velocity).call_count
-    assert_emitted(docs, start=2, stop=2)
+    assert_emitted(run_engine_documents, start=2, stop=2)
 
 
-async def test_fast_scan_1d_success(sim_motor: XYZStage, RE: RunEngine, det):
-    docs = defaultdict(list)
-    det.start_simulation()
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
-    RE(fast_scan_1d([det], sim_motor.x, 5, -1, 8.0), capture_emitted)
+async def test_fast_scan_1d_success(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_motor: XYZStage,
+    det: SimPointDetector,
+) -> None:
+    run_engine(fast_scan_1d([det], sim_motor.x, 5, -1, 8.0))
 
     assert 2.78 == await sim_motor.x.velocity.get_value()
     assert 2 == get_mock_put(sim_motor.x.user_setpoint).call_count
     assert 3 == get_mock_put(sim_motor.x.velocity).call_count
     # check speed is set and reset
     assert [
-        mock.call(100.0, wait=True),  # prepare set it to max speed
-        mock.call(8.0, wait=True),
-        mock.call(2.78, wait=True),
+        mock.call(100.0),  # prepare set it to max speed
+        mock.call(8.0),
+        mock.call(2.78),
     ] == get_mock_put(sim_motor.x.velocity).call_args_list
 
     """Only 1 event as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
-    assert_emitted(docs, start=1, descriptor=1, event=1, stop=1)
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=1, stop=1)
 
 
 async def test_fast_scan_1d_success_without_speed(
-    sim_motor_delay: XYZStage, RE: RunEngine, det
-):
-    docs = defaultdict(list)
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_stage_delay: XYZStage,
+) -> None:
+    run_engine(fast_scan_1d([sim_stage_delay.y], sim_stage_delay.x, 1, 5))
 
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
-    RE(fast_scan_1d([sim_motor_delay.y], sim_motor_delay.x, 1, 5), capture_emitted)
-
-    assert 88.88 == await sim_motor_delay.x.velocity.get_value()
-    assert 2 == get_mock_put(sim_motor_delay.x.user_setpoint).call_count
-    assert 3 == get_mock_put(sim_motor_delay.x.velocity).call_count
+    assert 88.88 == await sim_stage_delay.x.velocity.get_value()
+    assert 2 == get_mock_put(sim_stage_delay.x.user_setpoint).call_count
+    assert 3 == get_mock_put(sim_stage_delay.x.velocity).call_count
     # check speed is set and reset
     assert [
-        mock.call(pytest.approx(0), wait=True),  # SimMotor fast move to start
-        mock.call(pytest.approx(88.88), wait=True),
-        mock.call(pytest.approx(88.88), wait=True),
-    ] == get_mock_put(sim_motor_delay.x.velocity).call_args_list
+        mock.call(pytest.approx(0)),  # SimMotor fast move to start
+        mock.call(pytest.approx(88.88)),
+        mock.call(pytest.approx(88.88)),
+    ] == get_mock_put(sim_stage_delay.x.velocity).call_args_list
 
     """Only 1 event as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""  #
-    print(docs)
-    assert_emitted(docs, start=1, descriptor=1, event=mock.ANY, stop=1)
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=mock.ANY, stop=1)
 
 
-async def test_fast_scan_2d_success(sim_motor: XYZStage, RE: RunEngine, det):
-    docs = defaultdict(list)
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
+async def test_fast_scan_2d_success(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_motor: XYZStage,
+    det: SimPointDetector,
+) -> None:
     x_start = 0
     x_end = 2
     num_step = 5
@@ -95,7 +97,7 @@ async def test_fast_scan_2d_success(sim_motor: XYZStage, RE: RunEngine, det):
     y_end = 5
     speed = 1
     snake_axes = False
-    RE(
+    run_engine(
         fast_scan_grid(
             [det],
             sim_motor.x,
@@ -108,7 +110,6 @@ async def test_fast_scan_2d_success(sim_motor: XYZStage, RE: RunEngine, det):
             speed,
             snake_axes=snake_axes,
         ),
-        capture_emitted,
     )
 
     assert 2.78 == await sim_motor.x.velocity.get_value()
@@ -119,7 +120,7 @@ async def test_fast_scan_2d_success(sim_motor: XYZStage, RE: RunEngine, det):
     for cnt, motor_x in enumerate(
         get_mock_put(sim_motor.x.user_setpoint).call_args_list
     ):
-        assert motor_x == mock.call(steps[cnt], wait=True)
+        assert motor_x == mock.call(steps[cnt])
 
     assert 2.88 == await sim_motor.y.velocity.get_value()
     assert num_step * 3 == get_mock_put(sim_motor.y.velocity).call_count
@@ -129,20 +130,20 @@ async def test_fast_scan_2d_success(sim_motor: XYZStage, RE: RunEngine, det):
         get_mock_put(sim_motor.y.user_setpoint).call_args_list
     ):
         if cnt % 2 == 0:
-            assert motor_y == mock.call(y_start, wait=True)
+            assert motor_y == mock.call(y_start)
         else:
-            assert motor_y == mock.call(y_end, wait=True)
+            assert motor_y == mock.call(y_end)
     """Only 1 event per step as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
-    assert_emitted(docs, start=1, descriptor=1, event=num_step, stop=1)
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=num_step, stop=1)
 
 
-async def test_fast_scan_2d_snake_success(sim_motor: XYZStage, RE: RunEngine, det):
-    docs = defaultdict(list)
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
-
+async def test_fast_scan_2d_snake_success(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_motor: XYZStage,
+    det: SimPointDetector,
+) -> None:
     x_start = 0
     x_end = 2
     num_step = 5
@@ -150,7 +151,7 @@ async def test_fast_scan_2d_snake_success(sim_motor: XYZStage, RE: RunEngine, de
     y_end = 4
     speed = 1
     snake_axes = True
-    RE(
+    run_engine(
         fast_scan_grid(
             [det],
             sim_motor.x,
@@ -163,7 +164,6 @@ async def test_fast_scan_2d_snake_success(sim_motor: XYZStage, RE: RunEngine, de
             speed,
             snake_axes=snake_axes,
         ),
-        capture_emitted,
     )
 
     assert 2.78 == await sim_motor.x.velocity.get_value()
@@ -173,7 +173,7 @@ async def test_fast_scan_2d_snake_success(sim_motor: XYZStage, RE: RunEngine, de
     for cnt, motor_x in enumerate(
         get_mock_put(sim_motor.x.user_setpoint).call_args_list
     ):
-        assert motor_x == mock.call(steps[cnt], wait=True)
+        assert motor_x == mock.call(steps[cnt])
 
     assert 2.88 == await sim_motor.y.velocity.get_value()
     assert num_step * 3 == get_mock_put(sim_motor.y.velocity).call_count
@@ -193,8 +193,8 @@ async def test_fast_scan_2d_snake_success(sim_motor: XYZStage, RE: RunEngine, de
     for cnt, motor_y in enumerate(
         get_mock_put(sim_motor.y.user_setpoint).call_args_list
     ):
-        assert motor_y == mock.call(y_position[cnt], wait=True)
+        assert motor_y == mock.call(y_position[cnt])
 
     """Only 1 event per step as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
-    assert_emitted(docs, start=1, descriptor=1, event=num_step, stop=1)
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=num_step, stop=1)

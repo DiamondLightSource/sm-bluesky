@@ -4,10 +4,9 @@ from typing import Any, TypedDict
 
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
-from blueapi.core import MsgGenerator
 from bluesky.preprocessors import finalize_wrapper
 from bluesky.protocols import Readable
-from bluesky.utils import plan
+from bluesky.utils import MsgGenerator, plan
 from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
 from ophyd_async.epics.adcore import AreaDetector, SingleTriggerDetector
 from ophyd_async.epics.motor import Motor

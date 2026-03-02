@@ -12,7 +12,7 @@ from bluesky.utils import (
     ScalarOrIterableFloat,
     plan,
 )
-from dodal.devices.electron_analyser import (
+from dodal.devices.electron_analyser.base import (
     ElectronAnalyserDetector,
 )
 

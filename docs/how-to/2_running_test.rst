@@ -21,7 +21,7 @@ In the ``sm-bluesky`` project, ``tox`` is configured to run a series of commands
 
 .. literalinclude:: ../../pyproject.toml
     :start-at: commands =
-    :end-at: docs build/html
+    :end-at: extend = true },
 
 Code Formatting and Linting
 ---------------------------

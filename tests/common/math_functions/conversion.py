@@ -24,5 +24,7 @@ from sm_bluesky.common.math_functions import cal_range_num
         ),
     ],
 )
-def test_slit_cal_range_num(test_input, expected_output):
+def test_slit_cal_range_num(
+    test_input: list[float], expected_output: tuple[float]
+) -> None:
     assert cal_range_num(*test_input) == pytest.approx(expected_output, 0.01)

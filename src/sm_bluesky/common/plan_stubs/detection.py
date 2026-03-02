@@ -1,10 +1,9 @@
 from typing import Any
 
 import bluesky.plan_stubs as bps
-from blueapi.core import MsgGenerator
 from bluesky.plan_stubs import abs_set
 from bluesky.protocols import Flyable
-from bluesky.utils import plan, short_uid
+from bluesky.utils import MsgGenerator, plan, short_uid
 from ophyd_async.core import FlyMotorInfo
 from ophyd_async.epics.adcore import AreaDetector, SingleTriggerDetector
 
