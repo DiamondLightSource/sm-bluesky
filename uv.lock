@@ -5394,7 +5394,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "bluesky" },
-    { name = "dls-dodal", specifier = ">=2.0.0" },
+    { name = "dls-dodal", specifier = ">=2.1.0" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "scanspec" },
 ]
