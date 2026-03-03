@@ -1,5 +1,5 @@
 import pytest
-from dodal.common.data_util import JsonModelLoader
+from dodal.common.data_util import JsonLoaderConfig, JsonModelLoader, json_model_loader
 from dodal.devices.beamlines import b07, b07_shared, i09
 from dodal.devices.common_dcm import (
     DoubleCrystalMonochromatorWithDSpacing,
@@ -160,12 +160,12 @@ def sim_analyser(
 
 
 I09Sequence = VGScientaSequence[i09.LensMode, i09.PsuMode, i09.PassEnergy]
-load_i09_vgscienta_test_seq = JsonModelLoader[I09Sequence](
-    I09Sequence, TEST_VGSCIENTA_SEQUENCE
+load_i09_vgscienta_test_seq = json_model_loader(
+    I09Sequence, JsonLoaderConfig.from_default_file(TEST_VGSCIENTA_SEQUENCE)
 )
 B07BSequence = SpecsSequence[b07.LensMode, b07_shared.PsuMode]
-load_b07b_specs_test_seq = JsonModelLoader[B07BSequence](
-    B07BSequence, TEST_SPECS_SEQUENCE
+load_b07b_specs_test_seq = json_model_loader(
+    B07BSequence, JsonLoaderConfig.from_default_file(TEST_SPECS_SEQUENCE)
 )
 
 
