@@ -10,7 +10,6 @@ from dodal.devices.beamlines.i10.i10_apple2 import (
     I10Apple2,
     I10Apple2Controller,
 )
-from dodal.devices.beamlines.i10.i10_setting_data import I10Grating
 from dodal.devices.insertion_device import (
     BeamEnergy,
     InsertionDeviceEnergy,
@@ -27,12 +26,15 @@ from dodal.devices.insertion_device.lookup_table_models import (
 )
 from dodal.devices.pgm import PlaneGratingMonochromator
 from ophyd_async.core import (
+    Device,
     StrictEnum,
     init_devices,
+    set_mock_value,
 )
 from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.plans import soft_fly_energy_scan
+from sm_bluesky.common.sim_devices.sim_stage import SimMotorExtra
 from tests.test_data.common import (
     ID_ENERGY_2_GAP_CALIBRATIONS_CSV,
     ID_ENERGY_2_PHASE_CALIBRATIONS_CSV,
@@ -46,12 +48,23 @@ class Grating(StrictEnum):
     TESTING = "Grating"
 
 
+class FakePGM(Device):
+    def __init__(self, name=""):
+        self.energy = SimMotorExtra(instant=False)
+        super().__init__(name=name)
+
+
 @pytest.fixture
-async def mock_pgm(prefix: str = "BLXX-EA-DET-007:") -> PlaneGratingMonochromator:
+async def mock_pgm(prefix: str = "BLXX-EA-DET-007:") -> FakePGM:
     async with init_devices(mock=True):
-        mock_pgm = PlaneGratingMonochromator(
-            prefix=prefix, grating=I10Grating, grating_pv="NLINES2"
-        )
+        mock_pgm = FakePGM()
+
+    set_mock_value(mock_pgm.energy.acceleration_time, 0.1)
+    set_mock_value(mock_pgm.energy.user_readback, 500)
+    set_mock_value(mock_pgm.energy.user_setpoint, 500)
+    set_mock_value(mock_pgm.energy.max_velocity, 50)
+    set_mock_value(mock_pgm.energy.high_limit_travel, 1700)
+    set_mock_value(mock_pgm.energy.low_limit_travel, 400)
     return mock_pgm
 
 
@@ -65,6 +78,10 @@ async def mock_id(
         mock_id = I10Apple2(
             id_gap=mock_id_gap, id_phase=mock_phase_axes, id_jaw_phase=mock_jaw_phase
         )
+    set_mock_value(mock_id.gap().acceleration_time, 0.2)
+    set_mock_value(mock_id.gap().velocity, 2)
+    set_mock_value(mock_id.gap().max_velocity, 200)
+    set_mock_value(mock_id.gap().min_velocity, 0.0)
     return mock_id
 
 
@@ -145,13 +162,13 @@ async def test_soft_fly_energy_scan_success(
     # check the starting point
     assert docs["event"][0]["data"] == {
         "fake_detector-value": ANY,
-        "mock_energy-id-energy": 750,
+        "mock_id_controller-energy": 750.0,
         "mock_pgm-energy": 700.0,
     }
     # check end point
     assert docs["event"][-1]["data"] == {
         "fake_detector-value": ANY,
-        "mock_energy-id-energy": 750,
+        "mock_id_controller-energy": 750.0,
         "mock_pgm-energy": 810.0,
     }
     # speed reset
