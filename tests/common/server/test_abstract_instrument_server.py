@@ -7,7 +7,7 @@ from sm_bluesky.common.server import AbstractInstrumentServer
 
 class MockInstrument(AbstractInstrumentServer):
     def connect_hardware(self) -> None:
-        self._hardwarde_connected = True
+        self._hardware_connected = True
 
     def disconnect_hardware(self) -> None:
         self._hardwarde_connected = False
@@ -18,7 +18,7 @@ class MockInstrument(AbstractInstrumentServer):
             self.stop()
         if cmd == b"ping":
             self._send_ack()
-        if cmd == "disconnect":
+        if cmd == b"disconnect":
             self.disconnect_hardware()
 
         self._send_error("Unknown command")
@@ -86,9 +86,9 @@ def test_stop_server(
     mock_instrument.start()
     assert mock_instrument._is_running is True
     assert mock_instrument._server_socket is not None
-    assert mock_instrument._hardwarde_connected is True
+    assert mock_instrument._hardware_connected is True
     mock_instrument._handle_command(b"shutdown", b"")
-    assert mock_instrument._hardwarde_connected is False
+    assert mock_instrument._hardware_connected is False
     assert mock_instrument._is_running is False
     assert "Server stopped" in caplog.text
 
@@ -96,13 +96,13 @@ def test_stop_server(
 def test_send_ack(mock_instrument: AbstractInstrumentServer):
     mock_instrument._server_socket.sendall = MagicMock()
     mock_instrument._handle_command(b"ping", b"")
-    assert mock_instrument._server_socket.sendall.assert_called_once_with(b"1\n")
+    mock_instrument._server_socket.sendall.assert_called_once_with(b"1\n")
 
 
 def test_send_error(mock_instrument: AbstractInstrumentServer):
     mock_instrument._server_socket.sendall = MagicMock()
     mock_instrument._handle_command(b"unknown", b"")
-    assert mock_instrument._server_socket.sendall.assert_called_once_with(
+    mock_instrument._server_socket.sendall.assert_called_once_with(
         b"0\tUnknown command\n"
     )
 
@@ -110,6 +110,6 @@ def test_send_error(mock_instrument: AbstractInstrumentServer):
 def test_send_response(mock_instrument: AbstractInstrumentServer):
     mock_instrument._server_socket.sendall = MagicMock()
     mock_instrument._handle_command(b"shutdown", b"")
-    assert mock_instrument._server_socket.sendall.assert_called_once_with(
+    mock_instrument._server_socket.sendall.assert_called_once_with(
         b"1\tShutting down server\n"
     )

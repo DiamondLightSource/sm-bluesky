@@ -7,7 +7,7 @@ class AbstractInstrumentServer:
         self.host: str = host
         self.port: int = port
         self._is_running: bool = False
-        self._hardwarde_connected: bool = False
+        self._hardware_connected: bool = False
         self._server_socket: socket
 
     def start(self) -> None:
@@ -25,7 +25,7 @@ class AbstractInstrumentServer:
     def _send_error(self, error_message: str) -> None:
         pass
 
-    def _send_response(self, response: str) -> None:
+    def _send_response(self, response: str = "") -> None:
         pass
 
     @abstractmethod
