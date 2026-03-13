@@ -1,3 +1,4 @@
+import socket
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -58,6 +59,25 @@ def test_start_server_success(
     mock_server_socket.accept.assert_called_once()
     assert mock_instrument._is_running is False
     assert "Connection accepted from" in caplog.text
+
+
+@patch("socket.socket")
+def test_start_handles_timeout(mock_socket_class, mock_instrument):
+    mock_instance = MagicMock()
+    mock_socket_class.return_value = mock_instance
+    mock_instance.accept.side_effect = [
+        socket.timeout,
+        (MagicMock(), ("127.0.0.1", 1234)),
+    ]
+
+    with patch.object(
+        mock_instrument,
+        "_run_command_loop",
+        side_effect=lambda: setattr(mock_instrument, "_is_running", False),
+    ):
+        mock_instrument.start()
+
+    assert mock_instance.accept.call_count == 2
 
 
 def test_start_server_failure_hardware(
