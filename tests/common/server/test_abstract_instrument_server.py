@@ -110,7 +110,7 @@ def test_start_server_failure_on_accept(
     assert mock_instrument._conn is None
 
 
-@patch("socket.socket", autospec=True)
+@patch("socket.socket")
 def test_stop_server(
     mock_socket_class: MagicMock,
     mock_instrument: AbstractInstrumentServer,
@@ -121,7 +121,7 @@ def test_stop_server(
     mock_client_socket = MagicMock()
     mock_instrument._conn = mock_client_socket
     mock_server_socket.accept.return_value = (mock_client_socket, ("localhost", 8888))
-    mock_instrument._conn.recv = MagicMock(return_value=b"shutdown\t")
+    mock_instrument._conn.recv = MagicMock(return_value=b"shutdown\t\n")
     mock_instrument.start()
     assert mock_instrument._hardware_connected is False
     assert mock_instrument._is_running is False

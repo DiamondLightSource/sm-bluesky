@@ -85,13 +85,12 @@ class AbstractInstrumentServer:
                 while b"\n" in buffer:
                     line, buffer = buffer.split(b"\n", 1)
                     if line:  # Ignore empty lines
-                        self._process_line(line)
+                        self._dispatch_command(line.strip())
 
             except (OSError, ConnectionResetError):
                 break
 
-    def _process_line(self, line: bytes) -> None:
-        line = line.strip()
+    def _dispatch_command(self, line: bytes) -> None:
 
         if b"\t" in line:
             cmd, arg = line.split(b"\t", 1)
