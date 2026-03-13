@@ -50,24 +50,50 @@ class AbstractInstrumentServer:
         try:
             yield
         finally:
-            self._conn.close()
-            self._conn = None
-            LOGGER.info(f"Client {addr} disconnected. Server idle.")
+            self._disconnect_client()
+            LOGGER.info(f"Client {addr} disconnected. Server ready.")
 
     def stop(self) -> None:
-        pass
+
+        self._disconnect_client()
+        if hasattr(self, "_server_socket"):
+            self._server_socket.close()
+        if self._hardware_connected:
+            self.disconnect_hardware()
+            self._hardware_connected = False
+        self._is_running = False
+        LOGGER.info("Server stopped successfully")
+
+    def _disconnect_client(self) -> None:
+        if self._conn:
+            self._conn.close()
+            self._conn = None
+            LOGGER.info("Client disconnected")
 
     def _run_command_loop(self) -> None:
-        pass
+        if self._conn is None:
+            LOGGER.error("No client connection available to run command loop")
+            return
+        queued_data = self._conn.recv(1024).splitlines()
+        if not queued_data:
+            queued_data = [b"disconnect"]
+        for line in queued_data:
+            if b"\t" in line:
+                cmd, arg = line.split(b"\t", 1)
+            else:
+                cmd, arg = line, b""
+            self._handle_command(cmd, arg)
 
     def _send_ack(self) -> None:
-        pass
+        self._send_response()
 
     def _send_error(self, error_message: str) -> None:
-        pass
+        if self._conn:
+            self._conn.sendall(b"0\t" + error_message.encode() + b"\n")
 
     def _send_response(self, response: str = "") -> None:
-        pass
+        if self._conn:
+            self._conn.sendall(b"1\t" + response.encode() + b"\n")
 
     @abstractmethod
     def connect_hardware(self) -> bool:

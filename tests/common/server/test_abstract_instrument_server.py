@@ -90,24 +90,30 @@ def test_start_server_failure_on_accept(
     assert mock_instrument._conn is None
 
 
+@patch("socket.socket", autospec=True)
 def test_stop_server(
-    mock_instrument: AbstractInstrumentServer, caplog: pytest.LogCaptureFixture
+    mock_socket_class: MagicMock,
+    mock_instrument: AbstractInstrumentServer,
+    caplog: pytest.LogCaptureFixture,
 ):
-    mock_instrument._server_socket = MagicMock()
+    mock_server_socket = MagicMock()
+    mock_socket_class.return_value = mock_server_socket
+    mock_client_socket = MagicMock()
+    mock_instrument._conn = mock_client_socket
+    mock_server_socket.accept.return_value = (mock_client_socket, ("localhost", 8888))
+    mock_instrument._conn.recv = MagicMock(return_value=b"shutdown\t")
     mock_instrument.start()
-    assert mock_instrument._is_running is True
-    assert mock_instrument._server_socket is not None
-    assert mock_instrument._hardware_connected is True
-    mock_instrument._handle_command(b"shutdown", b"")
+    # mock_instrument._handle_command(b"shutdown", b"")
     assert mock_instrument._hardware_connected is False
     assert mock_instrument._is_running is False
     assert "Server stopped" in caplog.text
 
 
+@patch("socket.socket")
 def test_send_ack(mock_instrument: AbstractInstrumentServer):
-    mock_instrument._server_socket.sendall = MagicMock()
+    mock_instrument._conn.sendall = MagicMock()
     mock_instrument._handle_command(b"ping", b"")
-    mock_instrument._server_socket.sendall.assert_called_once_with(b"1\n")
+    mock_instrument._conn.sendall.assert_called_once_with(b"1\n")
 
 
 def test_send_error(mock_instrument: AbstractInstrumentServer):
