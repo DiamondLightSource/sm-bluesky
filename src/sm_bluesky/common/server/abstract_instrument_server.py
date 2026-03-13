@@ -74,15 +74,34 @@ class AbstractInstrumentServer:
         if self._conn is None:
             LOGGER.error("No client connection available to run command loop")
             return
-        queued_data = self._conn.recv(1024).splitlines()
-        if not queued_data:
-            queued_data = [b"disconnect"]
-        for line in queued_data:
-            if b"\t" in line:
-                cmd, arg = line.split(b"\t", 1)
-            else:
-                cmd, arg = line, b""
+        buffer = b""
+        while self._is_running:
+            try:
+                chunk = self._conn.recv(1024)
+                if not chunk:
+                    break
+                buffer += chunk
+
+                while b"\n" in buffer:
+                    line, buffer = buffer.split(b"\n", 1)
+                    if line:  # Ignore empty lines
+                        self._process_line(line)
+
+            except (OSError, ConnectionResetError):
+                break
+
+    def _process_line(self, line: bytes) -> None:
+        line = line.strip()
+
+        if b"\t" in line:
+            cmd, arg = line.split(b"\t", 1)
+        else:
+            cmd, arg = line, b""
+
+        try:
             self._handle_command(cmd, arg)
+        except Exception as e:
+            self._send_error(str(e))
 
     def _send_ack(self) -> None:
         self._send_response()
@@ -96,13 +115,10 @@ class AbstractInstrumentServer:
             self._conn.sendall(b"1\t" + response.encode() + b"\n")
 
     @abstractmethod
-    def connect_hardware(self) -> bool:
-        raise NotImplementedError("Subclasses must implement connect_hardware")
+    def connect_hardware(self) -> bool: ...
 
     @abstractmethod
-    def disconnect_hardware(self) -> None:
-        raise NotImplementedError("Subclasses must implement disconnect_hardware")
+    def disconnect_hardware(self) -> None: ...
 
     @abstractmethod
-    def _handle_command(self, cmd: bytes, arg: bytes) -> None:
-        raise NotImplementedError("Subclasses must implement handle_command")
+    def _handle_command(self, cmd: bytes, arg: bytes) -> None: ...
