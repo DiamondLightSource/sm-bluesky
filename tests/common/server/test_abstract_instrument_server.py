@@ -48,7 +48,7 @@ def test_start_server_success(
     mock_client_socket = MagicMock()
     mock_server_socket.accept.return_value = (mock_client_socket, ("localhost", 8888))
 
-    mock_instrument._run_command_loop = lambda: setattr(
+    mock_instrument._serve_client = lambda: setattr(
         mock_instrument, "_is_running", False
     )
     mock_instrument.start()
@@ -72,7 +72,7 @@ def test_start_handles_timeout(mock_socket_class, mock_instrument):
 
     with patch.object(
         mock_instrument,
-        "_run_command_loop",
+        "_serve_client",
         side_effect=lambda: setattr(mock_instrument, "_is_running", False),
     ):
         mock_instrument.start()

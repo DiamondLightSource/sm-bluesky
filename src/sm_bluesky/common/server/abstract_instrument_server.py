@@ -36,7 +36,7 @@ class AbstractInstrumentServer:
                 client_info = self._server_socket.accept()
                 LOGGER.info(f"Connection accepted from {client_info}")
                 with self._manage_connection(client_info):
-                    self._run_command_loop()
+                    self._serve_client()
             except TimeoutError:
                 continue
             except Exception as e:
@@ -70,7 +70,7 @@ class AbstractInstrumentServer:
             self._conn = None
             LOGGER.info("Client disconnected")
 
-    def _run_command_loop(self) -> None:
+    def _serve_client(self) -> None:
         if self._conn is None:
             LOGGER.error("No client connection available to run command loop")
             return
