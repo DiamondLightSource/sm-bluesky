@@ -6,11 +6,12 @@ from sm_bluesky.common.server import AbstractInstrumentServer
 
 
 class MockInstrument(AbstractInstrumentServer):
-    def connect_hardware(self) -> None:
+    def connect_hardware(self) -> bool:
         self._hardware_connected = True
+        return True
 
     def disconnect_hardware(self) -> None:
-        self._hardwarde_connected = False
+        self._hardware_connected = False
 
     def _handle_command(self, cmd: bytes, arg: bytes) -> None:
         if cmd == b"shutdown":
@@ -30,53 +31,63 @@ def mock_instrument():
 
 
 def test_connect_hardware(mock_instrument: AbstractInstrumentServer):
-    assert mock_instrument.connect_hardware() is True
+    assert mock_instrument._hardware_connected is False
+    mock_instrument.connect_hardware()
+    assert mock_instrument._hardware_connected is True
 
 
+@patch("socket.socket")
 def test_start_server_success(
-    mock_instrument: AbstractInstrumentServer, caplog: pytest.LogCaptureFixture
+    mock_socket_class: MagicMock,
+    mock_instrument: AbstractInstrumentServer,
+    caplog: pytest.LogCaptureFixture,
 ):
-    mock_instrument.start()
-    mock_instrument._run_command_loop = MagicMock()
-    assert mock_instrument._is_running is True
-    assert mock_instrument.connect_hardware() is True
-    assert "Hardware connected successfully" in caplog.text
-    assert (
-        f"Server started on {mock_instrument.host}:{mock_instrument.port}"
-        in caplog.text
+    mock_server_socket = MagicMock()
+    mock_socket_class.return_value = mock_server_socket
+    mock_client_socket = MagicMock()
+    mock_server_socket.accept.return_value = (mock_client_socket, ("localhost", 8888))
+
+    mock_instrument._run_command_loop = lambda: setattr(
+        mock_instrument, "_is_running", False
     )
-    assert mock_instrument._run_command_loop.assert_called_once()
+    mock_instrument.start()
+
+    mock_server_socket.bind.assert_called_with(("localhost", 8888))
+    assert "Server started listening on localhost:8888" in caplog.text
+    mock_server_socket.listen.assert_called_once()
+    mock_server_socket.accept.assert_called_once()
+    assert mock_instrument._is_running is False
+    assert "Connection accepted from" in caplog.text
 
 
 def test_start_server_failure_hardware(
     mock_instrument: AbstractInstrumentServer, caplog: pytest.LogCaptureFixture
 ):
     # Simulate hardware connection failure by overriding the method
-    mock_instrument.connect_hardware = MagicMock(
-        side_effect=Exception("Simulated Hardware Failure")
-    )
-    pytest.raises(
-        Exception, match="Simulated Hardware Failure", func=mock_instrument.start
-    )
+    mock_instrument.connect_hardware = MagicMock(side_effect=[False])
+    with pytest.raises(RuntimeError, match="Failed to connect hardware"):
+        mock_instrument.start()
+    assert "Failed to connect hardware" in caplog.text
+
     assert mock_instrument._is_running is False
 
 
-@patch(
-    "sm_bluesky.common.server.abstract_instrument_server.AbstractInstrumentServer.socket.socket",
-    autospec=True,
-)
-def test_start_server_failure_socket(
+@patch("socket.socket")
+def test_start_server_failure_on_accept(
     mock_socket: MagicMock,
     mock_instrument: AbstractInstrumentServer,
     caplog: pytest.LogCaptureFixture,
 ):
+    error_message = "Simulated socket error"
+    mock_instance = MagicMock()
+    mock_socket.return_value = mock_instance
 
-    # Simulate socket failure by overriding the method
-    mock_socket.side_effect = Exception("Simulated Socket Failure")
+    mock_instance.accept.side_effect = Exception(error_message)
     mock_instrument.start()
+
     assert mock_instrument._is_running is False
-    assert "Failed to start server" in caplog.text
-    assert "Simulated Socket Failure" in caplog.text
+    assert f"Error in server loop: {error_message}" in caplog.text
+    assert mock_instrument._conn is None
 
 
 def test_stop_server(
