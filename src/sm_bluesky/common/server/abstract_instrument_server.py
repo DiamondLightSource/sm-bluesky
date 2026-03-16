@@ -6,13 +6,14 @@ from sm_bluesky.log import LOGGER
 
 
 class AbstractInstrumentServer:
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str, port: int, ipv6: bool = False):
         self.host: str = host
         self.port: int = port
         self._is_running: bool = False
         self._hardware_connected: bool = False
         self._server_socket: socket.socket
         self._conn: socket.socket | None = None
+        self.address_type = socket.AF_INET6 if ipv6 else socket.AF_INET
 
     def start(self) -> None:
         self._is_running = True
@@ -23,7 +24,7 @@ class AbstractInstrumentServer:
             LOGGER.error("Failed to connect hardware")
             raise RuntimeError("Failed to connect hardware")
         LOGGER.info("Hardware connected successfully")
-        self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._server_socket = socket.socket(self.address_type, socket.SOCK_STREAM)
         self._server_socket.bind((self.host, self.port))
         self._server_socket.listen()
         self._server_socket.settimeout(1.0)
@@ -37,7 +38,7 @@ class AbstractInstrumentServer:
                 LOGGER.info(f"Connection accepted from {client_info}")
                 with self._manage_connection(client_info):
                     self._serve_client()
-            except TimeoutError:
+            except socket.timeout:  # noqa: UP041
                 continue
             except Exception as e:
                 LOGGER.error(f"Error in server loop: {e}")
