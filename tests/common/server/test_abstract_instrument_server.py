@@ -67,7 +67,7 @@ def test_start_handles_timeout(mock_socket_class, mock_instrument):
     mock_socket_class.return_value = mock_instance
     mock_instance.accept.side_effect = [
         socket.timeout,
-        (MagicMock(), ("127.0.0.1", 1234)),
+        (MagicMock(), ("8.8.8.8", 1234)),
     ]
 
     with patch.object(
@@ -147,3 +147,71 @@ def test_send_response(mock_instrument: AbstractInstrumentServer):
     mock_instrument._conn.sendall = MagicMock()
     mock_instrument._send_response("data data data")
     mock_instrument._conn.sendall.assert_called_once_with(b"1\tdata data data\n")
+
+
+def test_serve_client_eof(
+    mock_instrument: AbstractInstrumentServer,
+):
+    mock_conn = MagicMock()
+    mock_instrument._conn = mock_conn
+    mock_conn.recv.side_effect = [b"", b"shutdown\t\n"]
+    mock_instrument._is_running = True
+    mock_instrument._serve_client()
+    mock_instrument._conn.recv.assert_called_once()
+
+
+def test_serve_client_no_client_connected(
+    mock_instrument: AbstractInstrumentServer,
+    caplog: pytest.LogCaptureFixture,
+):
+    mock_instrument._conn = None
+    mock_instrument._serve_client()
+    assert "No client connection available to run command loop" in caplog.text
+
+
+def test_serve_client_exception(
+    mock_instrument: AbstractInstrumentServer,
+    caplog: pytest.LogCaptureFixture,
+):
+    mock_conn = MagicMock()
+    mock_instrument._conn = mock_conn
+    mock_conn.recv.side_effect = [
+        OSError("Simulated connection error"),
+        b"shutdown\t\n",
+    ]
+    mock_instrument._is_running = True
+    mock_instrument._serve_client()
+    mock_instrument._conn.recv.assert_called_once()
+    assert "Client connection lost unexpectedly" in caplog.text
+
+
+def test_full_connection_cycle_cleanup(mock_instrument, caplog):
+    mock_instance = MagicMock()
+    mock_instance.accept.return_value = (MagicMock(), ("8.8.8.8", 1234))
+    mock_instrument._server_socket = mock_instance
+
+    with patch.object(mock_instrument, "_serve_client", side_effect=None):
+        client_info = (MagicMock(), "8.8.8.8")
+        with mock_instrument._manage_connection(client_info):  #
+            pass
+    assert mock_instrument._conn is None
+    assert mock_instance.close.called_once()
+    assert "Client disconnected" in caplog.text
+
+
+def test_dispatch_command_exception_handling(
+    mock_instrument: AbstractInstrumentServer, caplog: pytest.LogCaptureFixture
+):
+    mock_instrument._dispatch_command(b"test exception")
+    mock_instrument._handle_command = MagicMock(side_effect=Exception("Test exception"))
+    mock_instrument._send_error = MagicMock()
+    mock_instrument._dispatch_command(b"test exception")
+    mock_instrument._send_error.assert_called_once_with("Test exception")
+
+
+def test_dispatch_command_with_arg(mock_instrument: AbstractInstrumentServer):
+    mock_instrument._handle_command = MagicMock()
+    mock_instrument._dispatch_command(b"command\targument\targument2")
+    mock_instrument._handle_command.assert_called_once_with(
+        b"command", b"argument\targument2"
+    )

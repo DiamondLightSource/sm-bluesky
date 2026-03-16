@@ -85,10 +85,11 @@ class AbstractInstrumentServer:
 
                 while b"\n" in buffer:
                     line, buffer = buffer.split(b"\n", 1)
-                    if line:  # Ignore empty lines
+                    if line:
                         self._dispatch_command(line.strip())
 
             except (OSError, ConnectionResetError):
+                LOGGER.error("Client connection lost unexpectedly")
                 break
 
     def _dispatch_command(self, line: bytes) -> None:
