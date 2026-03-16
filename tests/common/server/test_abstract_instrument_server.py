@@ -192,10 +192,10 @@ def test_full_connection_cycle_cleanup(mock_instrument, caplog):
 
     with patch.object(mock_instrument, "_serve_client", side_effect=None):
         client_info = (MagicMock(), "8.8.8.8")
-        with mock_instrument._manage_connection(client_info):  #
+        with mock_instrument._manage_connection(client_info):
             pass
+    client_info[0].close.assert_called_once()
     assert mock_instrument._conn is None
-    assert mock_instance.close.called_once()
     assert "Client disconnected" in caplog.text
 
 
