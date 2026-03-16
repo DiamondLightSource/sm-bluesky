@@ -1,15 +1,35 @@
+from serial import Serial
+
 from sm_bluesky.common.server import AbstractInstrumentServer
+from sm_bluesky.log import LOGGER
 
 
 class GeneratorServerShanghaiTech(AbstractInstrumentServer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.device = None  # Placeholder for your USB device connection
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        ipv6: bool = False,
+        usb_port: str = "COM4",
+        baud_rate: int = 9600,
+        timeout: float = 1.0,
+    ):
+        super().__init__(host, port, ipv6)
+        self.usb_port: str = usb_port
+        self.baud_rate: int = baud_rate
+        self.timeout: float = timeout
+        self.device: Serial | None = None
 
     def connect_hardware(self) -> bool:
         """Initialize the USB connection protocol."""
-        # TODO: Add your USB connection logic here
-        return False
+        try:
+            self.device = Serial(
+                port=self.usb_port, baudrate=self.baud_rate, timeout=self.timeout
+            )
+            return True
+        except Exception as e:
+            LOGGER.error(f"Failed to connect to hardware {e}")
+            return False
 
     def disconnect_hardware(self):
         """Safely release the USB resource."""

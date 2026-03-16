@@ -21,6 +21,8 @@ dependencies = [
     "dls-dodal>=2.1.0",
     "ophyd-async[sim]",
     "scanspec",
+    "pyserial",
+
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
