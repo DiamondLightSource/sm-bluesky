@@ -6,6 +6,13 @@ from sm_bluesky.log import LOGGER
 
 
 class AbstractInstrumentServer:
+    """
+    Base class for TCP instrument servers.
+
+    Handles socket lifecycle, connection management, and buffered command
+    parsing. Subclasses must implement hardware-specific control logic.
+    """
+
     def __init__(self, host: str, port: int, ipv6: bool = False):
         self.host: str = host
         self.port: int = port
@@ -16,6 +23,7 @@ class AbstractInstrumentServer:
         self.address_type = socket.AF_INET6 if ipv6 else socket.AF_INET
 
     def start(self) -> None:
+        """Initializes the server, connects hardware, and enters the listening loop."""
         self._is_running = True
 
         self._hardware_connected = self.connect_hardware()
@@ -46,6 +54,7 @@ class AbstractInstrumentServer:
 
     @contextmanager
     def _manage_connection(self, client_info: tuple[socket.socket, str]):
+        """Manages the lifecycle of a client connection with automatic cleanup."""
         self._conn, addr = client_info
         LOGGER.info(f"Client {addr} connected. Server busy.")
         try:
@@ -55,7 +64,7 @@ class AbstractInstrumentServer:
             LOGGER.info(f"Client {addr} disconnected. Server ready.")
 
     def stop(self) -> None:
-
+        """Stops the server, closes sockets, and disconnects hardware."""
         self._disconnect_client()
         if hasattr(self, "_server_socket"):
             self._server_socket.close()
@@ -72,6 +81,7 @@ class AbstractInstrumentServer:
             LOGGER.info("Client disconnected")
 
     def _serve_client(self) -> None:
+        """Reads stream data from the client and handles command buffering."""
         if self._conn is None:
             LOGGER.error("No client connection available to run command loop")
             return
@@ -93,7 +103,7 @@ class AbstractInstrumentServer:
                 break
 
     def _dispatch_command(self, line: bytes) -> None:
-
+        """Parses raw input into command/argument pairs and executes the handler."""
         if b"\t" in line:
             cmd, arg = line.split(b"\t", 1)
         else:
@@ -116,10 +126,13 @@ class AbstractInstrumentServer:
             self._conn.sendall(b"1\t" + response.encode() + b"\n")
 
     @abstractmethod
-    def connect_hardware(self) -> bool: ...
+    def connect_hardware(self) -> bool:
+        """Establishes connection to the specific hardware device."""
 
     @abstractmethod
-    def disconnect_hardware(self) -> None: ...
+    def disconnect_hardware(self) -> None:
+        """Disconnect from the hardware device."""
 
     @abstractmethod
-    def _handle_command(self, cmd: bytes, arg: bytes) -> None: ...
+    def _handle_command(self, cmd: bytes, arg: bytes) -> None:
+        """Executes logic for a specific instrument command."""
