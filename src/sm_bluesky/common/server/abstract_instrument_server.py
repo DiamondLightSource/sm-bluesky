@@ -1,11 +1,11 @@
 import socket
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from contextlib import contextmanager
 
 from sm_bluesky.log import LOGGER
 
 
-class AbstractInstrumentServer:
+class AbstractInstrumentServer(ABC):
     """
     Base class for TCP instrument servers.
 
