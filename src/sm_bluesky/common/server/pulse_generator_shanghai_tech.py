@@ -9,7 +9,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
     def connect_hardware(self) -> bool:
         """Initialize the USB connection protocol."""
         # TODO: Add your USB connection logic here
-        return True
+        return False
 
     def disconnect_hardware(self):
         """Safely release the USB resource."""
