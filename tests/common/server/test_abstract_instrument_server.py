@@ -202,7 +202,6 @@ def test_full_connection_cycle_cleanup(mock_instrument, caplog):
 def test_dispatch_command_exception_handling(
     mock_instrument: AbstractInstrumentServer, caplog: pytest.LogCaptureFixture
 ):
-    mock_instrument._dispatch_command(b"test exception")
     mock_instrument._handle_command = MagicMock(side_effect=Exception("Test exception"))
     mock_instrument._send_error = MagicMock()
     mock_instrument._dispatch_command(b"test exception")
