@@ -19,7 +19,6 @@ class MockInstrument(AbstractInstrumentServer):
 
 @pytest.fixture
 def mock_socket_instance():
-    """Provides a MagicMock that looks like a socket instance."""
     return MagicMock(spec=socket.socket)
 
 
