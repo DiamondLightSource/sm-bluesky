@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from serial import Serial
 
 from sm_bluesky.common.server import GeneratorServerShanghaiTech
 
@@ -11,13 +12,11 @@ def mock_serial():
     with patch(
         "sm_bluesky.common.server.pulse_generator_shanghai_tech.Serial", spec=True
     ) as mock_serial:
-        # Ensure calling Serial() returns a Mock instance with Serial methods
-        # mock_serial.return_value = MagicMock(spec=Serial)
         yield mock_serial
 
 
 @pytest.fixture
-def mock_server(mock_serial):
+def mock_server(mock_serial: Serial):
     """Provides a fresh server instance with a mocked device for every test."""
     mock_server = GeneratorServerShanghaiTech(
         host="localhost", port=8888, usb_port="COM4", baud_rate=9600, timeout=1.0
