@@ -13,12 +13,24 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         usb_port: str = "COM4",
         baud_rate: int = 9600,
         timeout: float = 1.0,
+        max_delay=1024,
     ):
         super().__init__(host, port, ipv6)
         self.usb_port: str = usb_port
         self.baud_rate: int = baud_rate
         self.timeout: float = timeout
+        self.max_pulse_delay: float = max_delay
         self.device: Serial | None = None
+
+        # Expand the registry with Pulse Generator specific commands
+        self._command_registry.update(
+            {
+                b"set_delay": self._set_delay,
+                b"get_delay": self._get_delay,
+                b"reset_output_buffer": self._reset_buffer,
+                b"pass_command": self._passthrough,
+            }
+        )
 
     def connect_hardware(self) -> bool:
         """Initialize the USB connection protocol."""
@@ -51,32 +63,23 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             LOGGER.warning("Attempted to disconnect hardware that was not connected")
             self._send_error("Attempted to disconnect hardware that was not connected")
 
-    def _handle_command(self, cmd: bytes, arg: bytes) -> None:
-        """
-        Routes incoming commands to the pulse generator.
-        """
-        if cmd == b"disconnect":
-            self.disconnect_hardware()
-
-        elif cmd == b"check_status":
-            # TODO: Logic to get hardware status
-            pass
-
-        elif cmd == b"set_delay":
-            # TODO: Logic to set delay using args
-            pass
-
-        elif cmd == b"get_delay":
-            # TODO: Return current delay
-            pass
-
-        elif cmd == b"reset_output_buffer":
-            # TODO: Logic to clear buffer
-            pass
-
-        elif cmd == b"pass_command":
-            # TODO: Forward raw command
-            pass
+    def _set_delay(self, value: bytes) -> None:
+        delay = int(value.decode("utf-8"))
+        if 1024 > delay >= 0 and self.device is not None:
+            try:
+                self.device.write(b"AT+DLSET=" + value + b"\r\n")
+                self._send_response(self.device.readline().decode("utf-8").strip())
+            except Exception as e:
+                self._error_helper(message="Set delay failed", error=e)
 
         else:
-            pass
+            self._send_error("Delay must be between 0 and 1023")
+            LOGGER.error("Delay must be between 0 and 1023")
+
+    def _get_delay(self):
+        if self.device is not None:
+            self.device.write(b"AT+DLSET=?\r\n")
+            self._send_response(self.device.readline().decode("utf-8").strip())
+
+        else:
+            self._send_error("Fail to read delay")
