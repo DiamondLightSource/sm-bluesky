@@ -1,5 +1,6 @@
 import socket
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from contextlib import contextmanager
 
 from sm_bluesky.log import LOGGER
@@ -21,6 +22,12 @@ class AbstractInstrumentServer(ABC):
         self._server_socket: socket.socket
         self._conn: socket.socket | None = None
         self.address_type = socket.AF_INET6 if ipv6 else socket.AF_INET
+        self._command_registry: dict[bytes, Callable] = {
+            b"connect_hardware": self.connect_hardware,
+            b"disconnect_hardware": self.disconnect_hardware,
+            b"ping": self._send_ack,
+            b"shutdown": self.stop,
+        }
 
     def start(self) -> None:
         """Initializes the server, connects hardware, and enters the listening loop."""
@@ -125,6 +132,20 @@ class AbstractInstrumentServer(ABC):
         if self._conn:
             self._conn.sendall(b"1\t" + response.encode() + b"\n")
 
+    def _handle_command(self, cmd: bytes, args: bytes) -> None:
+        """Executes logic for a specific instrument command."""
+        handler = self._command_registry.get(cmd)
+        if not handler:
+            LOGGER.warning(f"Received unknown command: {cmd.decode()}")
+            self._send_error("Received unknown command")
+        else:
+            try:
+                handler(args) if args else handler()
+
+            except Exception as e:
+                LOGGER.error(f"Error handling command '{cmd.decode()}': {e}")
+                self._send_error(f"Error handling command '{cmd.decode()}': {e}")
+
     @abstractmethod
     def connect_hardware(self) -> bool:
         """Establishes connection to the specific hardware device."""
@@ -132,7 +153,3 @@ class AbstractInstrumentServer(ABC):
     @abstractmethod
     def disconnect_hardware(self) -> None:
         """Disconnect from the hardware device."""
-
-    @abstractmethod
-    def _handle_command(self, cmd: bytes, arg: bytes) -> None:
-        """Executes logic for a specific instrument command."""

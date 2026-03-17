@@ -14,17 +14,6 @@ class MockInstrument(AbstractInstrumentServer):
     def disconnect_hardware(self) -> None:
         self._hardware_connected = False
 
-    def _handle_command(self, cmd: bytes, arg: bytes) -> None:
-        if cmd == b"shutdown":
-            self._send_response("Shutting down server")
-            self.stop()
-        elif cmd == b"ping":
-            self._send_ack()
-        elif cmd == b"disconnect":
-            self.disconnect_hardware()
-        else:
-            self._send_error("Unknown command")
-
 
 @pytest.fixture
 def mock_instrument():
@@ -139,7 +128,23 @@ def test_send_unknow_command_error(mock_instrument: AbstractInstrumentServer):
     mock_instrument._conn = MagicMock()
     mock_instrument._conn.sendall = MagicMock()
     mock_instrument._handle_command(b"sdljkfnsdouifn", b"")
-    mock_instrument._conn.sendall.assert_called_once_with(b"0\tUnknown command\n")
+    mock_instrument._conn.sendall.assert_called_once_with(
+        b"0\tReceived unknown command\n"
+    )
+
+
+def test_send_command_handling_error(mock_instrument: AbstractInstrumentServer):
+    mock_instrument._conn = MagicMock()
+    mock_instrument._conn.sendall = MagicMock()
+
+    def handling_exception():
+        raise Exception(Exception("test_send_command_handling_error"))
+
+    mock_instrument._command_registry.update({b"ping": handling_exception})
+    mock_instrument._handle_command(b"ping", b"")
+    mock_instrument._conn.sendall.assert_called_once_with(
+        b"0\tError handling command 'ping': test_send_command_handling_error\n"
+    )
 
 
 def test_send_response(mock_instrument: AbstractInstrumentServer):
