@@ -27,8 +27,8 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             {
                 b"set_delay": self._set_delay,
                 b"get_delay": self._get_delay,
-                b"reset_output_buffer": self._reset_buffer,
-                b"pass_command": self._passthrough,
+                # b"reset_output_buffer": self._reset_buffer,
+                # b"pass_command": self._passthrough,
             }
         )
 
@@ -68,7 +68,8 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         if 1024 > delay >= 0 and self.device is not None:
             try:
                 self.device.write(b"AT+DLSET=" + value + b"\r\n")
-                self._send_response(self.device.readline().decode("utf-8").strip())
+                device_respond = self.device.readline()
+                self._send_response(device_respond.decode("utf-8").strip())
             except Exception as e:
                 self._error_helper(message="Set delay failed", error=e)
 
