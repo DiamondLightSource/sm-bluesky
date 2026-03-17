@@ -73,3 +73,25 @@ def test_disconnect_hardware_not_connected(
         server._send_error.assert_called_with(
             "Attempted to disconnect hardware that was not connected"
         )
+
+
+@patch("sm_bluesky.common.server.pulse_generator_shanghai_tech.Serial")
+def test_disconnect_hardware_exception_on_close(
+    mock_serial_class: MagicMock, caplog: pytest.LogCaptureFixture
+):
+    mock_serial_class.side_effect = MagicMock(spec=Serial)
+    server = pulse_generator_shanghai_tech.GeneratorServerShanghaiTech(
+        host="localhost", port=8888, usb_port="COM4", baud_rate=9600, timeout=1.0
+    )
+    server.connect_hardware()
+    with patch.object(server, "device") as mock_device:
+        mock_device.close.side_effect = Exception("Close failed")
+        server._send_error = MagicMock()
+        server.disconnect_hardware()
+        mock_device.close.assert_called_once()
+        assert server._hardware_connected is False
+        assert server.device is None
+        assert "Error occurred while closing hardware connection" in caplog.text
+        server._send_error.assert_called_with(
+            "Error occurred while closing hardware connection Close failed"
+        )
