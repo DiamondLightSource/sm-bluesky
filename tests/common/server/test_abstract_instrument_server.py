@@ -7,6 +7,8 @@ from sm_bluesky.common.server import AbstractInstrumentServer
 
 
 class MockInstrument(AbstractInstrumentServer):
+    """Concrete implementation for testing the Abstract class."""
+
     def connect_hardware(self) -> bool:
         self._hardware_connected = True
         return True
@@ -16,8 +18,20 @@ class MockInstrument(AbstractInstrumentServer):
 
 
 @pytest.fixture
-def mock_instrument():
-    return MockInstrument(host="localhost", port=8888)
+def mock_socket_instance():
+    """Provides a MagicMock that looks like a socket instance."""
+    return MagicMock(spec=socket.socket)
+
+
+@pytest.fixture
+def mock_instrument(mock_socket_instance: MagicMock):
+
+    with patch(
+        "sm_bluesky.common.server.abstract_instrument_server.socket.socket"
+    ) as mock_socket_class:
+        mock_socket_class.return_value = mock_socket_instance
+        mock_instrument = MockInstrument(host="localhost", port=8888)
+        yield mock_instrument
 
 
 def test_connect_hardware(mock_instrument: AbstractInstrumentServer):
@@ -26,47 +40,41 @@ def test_connect_hardware(mock_instrument: AbstractInstrumentServer):
     assert mock_instrument._hardware_connected is True
 
 
-@patch("socket.socket")
 def test_start_server_success(
-    mock_socket_class: MagicMock,
     mock_instrument: AbstractInstrumentServer,
+    mock_socket_instance: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ):
-    mock_server_socket = MagicMock()
-    mock_socket_class.return_value = mock_server_socket
     mock_client_socket = MagicMock()
-    mock_server_socket.accept.return_value = (mock_client_socket, ("localhost", 8888))
+    mock_socket_instance.accept.return_value = (mock_client_socket, ("localhost", 8888))
 
     mock_instrument._serve_client = lambda: setattr(
         mock_instrument, "_is_running", False
     )
     mock_instrument.start()
 
-    mock_server_socket.bind.assert_called_with(("localhost", 8888))
+    mock_socket_instance.bind.assert_called_with(("localhost", 8888))
     assert "Server started listening on localhost:8888" in caplog.text
-    mock_server_socket.listen.assert_called_once()
-    mock_server_socket.accept.assert_called_once()
+    mock_socket_instance.listen.assert_called_once()
+    mock_socket_instance.accept.assert_called_once()
     assert mock_instrument._is_running is False
     assert "Connection accepted from" in caplog.text
 
 
-@patch("socket.socket")
-def test_start_handles_timeout(mock_socket_class, mock_instrument):
-    mock_instance = MagicMock()
-    mock_socket_class.return_value = mock_instance
-    mock_instance.accept.side_effect = [
+def test_start_handles_timeout(
+    mock_instrument: AbstractInstrumentServer,
+    mock_socket_instance: MagicMock,
+):
+    mock_socket_instance.accept.side_effect = [
         socket.timeout,
         (MagicMock(), ("8.8.8.8", 1234)),
     ]
+    mock_instrument._serve_client = lambda: setattr(
+        mock_instrument, "_is_running", False
+    )
+    mock_instrument.start()
 
-    with patch.object(
-        mock_instrument,
-        "_serve_client",
-        side_effect=lambda: setattr(mock_instrument, "_is_running", False),
-    ):
-        mock_instrument.start()
-
-    assert mock_instance.accept.call_count == 2
+    assert mock_socket_instance.accept.call_count == 2
 
 
 def test_start_server_failure_hardware(
@@ -81,17 +89,14 @@ def test_start_server_failure_hardware(
     assert mock_instrument._is_running is False
 
 
-@patch("socket.socket")
 def test_start_server_failure_on_accept(
-    mock_socket: MagicMock,
     mock_instrument: AbstractInstrumentServer,
+    mock_socket_instance: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ):
     error_message = "Simulated socket error"
-    mock_instance = MagicMock()
-    mock_socket.return_value = mock_instance
 
-    mock_instance.accept.side_effect = Exception(error_message)
+    mock_socket_instance.accept.side_effect = Exception(error_message)
     mock_instrument.start()
 
     assert mock_instrument._is_running is False
@@ -99,17 +104,15 @@ def test_start_server_failure_on_accept(
     assert mock_instrument._conn is None
 
 
-@patch("socket.socket")
 def test_stop_server(
-    mock_socket_class: MagicMock,
     mock_instrument: AbstractInstrumentServer,
+    mock_socket_instance: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ):
-    mock_server_socket = MagicMock()
-    mock_socket_class.return_value = mock_server_socket
+
     mock_client_socket = MagicMock()
     mock_instrument._conn = mock_client_socket
-    mock_server_socket.accept.return_value = (mock_client_socket, ("localhost", 8888))
+    mock_socket_instance.accept.return_value = (mock_client_socket, ("localhost", 8888))
     mock_instrument._conn.recv = MagicMock(return_value=b"shutdown\t\n")
     mock_instrument.start()
     assert mock_instrument._hardware_connected is False
