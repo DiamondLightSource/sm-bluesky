@@ -129,7 +129,7 @@ def test_send_unknow_command_error(mock_instrument: AbstractInstrumentServer):
     mock_instrument._conn.sendall = MagicMock()
     mock_instrument._handle_command(b"sdljkfnsdouifn", b"")
     mock_instrument._conn.sendall.assert_called_once_with(
-        b"0\tReceived unknown command\n"
+        b"0\tReceived unknown command: 'sdljkfnsdouifn': Unknow command\n"
     )
 
 
@@ -210,7 +210,7 @@ def test_dispatch_command_exception_handling(
     mock_instrument._handle_command = MagicMock(side_effect=Exception("Test exception"))
     mock_instrument._send_error = MagicMock()
     mock_instrument._dispatch_command(b"test exception")
-    mock_instrument._send_error.assert_called_once_with("Test exception")
+    mock_instrument._send_error.assert_called_once_with("Handler Error: Test exception")
 
 
 def test_dispatch_command_with_arg(mock_instrument: AbstractInstrumentServer):

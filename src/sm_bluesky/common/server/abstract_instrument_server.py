@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from contextlib import contextmanager
 
-from sm_bluesky.log import LOGGER
+from sm_bluesky.log import LOGGER, logging
 
 
 class AbstractInstrumentServer(ABC):
@@ -119,7 +119,7 @@ class AbstractInstrumentServer(ABC):
         try:
             self._handle_command(cmd, arg)
         except Exception as e:
-            self._send_error(str(e))
+            self._error_helper(message="Handler Error", error=e)
 
     def _send_ack(self) -> None:
         self._send_response()
@@ -136,15 +136,29 @@ class AbstractInstrumentServer(ABC):
         """Executes logic for a specific instrument command."""
         handler = self._command_registry.get(cmd)
         if not handler:
-            LOGGER.warning(f"Received unknown command: {cmd.decode()}")
-            self._send_error("Received unknown command")
+            self._error_helper(
+                message=f"Received unknown command: '{cmd.decode()}'",
+                error=Exception("Unknow command"),
+                level=logging.WARNING,
+            )
         else:
             try:
                 handler(args) if args else handler()
 
             except Exception as e:
-                LOGGER.error(f"Error handling command '{cmd.decode()}': {e}")
-                self._send_error(f"Error handling command '{cmd.decode()}': {e}")
+                self._error_helper(
+                    message=f"Error handling command '{cmd.decode()}'", error=e
+                )
+
+    def _error_helper(
+        self,
+        message: str,
+        error: Exception | None = None,
+        level: int = logging.ERROR,
+    ):
+        err_msg = f"{message}: {error}" if error else message
+        LOGGER.log(level=level, msg=err_msg)
+        self._send_error(err_msg)
 
     @abstractmethod
     def connect_hardware(self) -> bool:
