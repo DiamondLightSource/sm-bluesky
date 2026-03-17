@@ -7,8 +7,6 @@ from sm_bluesky.common.server import AbstractInstrumentServer
 
 
 class MockInstrument(AbstractInstrumentServer):
-    """Concrete implementation for testing the Abstract class."""
-
     def connect_hardware(self) -> bool:
         self._hardware_connected = True
         return True
