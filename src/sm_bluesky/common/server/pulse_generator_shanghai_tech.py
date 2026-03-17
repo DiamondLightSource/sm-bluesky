@@ -26,15 +26,30 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             self.device = Serial(
                 port=self.usb_port, baudrate=self.baud_rate, timeout=self.timeout
             )
+            self._send_response("Hardware connected successfully")
             return True
         except Exception as e:
             LOGGER.error(f"Failed to connect to hardware {e}")
+            self._send_error(f"Failed to connect to hardware {e}")
             return False
 
     def disconnect_hardware(self):
         """Safely release the USB resource."""
-        # TODO: Add your USB disconnection logic here
-        pass
+        if self.device and self.device.is_open:
+            try:
+                self.device.close()
+            except Exception as e:
+                LOGGER.error(f"Error occurred while closing hardware connection {e}")
+                self._send_error(
+                    f"Error occurred while closing hardware connection {e}"
+                )
+            self._hardware_connected = False
+            self.device = None
+            LOGGER.info("Hardware disconnected successfully")
+            self._send_response("Hardware disconnected")
+        else:
+            LOGGER.warning("Attempted to disconnect hardware that was not connected")
+            self._send_error("Attempted to disconnect hardware that was not connected")
 
     def _handle_command(self, cmd: bytes, arg: bytes) -> None:
         """
@@ -42,7 +57,6 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         """
         if cmd == b"disconnect":
             self.disconnect_hardware()
-            pass
 
         elif cmd == b"check_status":
             # TODO: Logic to get hardware status
