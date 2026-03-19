@@ -56,6 +56,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
                     message="Error occurred while closing hardware connection", error=e
                 )
             self._hardware_connected = False
+            self.device = None
             LOGGER.info("Hardware disconnected successfully")
             self._send_response(b"Hardware disconnected")
         else:
