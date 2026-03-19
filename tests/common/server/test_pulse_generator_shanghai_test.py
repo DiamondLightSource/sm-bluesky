@@ -155,7 +155,20 @@ def test_passthrough_success(mock_server: GeneratorServerShanghaiTech):
     command = b"some commands"
     multi_line_responds = b"somethn\r\nsomethingelse\r\nmore\t\r\n"
     with patch.object(mock_server, "device", spec=Serial) as mock_device:
+        mock_server._send_response = MagicMock()
         mock_server.device = mock_device
         mock_server.device.readall.return_value = multi_line_responds
-        mock_server.device.write.assert_called_once_with(command)
-        mock_server.device._send_response.assert_called_once_with(multi_line_responds)
+        mock_server._passthrough(command)
+        mock_server.device.write.assert_called_once_with(command + b"\r\n")
+        mock_server._send_response.assert_called_once_with(multi_line_responds)
+
+
+def test_passthrough_failed(mock_server: GeneratorServerShanghaiTech):
+    with patch.object(mock_server, "device", spec=Serial) as mock_device:
+        mock_server.device = mock_device
+        mock_server.device.write.side_effect = Exception("Command pass through failed")
+        mock_server._send_error = MagicMock()
+        mock_server._passthrough(b"does not matter")
+        mock_server._send_error.assert_called_once_with(
+            "Command pass through failed: Command pass through failed"
+        )

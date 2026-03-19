@@ -13,13 +13,13 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         usb_port: str = "COM4",
         baud_rate: int = 9600,
         timeout: float = 1.0,
-        max_delay=1024,
+        max_pulse_delay=1024,
     ):
         super().__init__(host, port, ipv6)
         self.usb_port: str = usb_port
         self.baud_rate: int = baud_rate
         self.timeout: float = timeout
-        self.max_pulse_delay: float = max_delay
+        self.max_pulse_delay: float = max_pulse_delay
         self.device: Serial
 
         # Expand the registry with Pulse Generator specific commands
@@ -63,25 +63,23 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             self._send_error("Attempted to disconnect hardware that was not connected")
 
     def _set_delay(self, value: bytes) -> None:
-        delay = int(value.decode("utf-8"))
-        if 1024 > delay >= 0:
-            try:
-                self.device.write(b"AT+DLSET=" + value + b"\r\n")
-                device_respond = self.device.readall()
-                self._send_response(device_respond)
-            except Exception as e:
-                self._error_helper(message="Set delay failed", error=e)
 
-        else:
-            self._error_helper("Delay must be between 0 and 1023")
+        try:
+            delay = int(value.decode("utf-8"))
+            if 1024 > delay >= 0:
+                self._send_hardware_command(b"AT+DLSET=" + value)
+                LOGGER.info(f"Setting delay to {value}")
+            else:
+                self._error_helper("Delay must be between 0 and 1023")
+
+        except Exception as e:
+            self._error_helper(message="Set delay failed", error=e)
 
     def _get_delay(self):
 
         try:
-            self.device.write(b"AT+DLSET=?\r\n")
-            reading = self.device.readall()
-            LOGGER.info(f"Reading delay: {reading}")
-            self._send_response(reading)
+            self._send_hardware_command(b"AT+DLSET=?")
+            LOGGER.info("Reading delay")
         except Exception as e:
             self._error_helper(message="Read delay failed", error=e)
 
@@ -94,4 +92,12 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             self._error_helper(message="Buffer reset failed", error=e)
 
     def _passthrough(self, value: bytes):
-        pass
+        try:
+            self._send_hardware_command(value)
+        except Exception as e:
+            self._error_helper(message="Command pass through failed", error=e)
+
+    def _send_hardware_command(self, cmd: bytes):
+        self.device.write(cmd + b"\r\n")
+        device_respond = self.device.readall()
+        self._send_response(device_respond)
