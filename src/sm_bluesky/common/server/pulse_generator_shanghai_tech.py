@@ -84,7 +84,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
     def _reset_serial_buffer(self):
         self.device.reset_input_buffer()
         self.device.reset_output_buffer()
-        LOGGER.info("Resting buffers")
+        LOGGER.info("Reseting buffers")
 
     def _passthrough(self, value: bytes):
         self._send_hardware_command(value)
