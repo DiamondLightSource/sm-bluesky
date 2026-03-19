@@ -110,6 +110,17 @@ def test_set_delay_failed(mock_server: GeneratorServerShanghaiTech) -> None:
         )
 
 
+@pytest.mark.parametrize("delay", [b"-200", b"1024", b"-1"])
+def test_set_delay_failed_out_of_bound(
+    delay: bytes,
+    mock_server: GeneratorServerShanghaiTech,
+) -> None:
+
+    mock_server._send_error = MagicMock()
+    mock_server._set_delay(delay)
+    mock_server._send_error.assert_called_once_with("Delay must be between 0 and 1023")
+
+
 def test_get_delay_success(mock_server: GeneratorServerShanghaiTech) -> None:
     test_reading = b"Test reading"
     with patch.object(mock_server, "device") as mock_device:
