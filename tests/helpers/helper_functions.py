@@ -24,9 +24,9 @@ def check_msg_wait(msgs: list[Msg], wait_group: str, wait: bool = False) -> list
     )
     return assert_message_and_return_remaining(
         msgs,
-        lambda msg: msg.command == "wait"
-        and msg.obj is None
-        and msg.kwargs == wait_msg,
+        lambda msg: (
+            msg.command == "wait" and msg.obj is None and msg.kwargs == wait_msg
+        ),
     )
 
 
@@ -35,11 +35,13 @@ def check_mv_wait(
 ) -> list[Msg]:
     return assert_message_and_return_remaining(
         msgs,
-        lambda msg: msg.command == "wait"
-        and msg.obj is None
-        and msg.kwargs
-        == {
-            "group": wait_group,
-            "timeout": timeout,
-        },
+        lambda msg: (
+            msg.command == "wait"
+            and msg.obj is None
+            and msg.kwargs
+            == {
+                "group": wait_group,
+                "timeout": timeout,
+            }
+        ),
     )

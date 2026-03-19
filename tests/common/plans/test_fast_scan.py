@@ -52,9 +52,9 @@ async def test_fast_scan_1d_success(
     assert 3 == get_mock_put(sim_motor.x.velocity).call_count
     # check speed is set and reset
     assert [
-        mock.call(100.0, wait=True),  # prepare set it to max speed
-        mock.call(8.0, wait=True),
-        mock.call(2.78, wait=True),
+        mock.call(100.0),  # prepare set it to max speed
+        mock.call(8.0),
+        mock.call(2.78),
     ] == get_mock_put(sim_motor.x.velocity).call_args_list
 
     """Only 1 event as sim motor motor_done_move is set to True,
@@ -74,9 +74,9 @@ async def test_fast_scan_1d_success_without_speed(
     assert 3 == get_mock_put(sim_stage_delay.x.velocity).call_count
     # check speed is set and reset
     assert [
-        mock.call(pytest.approx(0), wait=True),  # SimMotor fast move to start
-        mock.call(pytest.approx(88.88), wait=True),
-        mock.call(pytest.approx(88.88), wait=True),
+        mock.call(pytest.approx(0)),  # SimMotor fast move to start
+        mock.call(pytest.approx(88.88)),
+        mock.call(pytest.approx(88.88)),
     ] == get_mock_put(sim_stage_delay.x.velocity).call_args_list
 
     """Only 1 event as sim motor motor_done_move is set to True,
@@ -120,7 +120,7 @@ async def test_fast_scan_2d_success(
     for cnt, motor_x in enumerate(
         get_mock_put(sim_motor.x.user_setpoint).call_args_list
     ):
-        assert motor_x == mock.call(steps[cnt], wait=True)
+        assert motor_x == mock.call(steps[cnt])
 
     assert 2.88 == await sim_motor.y.velocity.get_value()
     assert num_step * 3 == get_mock_put(sim_motor.y.velocity).call_count
@@ -130,9 +130,9 @@ async def test_fast_scan_2d_success(
         get_mock_put(sim_motor.y.user_setpoint).call_args_list
     ):
         if cnt % 2 == 0:
-            assert motor_y == mock.call(y_start, wait=True)
+            assert motor_y == mock.call(y_start)
         else:
-            assert motor_y == mock.call(y_end, wait=True)
+            assert motor_y == mock.call(y_end)
     """Only 1 event per step as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
     assert_emitted(run_engine_documents, start=1, descriptor=1, event=num_step, stop=1)
@@ -173,7 +173,7 @@ async def test_fast_scan_2d_snake_success(
     for cnt, motor_x in enumerate(
         get_mock_put(sim_motor.x.user_setpoint).call_args_list
     ):
-        assert motor_x == mock.call(steps[cnt], wait=True)
+        assert motor_x == mock.call(steps[cnt])
 
     assert 2.88 == await sim_motor.y.velocity.get_value()
     assert num_step * 3 == get_mock_put(sim_motor.y.velocity).call_count
@@ -193,7 +193,7 @@ async def test_fast_scan_2d_snake_success(
     for cnt, motor_y in enumerate(
         get_mock_put(sim_motor.y.user_setpoint).call_args_list
     ):
-        assert motor_y == mock.call(y_position[cnt], wait=True)
+        assert motor_y == mock.call(y_position[cnt])
 
     """Only 1 event per step as sim motor motor_done_move is set to True,
       so only 1 loop is ran"""
