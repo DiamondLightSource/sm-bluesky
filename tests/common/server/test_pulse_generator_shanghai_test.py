@@ -171,7 +171,7 @@ def test_reset_serial_buffer_fail(mock_server: GeneratorServerShanghaiTech):
 
 def test_passthrough_success(mock_server: GeneratorServerShanghaiTech):
     command = b"some commands"
-    multi_line_responds = b"somethn\r\nsomethingelse\r\nmore\t\r\n"
+    multi_line_responds = b"somethn\r\nsomethingelse\r\nmore"
     with patch.object(mock_server, "device", spec=Serial) as mock_device:
         mock_server._send_response = MagicMock()
         mock_server.device = mock_device

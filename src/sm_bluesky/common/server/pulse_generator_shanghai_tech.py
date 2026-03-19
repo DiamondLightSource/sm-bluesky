@@ -90,5 +90,5 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
     def _send_hardware_command(self, cmd: bytes) -> None:
         self.device.write(cmd + b"\r\n")
         self.device.flush()
-        device_respond = self.device.readline()
+        device_respond = self.device.readline().strip()
         self._send_response(device_respond)
