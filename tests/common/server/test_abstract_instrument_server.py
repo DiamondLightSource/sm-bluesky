@@ -150,7 +150,7 @@ def test_send_command_handling_error(mock_instrument: AbstractInstrumentServer):
 def test_send_response(mock_instrument: AbstractInstrumentServer):
     mock_instrument._conn = MagicMock()
     mock_instrument._conn.sendall = MagicMock()
-    mock_instrument._send_response("data data data")
+    mock_instrument._send_response(b"data data data")
     mock_instrument._conn.sendall.assert_called_once_with(b"1\tdata data data\n")
 
 
