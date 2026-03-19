@@ -1,3 +1,5 @@
+import logging
+
 from serial import Serial
 
 from sm_bluesky.common.server import AbstractInstrumentServer
@@ -41,8 +43,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             self._send_response(b"Hardware connected successfully")
             return True
         except Exception as e:
-            LOGGER.error(f"Failed to connect to hardware {e}")
-            self._send_error(f"Failed to connect to hardware {e}")
+            self._error_helper(message="Failed to connect to hardware", error=e)
             return False
 
     def disconnect_hardware(self):
@@ -59,8 +60,10 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             LOGGER.info("Hardware disconnected successfully")
             self._send_response(b"Hardware disconnected")
         else:
-            LOGGER.warning("Attempted to disconnect hardware that was not connected")
-            self._send_error("Attempted to disconnect hardware that was not connected")
+            self._error_helper(
+                message="Attempted to disconnect hardware that was not connected",
+                level=logging.WARNING,
+            )
 
     def _set_delay(self, value: bytes) -> None:
 

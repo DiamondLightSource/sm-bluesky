@@ -39,9 +39,9 @@ def test_connect_hardware_failure(
         mock_serial_class.side_effect = Exception(error_message)
         mock_server._send_error = MagicMock()
         assert mock_server.connect_hardware() is False
-        assert f"Failed to connect to hardware {error_message}" in caplog.text
+        assert f"Failed to connect to hardware: {error_message}" in caplog.text
         mock_server._send_error.assert_called_with(
-            f"Failed to connect to hardware {error_message}"
+            f"Failed to connect to hardware: {error_message}"
         )
 
 
