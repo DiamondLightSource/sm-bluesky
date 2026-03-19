@@ -1096,7 +1096,7 @@ wheels = [
 
 [[package]]
 name = "daq-config-server"
-version = "1.2.0"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
@@ -1111,9 +1111,9 @@ dependencies = [
     { name = "uvicorn" },
     { name = "xmltodict" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/60/78/98b706a3e630452fe308e180faed618eecbfe0d5f14261a2a2400dde64e3/daq_config_server-1.2.0.tar.gz", hash = "sha256:33f83537b63c3ea42adaa35a108492616601e16d27b2dd7ef44fd3fd41e504ff", size = 213224, upload-time = "2026-03-03T15:39:56.308Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/bd/1ea542f1fbbea91f0ef364e81c3908e2caba2c675be079878362261b0fb4/daq_config_server-1.3.0.tar.gz", hash = "sha256:2533a1dc930c146d1c91b063fbf6ab02b9629ca24a04bca7494870bd22586222", size = 224108, upload-time = "2026-03-18T09:37:24.495Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/ea/1bc90a539a987245142fa1b18fa5add3f6ca169da2b6f84375fce78d276a/daq_config_server-1.2.0-py3-none-any.whl", hash = "sha256:81473a26723d7b2cc55369899ad8e22df4c4ad3e4e3f51f0151fd67048844642", size = 29701, upload-time = "2026-03-03T15:39:55.238Z" },
+    { url = "https://files.pythonhosted.org/packages/c8/37/91d8f279d88d56e94ead0aeb13015bdfb990473dca644fbde9543d4afe96/daq_config_server-1.3.0-py3-none-any.whl", hash = "sha256:fedf70bd19b02bd213228f3473f8c3f2695b99b96ff4a713b95a4e3fec9c180d", size = 30795, upload-time = "2026-03-18T09:37:23.125Z" },
 ]
 
 [[package]]
@@ -1211,7 +1211,7 @@ wheels = [
 
 [[package]]
 name = "dls-dodal"
-version = "2.1.0"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -1235,9 +1235,9 @@ dependencies = [
     { name = "scanspec" },
     { name = "zocalo" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fc/fc/0f3e6adfaeb9da86fd8f2bd092a42f7aef3e6e513b8ba0227f078a19a92e/dls_dodal-2.1.0.tar.gz", hash = "sha256:081bb04d955632e10ea0dca77b5a81bc079fc1355eaf21c3bf7c85522c66c3c3", size = 1632454, upload-time = "2026-03-03T10:25:53.13Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/2a/126dd1294d9b25a1733d9fbca309fae979768fcdab5c18e6a9566e4bd019/dls_dodal-2.2.0.tar.gz", hash = "sha256:ea84215445401aeb1309f837f6ac2f32cfba808e071cdaf5ce66a3164243b147", size = 1644938, upload-time = "2026-03-18T15:15:03.149Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/56/f36d65e316ee28f77cd04817c7e9d53abbd0f5c0be0730626200ae71b6d7/dls_dodal-2.1.0-py3-none-any.whl", hash = "sha256:cd4a3b804da7c4494b5708f552c2da554ed363cfc70499f522887e899eebadbb", size = 377984, upload-time = "2026-03-03T10:25:51.664Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/b7/a17ce24f49c5a4c32c6e13c5cf77d7dfbc84ae31168a5323fd279d537ad1/dls_dodal-2.2.0-py3-none-any.whl", hash = "sha256:db302284b9246fb550e7a7e7a3fe610b6ac8d7254edcfab8a4a0a90167bc29ae", size = 390076, upload-time = "2026-03-18T15:15:01.891Z" },
 ]
 
 [[package]]
@@ -4007,7 +4007,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -5475,7 +5475,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "bluesky" },
-    { name = "dls-dodal", specifier = ">=2.1.0" },
+    { name = "dls-dodal", specifier = ">=2.2.0" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "scanspec" },
 ]
