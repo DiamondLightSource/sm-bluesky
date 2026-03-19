@@ -21,6 +21,7 @@ def mock_server(mock_serial: Serial):
     mock_server = GeneratorServerShanghaiTech(
         host="localhost", port=8888, usb_port="COM4", baud_rate=9600, timeout=1.0
     )
+    mock_server.device = mock_serial
     return mock_server
 
 
@@ -47,22 +48,19 @@ def test_connect_hardware_failure(
 def test_disconnect_hardware(
     mock_server: GeneratorServerShanghaiTech, caplog: pytest.LogCaptureFixture
 ):
-    mock_server.connect_hardware()
+
     with patch.object(mock_server, "device") as mock_device:
         mock_server._send_response = MagicMock()
         mock_server.disconnect_hardware()
         mock_device.close.assert_called_once()
         assert mock_server._hardware_connected is False
-        assert mock_server.device is None
         assert "Hardware disconnected successfully" in caplog.text
-        mock_server._send_response.assert_called_with("Hardware disconnected")
+        mock_server._send_response.assert_called_with(b"Hardware disconnected")
 
 
 def test_disconnect_hardware_not_connected(
     mock_server: GeneratorServerShanghaiTech, caplog: pytest.LogCaptureFixture
 ):
-
-    mock_server.connect_hardware()
     with patch.object(mock_server, "device") as mock_device:
         mock_device.is_open = False
         mock_server._send_error = MagicMock()
@@ -78,14 +76,12 @@ def test_disconnect_hardware_not_connected(
 def test_disconnect_hardware_exception_on_close(
     mock_server: GeneratorServerShanghaiTech, caplog: pytest.LogCaptureFixture
 ):
-    mock_server.connect_hardware()
     with patch.object(mock_server, "device") as mock_device:
         mock_device.close.side_effect = Exception("Close failed")
         mock_server._send_error = MagicMock()
         mock_server.disconnect_hardware()
         mock_device.close.assert_called_once()
         assert mock_server._hardware_connected is False
-        assert mock_server.device is None
         assert "Error occurred while closing hardware connection" in caplog.text
         mock_server._send_error.assert_called_with(
             "Error occurred while closing hardware connection Close failed"
@@ -95,10 +91,71 @@ def test_disconnect_hardware_exception_on_close(
 def test_set_delay_success(
     mock_server: GeneratorServerShanghaiTech,
 ) -> None:
-    mock_respond = "set success: 500"
+    mock_respond = b"set success: 500"
     with patch.object(mock_server, "device") as mock_device:
-        mock_device.readline.return_value = mock_respond.encode()
+        mock_device.readall.return_value = mock_respond
         mock_server._send_response = MagicMock()
         mock_server._set_delay(b"500")
         mock_server._send_response.assert_called_once_with(mock_respond)
-        mock_device.readline.assert_called_once()
+        mock_device.readall.assert_called_once()
+
+
+def test_set_delay_failed(mock_server: GeneratorServerShanghaiTech) -> None:
+    with patch.object(mock_server, "device") as mock_device:
+        mock_device.write.side_effect = Exception("Write_failed")
+        mock_server._send_error = MagicMock()
+        mock_server._set_delay(b"112")
+        mock_server._send_error.assert_called_once_with(
+            "Set delay failed: Write_failed"
+        )
+
+
+def test_get_delay_success(mock_server: GeneratorServerShanghaiTech) -> None:
+    test_reading = b"Test reading"
+    with patch.object(mock_server, "device") as mock_device:
+        mock_device.readall.return_value = test_reading
+        mock_server._send_response = MagicMock()
+        mock_server._get_delay()
+    mock_device.write.assert_called_once_with(b"AT+DLSET=?\r\n")
+    mock_server._send_response.assert_called_once_with(test_reading)
+
+
+def test_get_delay_failed(mock_server: GeneratorServerShanghaiTech) -> None:
+    with patch.object(mock_server, "device") as mock_device:
+        mock_device.write.side_effect = Exception("Read_failed")
+        mock_server._send_error = MagicMock()
+        mock_server._get_delay()
+        mock_server._send_error.assert_called_once_with(
+            "Read delay failed: Read_failed"
+        )
+
+
+def test_reset_serial_buffer_success(mock_server: GeneratorServerShanghaiTech):
+    with patch.object(mock_server, "device", spec=Serial) as mock_device:
+        mock_server.device = mock_device
+        mock_server._reset_serial_buffer()
+        mock_server.device.reset_output_buffer.assert_called_once()
+        mock_server.device.reset_input_buffer.assert_called_once()
+
+
+def test_reset_serial_buffer_fail(mock_server: GeneratorServerShanghaiTech):
+    with patch.object(mock_server, "device", spec=Serial) as mock_device:
+        mock_server.device = mock_device
+        mock_server.device.reset_output_buffer.side_effect = Exception(
+            "Buffer reset failed"
+        )
+        mock_server._send_error = MagicMock()
+        mock_server._reset_serial_buffer()
+        mock_server._send_error.assert_called_once_with(
+            "Buffer reset failed: Buffer reset failed"
+        )
+
+
+def test_passthrough_success(mock_server: GeneratorServerShanghaiTech):
+    command = b"some commands"
+    multi_line_responds = b"somethn\r\nsomethingelse\r\nmore\t\r\n"
+    with patch.object(mock_server, "device", spec=Serial) as mock_device:
+        mock_server.device = mock_device
+        mock_server.device.readall.return_value = multi_line_responds
+        mock_server.device.write.assert_called_once_with(command)
+        mock_server.device._send_response.assert_called_once_with(multi_line_responds)

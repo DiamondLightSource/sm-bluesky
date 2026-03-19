@@ -128,9 +128,9 @@ class AbstractInstrumentServer(ABC):
         if self._conn:
             self._conn.sendall(b"0\t" + error_message.encode() + b"\n")
 
-    def _send_response(self, response: str = "") -> None:
+    def _send_response(self, response: bytes = b"") -> None:
         if self._conn:
-            self._conn.sendall(b"1\t" + response.encode() + b"\n")
+            self._conn.sendall(b"1\t" + response + b"\n")
 
     def _handle_command(self, cmd: bytes, args: bytes) -> None:
         """Executes logic for a specific instrument command."""

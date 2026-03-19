@@ -20,15 +20,15 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         self.baud_rate: int = baud_rate
         self.timeout: float = timeout
         self.max_pulse_delay: float = max_delay
-        self.device: Serial | None = None
+        self.device: Serial
 
         # Expand the registry with Pulse Generator specific commands
         self._command_registry.update(
             {
                 b"set_delay": self._set_delay,
                 b"get_delay": self._get_delay,
-                # b"reset_output_buffer": self._reset_buffer,
-                # b"pass_command": self._passthrough,
+                b"reset_serial_buffer": self._reset_serial_buffer,
+                b"pass_command": self._passthrough,
             }
         )
 
@@ -38,7 +38,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             self.device = Serial(
                 port=self.usb_port, baudrate=self.baud_rate, timeout=self.timeout
             )
-            self._send_response("Hardware connected successfully")
+            self._send_response(b"Hardware connected successfully")
             return True
         except Exception as e:
             LOGGER.error(f"Failed to connect to hardware {e}")
@@ -56,31 +56,42 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
                     f"Error occurred while closing hardware connection {e}"
                 )
             self._hardware_connected = False
-            self.device = None
             LOGGER.info("Hardware disconnected successfully")
-            self._send_response("Hardware disconnected")
+            self._send_response(b"Hardware disconnected")
         else:
             LOGGER.warning("Attempted to disconnect hardware that was not connected")
             self._send_error("Attempted to disconnect hardware that was not connected")
 
     def _set_delay(self, value: bytes) -> None:
         delay = int(value.decode("utf-8"))
-        if 1024 > delay >= 0 and self.device is not None:
+        if 1024 > delay >= 0:
             try:
                 self.device.write(b"AT+DLSET=" + value + b"\r\n")
-                device_respond = self.device.readline()
-                self._send_response(device_respond.decode("utf-8").strip())
+                device_respond = self.device.readall()
+                self._send_response(device_respond)
             except Exception as e:
                 self._error_helper(message="Set delay failed", error=e)
 
         else:
-            self._send_error("Delay must be between 0 and 1023")
-            LOGGER.error("Delay must be between 0 and 1023")
+            self._error_helper("Delay must be between 0 and 1023")
 
     def _get_delay(self):
-        if self.device is not None:
-            self.device.write(b"AT+DLSET=?\r\n")
-            self._send_response(self.device.readline().decode("utf-8").strip())
 
-        else:
-            self._send_error("Fail to read delay")
+        try:
+            self.device.write(b"AT+DLSET=?\r\n")
+            reading = self.device.readall()
+            LOGGER.info(f"Reading delay: {reading}")
+            self._send_response(reading)
+        except Exception as e:
+            self._error_helper(message="Read delay failed", error=e)
+
+    def _reset_serial_buffer(self):
+        try:
+            self.device.reset_input_buffer()
+            self.device.reset_output_buffer()
+            LOGGER.info("Resting buffers")
+        except Exception as e:
+            self._error_helper(message="Buffer reset failed", error=e)
+
+    def _passthrough(self, value: bytes):
+        pass
