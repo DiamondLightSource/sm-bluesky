@@ -63,7 +63,7 @@ def grid_analyserscan(
     analyser: ElectronAnalyserDetector,
     sequence: AbstractBaseSequence,
     detectors: Sequence[Readable],
-    *args,
+    *args: Any,
     snake_axes: Iterable | bool | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
