@@ -66,8 +66,6 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             )
 
     def _set_delay(self, value: bytes) -> None:
-
-        #        try:
         delay = int(value.decode("utf-8"))
         if self.max_pulse_delay > delay >= 0:
             self._send_hardware_command(b"AT+DLSET=" + value)
