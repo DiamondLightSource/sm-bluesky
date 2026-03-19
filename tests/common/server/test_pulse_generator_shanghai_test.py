@@ -104,9 +104,9 @@ def test_set_delay_failed(mock_server: GeneratorServerShanghaiTech) -> None:
     with patch.object(mock_server, "device") as mock_device:
         mock_device.write.side_effect = Exception("Write_failed")
         mock_server._send_error = MagicMock()
-        mock_server._set_delay(b"112")
+        mock_server._handle_command(cmd=b"set_delay", args=b"112")
         mock_server._send_error.assert_called_once_with(
-            "Set delay failed: Write_failed"
+            "Error handling command 'set_delay': Write_failed"
         )
 
 
@@ -117,9 +117,9 @@ def test_set_delay_failed_out_of_bound(
 ) -> None:
 
     mock_server._send_error = MagicMock()
-    mock_server._set_delay(delay)
+    mock_server._handle_command(b"set_delay", delay)
     mock_server._send_error.assert_called_once_with(
-        f"Set delay failed: Delay {delay.decode('utf-8')}"
+        f"Error handling command 'set_delay': Delay {delay.decode('utf-8')}"
         + f" is out of bounds (0-{mock_server.max_pulse_delay - 1})"
     )
 
@@ -138,16 +138,17 @@ def test_get_delay_failed(mock_server: GeneratorServerShanghaiTech) -> None:
     with patch.object(mock_server, "device") as mock_device:
         mock_device.write.side_effect = Exception("Read_failed")
         mock_server._send_error = MagicMock()
-        mock_server._get_delay()
+        # mock_server._get_delay()
+        mock_server._handle_command(cmd=b"get_delay", args=b"")
         mock_server._send_error.assert_called_once_with(
-            "Read delay failed: Read_failed"
+            "Error handling command 'get_delay': Read_failed"
         )
 
 
 def test_reset_serial_buffer_success(mock_server: GeneratorServerShanghaiTech):
     with patch.object(mock_server, "device", spec=Serial) as mock_device:
         mock_server.device = mock_device
-        mock_server._reset_serial_buffer()
+        mock_server._handle_command(cmd=b"reset_serial_buffer", args=b"")
         mock_server.device.reset_output_buffer.assert_called_once()
         mock_server.device.reset_input_buffer.assert_called_once()
 
@@ -159,9 +160,9 @@ def test_reset_serial_buffer_fail(mock_server: GeneratorServerShanghaiTech):
             "Buffer reset failed"
         )
         mock_server._send_error = MagicMock()
-        mock_server._reset_serial_buffer()
+        mock_server._handle_command(cmd=b"reset_serial_buffer", args=b"")
         mock_server._send_error.assert_called_once_with(
-            "Buffer reset failed: Buffer reset failed"
+            "Error handling command 'reset_serial_buffer': Buffer reset failed"
         )
 
 
@@ -182,7 +183,7 @@ def test_passthrough_failed(mock_server: GeneratorServerShanghaiTech):
         mock_server.device = mock_device
         mock_server.device.write.side_effect = Exception("Command pass through failed")
         mock_server._send_error = MagicMock()
-        mock_server._passthrough(b"does not matter")
+        mock_server._handle_command(cmd=b"pass_command", args=b"some command")
         mock_server._send_error.assert_called_once_with(
-            "Command pass through failed: Command pass through failed"
+            "Error handling command 'pass_command': Command pass through failed"
         )

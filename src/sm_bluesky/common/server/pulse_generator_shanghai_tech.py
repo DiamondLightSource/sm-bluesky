@@ -67,40 +67,27 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
 
     def _set_delay(self, value: bytes) -> None:
 
-        try:
-            delay = int(value.decode("utf-8"))
-            if self.max_pulse_delay > delay >= 0:
-                self._send_hardware_command(b"AT+DLSET=" + value)
-                LOGGER.info(f"Setting delay to {value}")
-            else:
-                raise ValueError(
-                    f"Delay {delay} is out of bounds (0-{self.max_pulse_delay - 1})"
-                )
-
-        except Exception as e:
-            self._error_helper(message="Set delay failed", error=e)
+        #        try:
+        delay = int(value.decode("utf-8"))
+        if self.max_pulse_delay > delay >= 0:
+            self._send_hardware_command(b"AT+DLSET=" + value)
+            LOGGER.info(f"Setting delay to {value}")
+        else:
+            raise ValueError(
+                f"Delay {delay} is out of bounds (0-{self.max_pulse_delay - 1})"
+            )
 
     def _get_delay(self):
-
-        try:
-            self._send_hardware_command(b"AT+DLSET=?")
-            LOGGER.info("Reading delay")
-        except Exception as e:
-            self._error_helper(message="Read delay failed", error=e)
+        self._send_hardware_command(b"AT+DLSET=?")
+        LOGGER.info("Reading delay")
 
     def _reset_serial_buffer(self):
-        try:
-            self.device.reset_input_buffer()
-            self.device.reset_output_buffer()
-            LOGGER.info("Resting buffers")
-        except Exception as e:
-            self._error_helper(message="Buffer reset failed", error=e)
+        self.device.reset_input_buffer()
+        self.device.reset_output_buffer()
+        LOGGER.info("Resting buffers")
 
     def _passthrough(self, value: bytes):
-        try:
-            self._send_hardware_command(value)
-        except Exception as e:
-            self._error_helper(message="Command pass through failed", error=e)
+        self._send_hardware_command(value)
 
     def _send_hardware_command(self, cmd: bytes) -> None:
         self.device.write(cmd + b"\r\n")
