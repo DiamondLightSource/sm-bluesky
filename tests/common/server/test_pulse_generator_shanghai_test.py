@@ -1,3 +1,6 @@
+import socket
+import threading
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -187,3 +190,42 @@ def test_passthrough_failed(mock_server: GeneratorServerShanghaiTech):
         mock_server._send_error.assert_called_once_with(
             "Error handling command 'pass_command': Command pass through failed"
         )
+
+
+@pytest.fixture
+def running_server():
+    with patch(
+        "sm_bluesky.common.server.pulse_generator_shanghai_tech.Serial"
+    ) as mock_serial_class:
+        mock_device = MagicMock()
+        mock_serial_class.return_value = mock_device
+        mock_device.readline.return_value = b"OK\r\n"
+
+        server = GeneratorServerShanghaiTech(host="127.0.0.1", port=9999)
+        thread = threading.Thread(target=server.start, daemon=True)
+        thread.start()
+        time.sleep(0.1)
+        yield server
+
+        # Cleanup
+        server.stop()
+
+
+def test_full_tcp_command_flow(running_server):
+    """Client sends a command via TCP and verifies the protocol response."""
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect(("127.0.0.1", 9999))
+
+    # Test a successful hardware command
+    client.sendall(b"set_delay\t500\n")
+    response = client.recv(1024)
+    assert response.startswith(b"1\t")
+    assert b"OK" in response
+
+    # Test except with bad argument
+    client.sendall(b"set_delay\t9999\n")
+    response = client.recv(1024)
+    assert response.startswith(b"0\t")
+    assert b"Delay 9999 is out of bounds (0-1023)" in response
+
+    client.close()
