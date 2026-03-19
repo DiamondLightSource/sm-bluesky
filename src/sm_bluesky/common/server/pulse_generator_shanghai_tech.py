@@ -97,7 +97,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         except Exception as e:
             self._error_helper(message="Command pass through failed", error=e)
 
-    def _send_hardware_command(self, cmd: bytes):
+    def _send_hardware_command(self, cmd: bytes) -> None:
         self.device.write(cmd + b"\r\n")
         device_respond = self.device.readall()
         self._send_response(device_respond)
