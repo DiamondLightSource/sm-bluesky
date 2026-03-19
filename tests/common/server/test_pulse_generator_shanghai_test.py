@@ -87,7 +87,7 @@ def test_disconnect_hardware_exception_on_close(
         assert mock_server._hardware_connected is False
         assert "Error occurred while closing hardware connection" in caplog.text
         mock_server._send_error.assert_called_with(
-            "Error occurred while closing hardware connection Close failed"
+            "Error occurred while closing hardware connection: Close failed"
         )
 
 

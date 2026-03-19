@@ -22,7 +22,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         self.baud_rate: int = baud_rate
         self.timeout: float = timeout
         self.max_pulse_delay: float = max_pulse_delay
-        self.device: Serial
+        self.device: Serial | None = None
 
         # Expand the registry with Pulse Generator specific commands
         self._command_registry.update(
@@ -52,9 +52,8 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             try:
                 self.device.close()
             except Exception as e:
-                LOGGER.error(f"Error occurred while closing hardware connection {e}")
-                self._send_error(
-                    f"Error occurred while closing hardware connection {e}"
+                self._error_helper(
+                    message="Error occurred while closing hardware connection", error=e
                 )
             self._hardware_connected = False
             LOGGER.info("Hardware disconnected successfully")
@@ -80,6 +79,10 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         LOGGER.info("Reading delay")
 
     def _reset_serial_buffer(self):
+        if not self.device:
+            raise ConnectionError(
+                "Hardware not connected. Call connect_hardware first."
+            )
         self.device.reset_input_buffer()
         self.device.reset_output_buffer()
         LOGGER.info("Reseting buffers")
@@ -88,6 +91,10 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         self._send_hardware_command(value)
 
     def _send_hardware_command(self, cmd: bytes) -> None:
+        if not self.device:
+            raise ConnectionError(
+                "Hardware not connected. Call connect_hardware first."
+            )
         self.device.write(cmd + b"\r\n")
         self.device.flush()
         device_respond = self.device.readline().strip()
