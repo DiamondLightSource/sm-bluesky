@@ -69,11 +69,13 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
 
         try:
             delay = int(value.decode("utf-8"))
-            if 1024 > delay >= 0:
+            if self.max_pulse_delay > delay >= 0:
                 self._send_hardware_command(b"AT+DLSET=" + value)
                 LOGGER.info(f"Setting delay to {value}")
             else:
-                self._error_helper("Delay must be between 0 and 1023")
+                raise ValueError(
+                    f"Delay {delay} is out of bounds (0-{self.max_pulse_delay - 1})"
+                )
 
         except Exception as e:
             self._error_helper(message="Set delay failed", error=e)
@@ -102,5 +104,6 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
 
     def _send_hardware_command(self, cmd: bytes) -> None:
         self.device.write(cmd + b"\r\n")
-        device_respond = self.device.readall()
+        self.device.flush()
+        device_respond = self.device.readline()
         self._send_response(device_respond)

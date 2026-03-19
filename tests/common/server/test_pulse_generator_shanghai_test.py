@@ -93,11 +93,11 @@ def test_set_delay_success(
 ) -> None:
     mock_respond = b"set success: 500"
     with patch.object(mock_server, "device") as mock_device:
-        mock_device.readall.return_value = mock_respond
+        mock_device.readline.return_value = mock_respond
         mock_server._send_response = MagicMock()
         mock_server._set_delay(b"500")
         mock_server._send_response.assert_called_once_with(mock_respond)
-        mock_device.readall.assert_called_once()
+        mock_device.readline.assert_called_once()
 
 
 def test_set_delay_failed(mock_server: GeneratorServerShanghaiTech) -> None:
@@ -118,13 +118,16 @@ def test_set_delay_failed_out_of_bound(
 
     mock_server._send_error = MagicMock()
     mock_server._set_delay(delay)
-    mock_server._send_error.assert_called_once_with("Delay must be between 0 and 1023")
+    mock_server._send_error.assert_called_once_with(
+        f"Set delay failed: Delay {delay.decode('utf-8')}"
+        + f" is out of bounds (0-{mock_server.max_pulse_delay - 1})"
+    )
 
 
 def test_get_delay_success(mock_server: GeneratorServerShanghaiTech) -> None:
     test_reading = b"Test reading"
     with patch.object(mock_server, "device") as mock_device:
-        mock_device.readall.return_value = test_reading
+        mock_device.readline.return_value = test_reading
         mock_server._send_response = MagicMock()
         mock_server._get_delay()
     mock_device.write.assert_called_once_with(b"AT+DLSET=?\r\n")
@@ -168,7 +171,7 @@ def test_passthrough_success(mock_server: GeneratorServerShanghaiTech):
     with patch.object(mock_server, "device", spec=Serial) as mock_device:
         mock_server._send_response = MagicMock()
         mock_server.device = mock_device
-        mock_server.device.readall.return_value = multi_line_responds
+        mock_server.device.readline.return_value = multi_line_responds
         mock_server._passthrough(command)
         mock_server.device.write.assert_called_once_with(command + b"\r\n")
         mock_server._send_response.assert_called_once_with(multi_line_responds)
