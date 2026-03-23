@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plan_stubs.motions &#8212; sm-bluesky 1.0.2.dev19+geb837db66 documentation</title>
+    <title>sm_bluesky.common.plan_stubs.motions &#8212; sm-bluesky 1.0.2.dev23+gde5c7f2bf documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=2eac16f0"></script>
+    <script src="../../../../_static/documentation_options.js?v=a873f923"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -443,16 +443,17 @@
                   
   <h1>Source code for sm_bluesky.common.plan_stubs.motions</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Iterator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Protocol</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bps</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">abs_set</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">HasName</span><span class="p">,</span> <span class="n">Movable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span><span class="p">,</span> <span class="n">plan</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.slits</span><span class="w"> </span><span class="kn">import</span> <span class="n">Slits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignalRW</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.motor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Motor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RootModel</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.sim_devices</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimMotorExtra</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
 
 
@@ -465,11 +466,16 @@
 
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">HighLowLimitsDevice</span><span class="p">(</span><span class="n">HasName</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="n">low_limit_travel</span><span class="p">:</span> <span class="n">SignalRW</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">high_limit_travel</span><span class="p">:</span> <span class="n">SignalRW</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+
+
 <div class="viewcode-block" id="move_motor_with_look_up">
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plan_stubs.html#sm_bluesky.common.plan_stubs.move_motor_with_look_up">[docs]</a>
 <span class="nd">@plan</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">move_motor_with_look_up</span><span class="p">(</span>
-    <span class="n">slit</span><span class="p">:</span> <span class="n">Motor</span> <span class="o">|</span> <span class="n">SimMotorExtra</span><span class="p">,</span>
+    <span class="n">slit</span><span class="p">:</span> <span class="n">Movable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
     <span class="n">size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">motor_table</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
     <span class="n">use_motor_position</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -550,27 +556,27 @@
 <div class="viewcode-block" id="check_within_limit">
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plan_stubs.html#sm_bluesky.common.plan_stubs.check_within_limit">[docs]</a>
 <span class="nd">@plan</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">check_within_limit</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">motor</span><span class="p">:</span> <span class="n">Motor</span> <span class="o">|</span> <span class="n">SimMotorExtra</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the given values are within the limits of the motor.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_within_limit</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">device</span><span class="p">:</span> <span class="n">HighLowLimitsDevice</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the given values are within the limits of the device.</span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    values : List[float]</span>
 <span class="sd">        The values to check.</span>
-<span class="sd">    motor : Motor</span>
-<span class="sd">        The motor to check the limits of.</span>
+<span class="sd">    device : HighLowLimitsDevice</span>
+<span class="sd">        The device to check the limits of.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If any value is outside the motor&#39;s limits.</span>
+<span class="sd">        If any value is outside the device&#39;s limits.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Check </span><span class="si">{</span><span class="n">motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> limits.&quot;</span><span class="p">)</span>
-    <span class="n">lower_limit</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">rd</span><span class="p">(</span><span class="n">motor</span><span class="o">.</span><span class="n">low_limit_travel</span><span class="p">)</span>
-    <span class="n">high_limit</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">rd</span><span class="p">(</span><span class="n">motor</span><span class="o">.</span><span class="n">high_limit_travel</span><span class="p">)</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Check </span><span class="si">{</span><span class="n">device</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> limits.&quot;</span><span class="p">)</span>
+    <span class="n">lower_limit</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">rd</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">low_limit_travel</span><span class="p">)</span>
+    <span class="n">high_limit</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">rd</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">high_limit_travel</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">lower_limit</span> <span class="o">&lt;</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">high_limit</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> move request of </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> is beyond limits:&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">device</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> move request of </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> is beyond limits:&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">lower_limit</span><span class="si">}</span><span class="s2"> &lt; </span><span class="si">{</span><span class="n">high_limit</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span></div>
 
