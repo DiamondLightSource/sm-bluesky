@@ -19,7 +19,7 @@ class MotorTable(RootModel):
     root: dict[str, float]
 
 
-class MotorWithLimits(HasName, Protocol):
+class HighLowLimitsDevice(HasName, Protocol):
     low_limit_travel: SignalRW[float]
     high_limit_travel: SignalRW[float]
 
@@ -101,27 +101,27 @@ def set_slit_size(
 
 
 @plan
-def check_within_limit(values: list[float], motor: MotorWithLimits):
-    """Check if the given values are within the limits of the motor.
+def check_within_limit(values: list[float], device: HighLowLimitsDevice):
+    """Check if the given values are within the limits of the device.
     Parameters
     ----------
     values : List[float]
         The values to check.
-    motor : Motor
-        The motor to check the limits of.
+    device : HighLowLimitsDevice
+        The device to check the limits of.
 
     Raises
     ------
     ValueError
-        If any value is outside the motor's limits.
+        If any value is outside the device's limits.
     """
-    LOGGER.info(f"Check {motor.name} limits.")
-    lower_limit = yield from bps.rd(motor.low_limit_travel)
-    high_limit = yield from bps.rd(motor.high_limit_travel)
+    LOGGER.info(f"Check {device.name} limits.")
+    lower_limit = yield from bps.rd(device.low_limit_travel)
+    high_limit = yield from bps.rd(device.high_limit_travel)
     for value in values:
         if not lower_limit < value < high_limit:
             raise ValueError(
-                f"{motor.name} move request of {value} is beyond limits:"
+                f"{device.name} move request of {value} is beyond limits:"
                 f"{lower_limit} < {high_limit}"
             )
 
