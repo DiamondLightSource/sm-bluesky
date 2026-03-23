@@ -169,6 +169,14 @@ def test_reset_serial_buffer_fail(mock_server: GeneratorServerShanghaiTech):
         )
 
 
+def test_reset_serial_buffer_fail_no_device(mock_server: GeneratorServerShanghaiTech):
+    mock_server.device = None
+    with pytest.raises(
+        ConnectionError, match="Hardware not connected. Call connect_hardware first."
+    ):
+        mock_server._reset_serial_buffer()
+
+
 def test_passthrough_success(mock_server: GeneratorServerShanghaiTech):
     command = b"some commands"
     multi_line_responds = b"somethn\r\nsomethingelse\r\nmore"
@@ -190,6 +198,14 @@ def test_passthrough_failed(mock_server: GeneratorServerShanghaiTech):
         mock_server._send_error.assert_called_once_with(
             "Error handling command 'pass_command': Command pass through failed"
         )
+
+
+def test_send_hardware_command_fail_no_device(mock_server: GeneratorServerShanghaiTech):
+    mock_server.device = None
+    with pytest.raises(
+        ConnectionError, match="Hardware not connected. Call connect_hardware first."
+    ):
+        mock_server._send_hardware_command(cmd=b"some command")
 
 
 @pytest.fixture
