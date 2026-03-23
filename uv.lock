@@ -5452,8 +5452,12 @@ dependencies = [
     { name = "bluesky" },
     { name = "dls-dodal" },
     { name = "ophyd-async", extra = ["sim"] },
-    { name = "pyserial" },
     { name = "scanspec" },
+]
+
+[package.optional-dependencies]
+server = [
+    { name = "pyserial" },
 ]
 
 [package.dev-dependencies]
@@ -5475,6 +5479,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "sm-bluesky", extra = ["server"] },
     { name = "sphinx-autobuild" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
@@ -5487,9 +5492,10 @@ requires-dist = [
     { name = "bluesky" },
     { name = "dls-dodal", specifier = ">=2.1.0" },
     { name = "ophyd-async", extras = ["sim"] },
-    { name = "pyserial" },
+    { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },
 ]
+provides-extras = ["server"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -5509,6 +5515,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "sm-bluesky", extras = ["server"] },
     { name = "sphinx-autobuild" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
