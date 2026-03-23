@@ -71,3 +71,30 @@ def test_disconnect_hardware(mock_server: HF2Server):
         mock_server.disconnect_hardware()
         mock_device.disconnect.assert_called_once()
         assert mock_server.device is None
+
+
+@pytest.mark.parametrize(
+    "args, expected",
+    [
+        ([b"10"], [10, 4096, 0, 0]),
+        ([b"10", b"11"], [10, 11, 0, 0]),
+        ([b"10", b"11", b"322"], [10, 11, 322, 0]),
+    ],
+)
+def test_setup_scope_success(args: list, expected: list, mock_server: HF2Server):
+    cmd = ["time", "length", "channels/0/inputselect", "enable"]
+    with patch.object(mock_server, "device") as mock_device:
+        mock_device.set = MagicMock()
+        mock_server._setup_scope(*args)
+        for i, arg in enumerate(mock_device.set.call_args_list):
+            assert arg.args == (
+                f"/{mock_server.device_id}/scopes/0/{cmd[i]}",
+                expected[i],
+            )
+
+
+def test_setup_scope_failed_no_device(mock_server: HF2Server):
+    mock_server.device = None
+    mock_server._send_error = MagicMock()
+    with pytest.raises(ConnectionError, match="Lockin amplifier not connected"):
+        mock_server._setup_scope()
