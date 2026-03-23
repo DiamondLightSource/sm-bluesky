@@ -8,7 +8,6 @@ from dodal.devices.slits import Slits
 from ophyd_async.epics.motor import Motor
 from pydantic import RootModel
 
-from sm_bluesky.common.sim_devices import SimMotorExtra
 from sm_bluesky.log import LOGGER
 
 
@@ -20,7 +19,7 @@ class MotorTable(RootModel):
 
 @plan
 def move_motor_with_look_up(
-    slit: Motor | SimMotorExtra,
+    slit: Motor,
     size: float,
     motor_table: dict[str, float],
     use_motor_position: bool = False,
@@ -95,7 +94,7 @@ def set_slit_size(
 
 
 @plan
-def check_within_limit(values: list[float], motor: Motor | SimMotorExtra):
+def check_within_limit(values: list[float], motor: Motor):
     """Check if the given values are within the limits of the motor.
     Parameters
     ----------
