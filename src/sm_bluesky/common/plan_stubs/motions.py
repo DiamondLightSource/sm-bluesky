@@ -1,14 +1,15 @@
 from collections.abc import Hashable, Iterator
-from typing import Any
+from typing import Any, Protocol
 
 import bluesky.plan_stubs as bps
 from bluesky.plan_stubs import abs_set
+from bluesky.protocols import HasName, Movable
 from bluesky.utils import MsgGenerator, plan
 from dodal.devices.slits import Slits
+from ophyd_async.core import SignalRW
 from ophyd_async.epics.motor import Motor
 from pydantic import RootModel
 
-from sm_bluesky.common.sim_devices import SimMotorExtra
 from sm_bluesky.log import LOGGER
 
 
@@ -18,9 +19,14 @@ class MotorTable(RootModel):
     root: dict[str, float]
 
 
+class MotorWithLimits(HasName, Protocol):
+    low_limit_travel: SignalRW[float]
+    high_limit_travel: SignalRW[float]
+
+
 @plan
 def move_motor_with_look_up(
-    slit: Motor | SimMotorExtra,
+    slit: Movable[float],
     size: float,
     motor_table: dict[str, float],
     use_motor_position: bool = False,
@@ -95,7 +101,7 @@ def set_slit_size(
 
 
 @plan
-def check_within_limit(values: list[float], motor: Motor | SimMotorExtra):
+def check_within_limit(values: list[float], motor: MotorWithLimits):
     """Check if the given values are within the limits of the motor.
     Parameters
     ----------
