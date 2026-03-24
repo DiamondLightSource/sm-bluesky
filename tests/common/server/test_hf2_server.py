@@ -1,5 +1,6 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
+import numpy as np
 import pytest
 from zhinst.core import ziDAQServer
 
@@ -76,12 +77,12 @@ def test_disconnect_hardware(mock_server: HF2Server):
 @pytest.mark.parametrize(
     "args, expected",
     [
-        ([b"10"], [10, 4096, 0, 0]),
-        ([b"10", b"11"], [10, 11, 0, 0]),
-        ([b"10", b"11", b"322"], [10, 11, 322, 0]),
+        ([10], [10, 4096, 0, 0]),
+        ([10, 11], [10, 11, 0, 0]),
+        ([10, 11, 322], [10, 11, 322, 0]),
     ],
 )
-def test_setup_scope_success(args: list, expected: list, mock_server: HF2Server):
+def test_setup_scope_success(args: list[int], expected: list, mock_server: HF2Server):
     cmd = ["time", "length", "channels/0/inputselect", "enable"]
     with patch.object(mock_server, "device") as mock_device:
         mock_device.set = MagicMock()
@@ -98,3 +99,47 @@ def test_setup_scope_failed_no_device(mock_server: HF2Server):
     mock_server._send_error = MagicMock()
     with pytest.raises(ConnectionError, match="Lockin amplifier not connected"):
         mock_server._setup_scope()
+
+
+@patch("sm_bluesky.common.server.zurich_lockin_amplifier.sleep")
+def test_get_single_scope_shot_success(mock_sleep: MagicMock, mock_server: HF2Server):
+
+    mock_server._scope_frequency = 1000
+    mock_server.device = MagicMock()
+    mock_server.scope = MagicMock()
+    mock_wave = np.array([1.0, 2.0, 3.0, 4.0])
+    mock_result = {"/dev4206/scopes/0/wave": [[{"wave": [mock_wave]}]]}
+    mock_server.scope.read.return_value = mock_result
+    result = mock_server._get_single_scope_shot()
+    assert result == 2.5
+
+    expected_device_calls = [
+        call.__bool__(),
+        call.set("/dev4206/scopes/0/enable", 0),
+        call.setInt("/dev4206/scopes/0/single", 1),
+        call.setInt("/dev4206/scopes/0/enable", 1),
+        call.sync(),
+        call.set("/dev4206/scopes/0/enable", 0),
+    ]
+    mock_server.device.assert_has_calls(expected_device_calls, any_order=False)
+    expected_scope_calls = [
+        call.__bool__(),
+        call.set("scopeModule/mode", 1),
+        call.subscribe("/dev4206/scopes/0/wave/"),
+        call.execute(),
+        call.finish(),
+        call.read(True),
+        call.unsubscribe("*"),
+    ]
+    mock_server.scope.assert_has_calls(expected_scope_calls, any_order=False)
+    assert 1.0 / 1000.0 + mock_server._minimum_scope_wait == pytest.approx(
+        mock_sleep.call_args.args[0], rel=0.01
+    )
+
+
+def test_get_single_scope_shot_connection_error(mock_server: HF2Server):
+    """Verifies that it raises ConnectionError if components are missing."""
+    mock_server.device = None  # Simulate disconnected state
+
+    with pytest.raises(ConnectionError, match="Lockin amplifier not connected"):
+        mock_server._get_single_scope_shot()
