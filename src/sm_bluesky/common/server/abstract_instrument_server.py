@@ -143,7 +143,8 @@ class AbstractInstrumentServer(ABC):
             )
         else:
             try:
-                handler(args) if args else handler()
+                arg_list = args.split(b"\t") if args else []
+                handler(*arg_list)
 
             except Exception as e:
                 self._error_helper(
