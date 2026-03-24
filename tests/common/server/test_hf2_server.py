@@ -219,6 +219,13 @@ def test_get_lockin_data_fail(mock_server: HF2Server):
             b"Harmonic set",
         ),
         ("_set_ref_freq", b"20.5", "/dev4206/oscs/0/freq", 20.5, b"Frequency set"),
+        (
+            "_set_current_range",
+            b"1e-4",
+            "/dev4206/currins/0/range",
+            10.0**-4,
+            b"Current range set",
+        ),
     ],
 )
 def test_commond_mapping_method_double(
@@ -239,30 +246,39 @@ def test_commond_mapping_method_double(
 
 
 @pytest.mark.parametrize(
-    "method_name, expected_path, expected_response",
+    "method_name, val_bytes, expected_path, expected_response",
     [
         (
             "_auto_voltage_range",
+            [],
             "/dev4206/sigins/0/autorange",
             b"Auto voltage triggered",
         ),
         (
             "_auto_current_range",
+            [],
             "/dev4206/currins/0/autorange",
             b"Auto current triggered",
+        ),
+        (
+            "_set_ref_output",
+            [b"1"],
+            "/dev4206/sigouts/0/enables/1",
+            b"Output set to",
         ),
     ],
 )
 def test_commond_mapping_method_int(
     mock_server: HF2Server,
     method_name: str,
+    val_bytes: bytes,
     expected_path: str,
     expected_response: bytes,
 ):
     method = getattr(mock_server, method_name)
     mock_server._send_response = MagicMock()
     mock_server._device = MagicMock()
-    method()
+    method(*val_bytes)
 
     mock_server._device.setInt.assert_called_once_with(expected_path, 1)
     mock_server._send_response.assert_called_once_with(expected_response + b": 1")

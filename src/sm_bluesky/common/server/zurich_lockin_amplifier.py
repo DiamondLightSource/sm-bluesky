@@ -195,23 +195,29 @@ class HF2Server(AbstractInstrumentServer):
             self._send_response(response_msg + b": %f" % value)
 
     # --- Command Handlers ---
-    def _get_combined_data(self, value: bytes = b"0.1"):
-        duration = float(value.decode())
+    @auto_type_cast
+    def _get_combined_data(self, duration: float = 0.1):
         x, y, r, theta = self._get_lockin_data(duration)
         static = self._get_single_scope_shot()
         response = f"{x:e}, {y:e}, {theta:f}, {static:e}, {r:e}"
         self._send_response(response.encode())
 
-    def _set_current_range(self, value: bytes):
-        raw_val = float(value)
-        exponent = int(np.floor(np.log10(raw_val)))
-        self.device.setDouble(f"/{self.device_id}/currins/0/range", 10**exponent)
-        self._send_response(b"Current range set")
+    @auto_type_cast
+    def _set_current_range(self, value: float):
+        # current range is in multiple of 10 between 1e-9 to 1e-2
+        exponent = int(np.floor(np.log10(value)))
 
-    def _set_ref_output(self, value: bytes):
-        state = 1 if value.strip().lower() == b"on" else 0
-        self.device.setInt(f"/{self.device_id}/sigouts/0/enables/1", state)
-        self._send_response(f"Output set to {state}".encode())
+        self._set_node(
+            path="currins/0/range",
+            value=10.0**exponent,
+            response_msg=b"Current range set",
+        )
+
+    @auto_type_cast
+    def _set_ref_output(self, value: int):
+        self._set_node(
+            path="sigouts/0/enables/1", value=value, response_msg=b"Output set to"
+        )
 
     @auto_type_cast
     def _setup_scope_cmd(self, freq: float = 5.0, length: int = 4096, channel: int = 0):
