@@ -79,5 +79,5 @@ def grid_analyserscan(
 
 
 @plan
-def test_move(*args: Movable[Any] | Any):
+def test_move(*args: Movable[Any] | Any) -> MsgGenerator:
     yield from bps.abs_set(args[0], args[1])
