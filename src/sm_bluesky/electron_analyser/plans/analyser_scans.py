@@ -1,6 +1,7 @@
 from collections.abc import Iterable, Sequence
 from typing import Any
 
+from bluesky import plan_stubs as bps
 from bluesky.plans import count, grid_scan, scan
 from bluesky.protocols import Movable, Readable
 from bluesky.utils import (
@@ -75,3 +76,8 @@ def grid_analyserscan(
         per_step=analyser_nd_step,
         md=md,
     )
+
+
+@plan
+def test_move(*args: Movable[Any] | Any):
+    yield from bps.abs_set(args[0], args[1])
