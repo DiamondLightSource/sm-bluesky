@@ -1,5 +1,6 @@
-import signal
+import ctypes
 import socket
+import threading
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from contextlib import contextmanager
@@ -74,16 +75,28 @@ class AbstractInstrumentServer(ABC):
     @contextmanager
     def _hardware_watch(self, seconds: int = 60):
         """Context manager to interrupt hardware calls that took too long."""
+        target_tid = threading.get_ident()
+        stop_event = threading.Event()
 
-        def handler(signum, frame):
-            raise TimeoutError(f"Hardware call timed out after {seconds}s")
+        def trigger_timeout():
+            if not stop_event.wait(timeout=seconds):
+                # Inject TimeoutError and kill the thread
+                res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                    ctypes.c_long(target_tid), ctypes.py_object(TimeoutError)
+                )
+                if res > 1:
+                    # If it affected more than one thread, undo it!
+                    ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                        ctypes.c_long(target_tid), None
+                    )
 
-        signal.signal(signal.SIGALRM, handler)
-        signal.alarm(seconds)
+        monitor = threading.Thread(target=trigger_timeout, daemon=True)
+        monitor.start()
+
         try:
             yield
         finally:
-            signal.alarm(0)
+            stop_event.set()
 
     def stop(self) -> None:
         """Stops the server, closes sockets, and disconnects hardware."""
@@ -153,7 +166,7 @@ class AbstractInstrumentServer(ABC):
         if not handler:
             self._error_helper(
                 message=f"Received unknown command: '{cmd.decode()}'",
-                error=Exception("Unknow command"),
+                error=Exception("Unknown command"),
                 level=logging.WARNING,
             )
         else:
