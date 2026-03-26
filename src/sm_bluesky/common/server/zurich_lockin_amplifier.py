@@ -1,5 +1,3 @@
-import functools
-import inspect
 from time import sleep, time
 from typing import Literal
 
@@ -7,41 +5,8 @@ import numpy as np
 from zhinst.core import ScopeModule, ziDAQServer
 
 from sm_bluesky.common.server import AbstractInstrumentServer
+from sm_bluesky.common.utils import auto_type_cast
 from sm_bluesky.log import LOGGER
-
-
-def auto_type_cast(func):
-    """Automatically casts byte arguments to the types hinted
-    in the function signature."""
-
-    @functools.wraps(func)
-    def wrapper(self, *args: bytes):
-        sig = inspect.signature(func)
-        params = list(sig.parameters.values())[1:]
-
-        casted_args = []
-        for i, arg in enumerate(args):
-            if i < len(params):
-                target_type = params[i].annotation
-                try:
-                    decoded = arg.decode("utf-8")
-                    if target_type is float:
-                        casted_args.append(float(decoded))
-                    elif target_type is int:
-                        casted_args.append(int(decoded))
-                    else:
-                        casted_args.append(decoded)
-                except ValueError as err:
-                    raise ValueError(
-                        f"Argument '{arg}' cannot be converted to "
-                        f"{target_type.__name__}"
-                    ) from err
-            else:
-                casted_args.append(arg)
-
-        return func(self, *casted_args)
-
-    return wrapper
 
 
 class HF2Server(AbstractInstrumentServer):

@@ -1,6 +1,7 @@
+import inspect
 from collections.abc import Callable
 from functools import wraps
-from typing import Any, TypeVar, cast
+from typing import Any, ParamSpec, TypeVar, cast, get_type_hints
 
 from bluesky.utils import MsgGenerator
 
@@ -46,3 +47,36 @@ def add_extra_names_to_meta(
         return md
     md[key] = names
     return md
+
+
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def auto_type_cast(func: Callable[P, R]) -> Callable[P, R]:
+    """
+    Casts positional byte arguments to hinted types.
+    Skips 'self' and handles empty strings gracefully.
+    """
+
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        sig = inspect.signature(func)
+        hints = get_type_hints(func)
+
+        bound_args = sig.bind(*args, **kwargs)
+        bound_args.apply_defaults()
+
+        for name, value in bound_args.arguments.items():
+            if isinstance(value, bytes) and name in hints:
+                target_type = hints[name]
+                try:
+                    str_val = value.decode("utf-8")
+                    if target_type in (int, float, str):
+                        bound_args.arguments[name] = target_type(str_val)
+                except (ValueError, UnicodeDecodeError) as e:
+                    raise TypeError(f"Argument '{name}' casting failed: {e}") from e
+
+        return func(*bound_args.args, **bound_args.kwargs)
+
+    return wrapper
