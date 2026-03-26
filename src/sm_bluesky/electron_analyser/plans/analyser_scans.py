@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from typing import Any
+from typing import Annotated, Any, TypeVar
 
 from bluesky import plan_stubs as bps
 from bluesky.plans import count, grid_scan, scan
@@ -78,8 +78,35 @@ def grid_analyserscan(
     )
 
 
+T = TypeVar("T")
+
+Group = Annotated[str, "String identifier used by 'wait' or stubs that await"]
+
+
+def set_relative2(
+    movable: Movable[T], value: T, group: Group | None = None, wait: bool = False
+) -> MsgGenerator:
+    """Change a device, wrapper for `bp.rel_set`.
+
+    Args:
+        movable (Movable): The device to set.
+        value (T): The new value.
+        group (Group | None, optional): The message group to associate with the setting,
+            for sequencing. Defaults to None.
+        wait (bool, optional): The group should wait until all setting is complete (e.g.
+            a motor has finished moving). Defaults to False.
+
+    Returns:
+        MsgGenerator: Plan.
+
+    Yields:
+        Iterator[MsgGenerator]: Bluesky messages.
+    """
+    return (yield from bps.rel_set(movable, value, group=group, wait=wait))
+
+
 @plan
 def test_move(
     *args: Movable[Any] | Any, group: str | None = None, wait: bool = True
 ) -> MsgGenerator:
-    return (yield from bps.abs_set(args[0], args[1], group=group, wait=wait))
+    yield from bps.abs_set(args[0], args[1], group=group, wait=wait)
