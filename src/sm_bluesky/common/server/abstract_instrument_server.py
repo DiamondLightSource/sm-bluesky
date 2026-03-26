@@ -1,9 +1,8 @@
-import ctypes
 import socket
-import threading
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from contextlib import contextmanager
+from time import time
 
 from sm_bluesky.log import LOGGER, logging
 
@@ -73,30 +72,15 @@ class AbstractInstrumentServer(ABC):
             LOGGER.info(f"Client {addr} disconnected. Server ready.")
 
     @contextmanager
-    def _hardware_watch(self, seconds: int = 60):
-        """Context manager to interrupt hardware calls that took too long."""
-        target_tid = threading.get_ident()
-        stop_event = threading.Event()
-
-        def trigger_timeout():
-            if not stop_event.wait(timeout=seconds):
-                # Inject TimeoutError and kill the thread
-                res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                    ctypes.c_long(target_tid), ctypes.py_object(TimeoutError)
-                )
-                if res > 1:
-                    # If it affected more than one thread, undo it!
-                    ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                        ctypes.c_long(target_tid), None
-                    )
-
-        monitor = threading.Thread(target=trigger_timeout, daemon=True)
-        monitor.start()
-
+    def _timeout_context(self, seconds: int):
+        """
+        Provides a deadline for hardware operations.
+        """
+        deadline = time() + seconds
         try:
-            yield
+            yield deadline
         finally:
-            stop_event.set()
+            pass
 
     def stop(self) -> None:
         """Stops the server, closes sockets, and disconnects hardware."""
@@ -171,7 +155,7 @@ class AbstractInstrumentServer(ABC):
             )
         else:
             try:
-                with self._hardware_watch(seconds=60):
+                with self._timeout_context(seconds=60):
                     arg_list = args.split(b"\t") if args else []
                     handler(*arg_list)
 
