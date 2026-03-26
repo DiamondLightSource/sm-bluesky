@@ -1,3 +1,4 @@
+import signal
 import socket
 from abc import ABC, abstractmethod
 from collections.abc import Callable
@@ -69,6 +70,20 @@ class AbstractInstrumentServer(ABC):
         finally:
             self._disconnect_client()
             LOGGER.info(f"Client {addr} disconnected. Server ready.")
+
+    @contextmanager
+    def _hardware_watch(self, seconds: int = 60):
+        """Context manager to interrupt hardware calls that took too long."""
+
+        def handler(signum, frame):
+            raise TimeoutError(f"Hardware call timed out after {seconds}s")
+
+        signal.signal(signal.SIGALRM, handler)
+        signal.alarm(seconds)
+        try:
+            yield
+        finally:
+            signal.alarm(0)
 
     def stop(self) -> None:
         """Stops the server, closes sockets, and disconnects hardware."""
@@ -143,9 +158,15 @@ class AbstractInstrumentServer(ABC):
             )
         else:
             try:
-                arg_list = args.split(b"\t") if args else []
-                handler(*arg_list)
+                with self._hardware_watch(seconds=60):
+                    arg_list = args.split(b"\t") if args else []
+                    handler(*arg_list)
 
+            except TimeoutError as te:
+                self._error_helper(
+                    f"Error handling command: {cmd.decode()} - hardware not responding",
+                    te,
+                )
             except Exception as e:
                 self._error_helper(
                     message=f"Error handling command '{cmd.decode()}'", error=e

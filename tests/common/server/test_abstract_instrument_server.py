@@ -1,3 +1,4 @@
+import signal
 import socket
 from unittest.mock import MagicMock, patch
 
@@ -219,3 +220,27 @@ def test_dispatch_command_with_arg(mock_instrument: AbstractInstrumentServer):
     mock_instrument._handle_command.assert_called_once_with(
         b"command", b"argument\targument2"
     )
+
+
+def test_hardware_watch_timeout(mock_instrument: AbstractInstrumentServer):
+    """Tests that a TimeoutError (hardware_Watch trip) is caught and reported
+    correctly."""
+
+    cmd = b"getData"
+    args = b"0.1"
+    mock_handler = MagicMock(side_effect=TimeoutError("Hardware hung"))
+    mock_instrument._command_registry[cmd] = mock_handler
+    mock_instrument._error_helper = MagicMock()
+    mock_instrument._handle_command(cmd, args)
+    mock_instrument._error_helper.assert_called_once()
+    args_called, _ = mock_instrument._error_helper.call_args
+    assert "hardware not responding" in args_called[0].lower()
+    assert isinstance(args_called[1], TimeoutError)
+
+
+def test_hardware_watch_handler_definition(mock_instrument):
+    with patch("signal.signal") as mock_signal_reg:
+        with mock_instrument._hardware_watch(seconds=5):
+            captured_handler = mock_signal_reg.call_args[0][1]
+            with pytest.raises(TimeoutError, match="Hardware call timed out after 5s"):
+                captured_handler(signal.SIGALRM, None)
