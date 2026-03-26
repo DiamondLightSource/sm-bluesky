@@ -1,4 +1,6 @@
+import ctypes
 import socket
+import threading
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from contextlib import contextmanager
@@ -70,6 +72,32 @@ class AbstractInstrumentServer(ABC):
             self._disconnect_client()
             LOGGER.info(f"Client {addr} disconnected. Server ready.")
 
+    @contextmanager
+    def _hardware_watch(self, seconds: int = 60):
+        """Context manager to interrupt hardware calls that took too long."""
+        target_tid = threading.get_ident()
+        stop_event = threading.Event()
+
+        def trigger_timeout():
+            if not stop_event.wait(timeout=seconds):
+                # Inject TimeoutError and kill the thread
+                res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                    ctypes.c_long(target_tid), ctypes.py_object(TimeoutError)
+                )
+                if res > 1:
+                    # If it affected more than one thread, undo it!
+                    ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                        ctypes.c_long(target_tid), None
+                    )
+
+        monitor = threading.Thread(target=trigger_timeout, daemon=True)
+        monitor.start()
+
+        try:
+            yield
+        finally:
+            stop_event.set()
+
     def stop(self) -> None:
         """Stops the server, closes sockets, and disconnects hardware."""
         self._disconnect_client()
@@ -138,14 +166,20 @@ class AbstractInstrumentServer(ABC):
         if not handler:
             self._error_helper(
                 message=f"Received unknown command: '{cmd.decode()}'",
-                error=Exception("Unknow command"),
+                error=Exception("Unknown command"),
                 level=logging.WARNING,
             )
         else:
             try:
-                arg_list = args.split(b"\t") if args else []
-                handler(*arg_list)
+                with self._hardware_watch(seconds=60):
+                    arg_list = args.split(b"\t") if args else []
+                    handler(*arg_list)
 
+            except TimeoutError as te:
+                self._error_helper(
+                    f"Error handling command: {cmd.decode()} - hardware not responding",
+                    te,
+                )
             except Exception as e:
                 self._error_helper(
                     message=f"Error handling command '{cmd.decode()}'", error=e
