@@ -244,3 +244,11 @@ def test_hardware_watch_handler_definition(mock_instrument):
             captured_handler = mock_signal_reg.call_args[0][1]
             with pytest.raises(TimeoutError, match="Hardware call timed out after 5s"):
                 captured_handler(signal.SIGALRM, None)
+
+
+def test_hardware_watch_disarms_on_success(mock_instrument):
+    with patch("signal.alarm") as mock_alarm:
+        with mock_instrument._hardware_watch(seconds=10):
+            mock_alarm.assert_called_with(10)
+
+        mock_alarm.assert_called_with(0)
