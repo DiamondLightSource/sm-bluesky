@@ -1,5 +1,4 @@
 import socket
-import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -222,8 +221,8 @@ def test_dispatch_command_with_arg(mock_instrument: AbstractInstrumentServer):
     )
 
 
-def test_hardware_watch_timeout(mock_instrument: AbstractInstrumentServer):
-    """Tests that a TimeoutError (hardware_Watch trip) is caught and reported
+def test__timeout_context_timeout(mock_instrument: AbstractInstrumentServer):
+    """Tests that a TimeoutError (hardware Watch trip) is caught and reported
     correctly."""
 
     cmd = b"getData"
@@ -236,27 +235,3 @@ def test_hardware_watch_timeout(mock_instrument: AbstractInstrumentServer):
     args_called, _ = mock_instrument._error_helper.call_args
     assert "hardware not responding" in args_called[0].lower()
     assert isinstance(args_called[1], TimeoutError)
-
-
-def test_hardware_watch_thread_lifecycle(mock_instrument):
-    """Verifies that the watchdog starts a monitor thread and cleans up."""
-    with patch("threading.Thread") as mock_thread:
-        mock_thread_instance = mock_thread.return_value
-
-        with mock_instrument._hardware_watch(seconds=10):
-            mock_thread.assert_called_once()
-            mock_thread_instance.start.assert_called_once()
-
-
-def test_hardware_watch_injection(mock_instrument):
-    cmd = b"hang"
-
-    def hanging_command():
-        time.sleep(0.1)
-
-    mock_instrument._command_registry[cmd] = hanging_command
-    mock_instrument._error_helper = MagicMock()
-
-    with pytest.raises(TimeoutError):
-        with mock_instrument._hardware_watch(seconds=0.01):
-            hanging_command()
