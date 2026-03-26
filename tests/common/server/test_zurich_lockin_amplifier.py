@@ -298,3 +298,11 @@ def test_get_combined_data(
     mock_server._get_single_scope_shot.assert_called_once()
     response = f"{1:e}, {2:e}, {4:f}, {5:e}, {3:e}".encode()
     mock_server._send_response.assert_called_once_with(response)
+
+
+def test_setup_scope_cmd(mock_server: HF2Server):
+    mock_server._setup_scope = MagicMock()
+    mock_server._send_response = MagicMock()
+    mock_server._setup_scope_cmd()
+    assert mock_server._send_response(b"Scope configured")
+    mock_server._setup_scope.assert_called_once()

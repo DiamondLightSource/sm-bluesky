@@ -168,6 +168,11 @@ class HF2Server(AbstractInstrumentServer):
         self._send_response(response.encode())
 
     @auto_type_cast
+    def _setup_scope_cmd(self, freq: float = 5.0, length: int = 4096, channel: int = 0):
+        self._setup_scope(freq, length, channel)
+        self._send_response(b"Scope configured")
+
+    @auto_type_cast
     def _set_current_range(self, value: float):
         # current range is in multiple of 10 between 1e-9 to 1e-2
         exponent = int(np.floor(np.log10(value)))
@@ -184,12 +189,6 @@ class HF2Server(AbstractInstrumentServer):
             path="sigouts/0/enables/1", value=value, response_msg=b"Output set to"
         )
 
-    @auto_type_cast
-    def _setup_scope_cmd(self, freq: float = 5.0, length: int = 4096, channel: int = 0):
-        self._setup_scope(freq, length, channel)
-        self._send_response(b"Scope configured")
-
-    # Add command mappings...
     def _auto_voltage_range(self):
         self._set_node(
             path="sigins/0/autorange", value=1, response_msg=b"Auto voltage triggered"
