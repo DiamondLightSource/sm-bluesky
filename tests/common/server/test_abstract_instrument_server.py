@@ -252,18 +252,11 @@ def test_hardware_watch_injection(mock_instrument):
     cmd = b"hang"
 
     def hanging_command():
-        time.sleep(0.1)  # Sleep longer than the watchdog
+        time.sleep(0.1)
 
     mock_instrument._command_registry[cmd] = hanging_command
     mock_instrument._error_helper = MagicMock()
 
-    with patch.object(
-        mock_instrument,
-        "_handle_command",
-        side_effect=lambda c, a: mock_instrument.__class__._handle_command(
-            mock_instrument, c, a
-        ),
-    ):
-        with pytest.raises(TimeoutError):
-            with mock_instrument._hardware_watch(seconds=0.01):
-                hanging_command()
+    with pytest.raises(TimeoutError):
+        with mock_instrument._hardware_watch(seconds=0.01):
+            hanging_command()
