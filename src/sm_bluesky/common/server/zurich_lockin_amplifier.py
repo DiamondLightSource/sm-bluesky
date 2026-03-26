@@ -196,7 +196,7 @@ class HF2Server(AbstractInstrumentServer):
 
     # --- Command Handlers ---
     @auto_type_cast
-    def _get_combined_data(self, duration: float = 0.1):
+    def _get_combined_data(self, duration: float = 0.1) -> None:
         x, y, r, theta = self._get_lockin_data(duration)
         static = self._get_single_scope_shot()
         response = f"{x:e}, {y:e}, {theta:f}, {static:e}, {r:e}"

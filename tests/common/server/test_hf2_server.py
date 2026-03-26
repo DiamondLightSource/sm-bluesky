@@ -282,3 +282,19 @@ def test_commond_mapping_method_int(
 
     mock_server._device.setInt.assert_called_once_with(expected_path, 1)
     mock_server._send_response.assert_called_once_with(expected_response + b": 1")
+
+
+def test_get_combined_data(
+    mock_server: HF2Server,
+):
+    duration = b"0.2"
+    mock_server._get_lockin_data = MagicMock(return_value={1, 2, 3, 4})
+    mock_server._get_single_scope_shot = MagicMock(return_value=5)
+    mock_server._send_response = MagicMock()
+    mock_server._get_combined_data(duration)  # type: ignore
+    mock_server._get_lockin_data.assert_called_once_with(
+        float(duration.decode("utf-8"))
+    )
+    mock_server._get_single_scope_shot.assert_called_once()
+    response = f"{1:e}, {2:e}, {4:f}, {5:e}, {3:e}".encode()
+    mock_server._send_response.assert_called_once_with(response)
