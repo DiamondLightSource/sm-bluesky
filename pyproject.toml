@@ -21,14 +21,19 @@ dependencies = [
     "dls-dodal>=2.2.0",
     "ophyd-async[sim]",
     "scanspec",
+
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
 readme = "README.md"
 requires-python = ">=3.11"
 
+
+[project.optional-dependencies]
+server = ["pyserial"]
 [dependency-groups]
 dev = [
+    "sm_bluesky[server]",
     "copier",
     "myst-parser",
     "pre-commit",
