@@ -107,6 +107,6 @@ def set_relative2(
 
 @plan
 def test_move(
-    *args: Movable[Any] | Any, group: str | None = None, wait: bool = True
+    args: list[Movable[Any] | Any], *, group: str | None = None, wait: bool = True
 ) -> MsgGenerator:
     yield from bps.abs_set(args[0], args[1], group=group, wait=wait)
