@@ -1,5 +1,5 @@
-import signal
 import socket
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -130,7 +130,7 @@ def test_send_unknow_command_error(mock_instrument: AbstractInstrumentServer):
     mock_instrument._conn.sendall = MagicMock()
     mock_instrument._handle_command(b"sdljkfnsdouifn", b"")
     mock_instrument._conn.sendall.assert_called_once_with(
-        b"0\tReceived unknown command: 'sdljkfnsdouifn': Unknow command\n"
+        b"0\tReceived unknown command: 'sdljkfnsdouifn': Unknown command\n"
     )
 
 
@@ -238,17 +238,32 @@ def test_hardware_watch_timeout(mock_instrument: AbstractInstrumentServer):
     assert isinstance(args_called[1], TimeoutError)
 
 
-def test_hardware_watch_handler_definition(mock_instrument):
-    with patch("signal.signal") as mock_signal_reg:
-        with mock_instrument._hardware_watch(seconds=5):
-            captured_handler = mock_signal_reg.call_args[0][1]
-            with pytest.raises(TimeoutError, match="Hardware call timed out after 5s"):
-                captured_handler(signal.SIGALRM, None)
+def test_hardware_watch_thread_lifecycle(mock_instrument):
+    """Verifies that the watchdog starts a monitor thread and cleans up."""
+    with patch("threading.Thread") as mock_thread:
+        mock_thread_instance = mock_thread.return_value
 
-
-def test_hardware_watch_disarms_on_success(mock_instrument):
-    with patch("signal.alarm") as mock_alarm:
         with mock_instrument._hardware_watch(seconds=10):
-            mock_alarm.assert_called_with(10)
+            mock_thread.assert_called_once()
+            mock_thread_instance.start.assert_called_once()
 
-        mock_alarm.assert_called_with(0)
+
+def test_hardware_watch_injection(mock_instrument):
+    cmd = b"hang"
+
+    def hanging_command():
+        time.sleep(0.1)  # Sleep longer than the watchdog
+
+    mock_instrument._command_registry[cmd] = hanging_command
+    mock_instrument._error_helper = MagicMock()
+
+    with patch.object(
+        mock_instrument,
+        "_handle_command",
+        side_effect=lambda c, a: mock_instrument.__class__._handle_command(
+            mock_instrument, c, a
+        ),
+    ):
+        with pytest.raises(TimeoutError):
+            with mock_instrument._hardware_watch(seconds=0.01):
+                hanging_command()
