@@ -5,11 +5,12 @@ from bluesky.plan_stubs import sleep
 from bluesky.plans import count
 from bluesky.run_engine import RunEngine
 
-from sm_bluesky.common.helper.add_meta import (
+from sm_bluesky.common.sim_devices import SimStage
+from sm_bluesky.common.utils.decorators import (
     add_default_metadata,
     add_extra_names_to_meta,
+    auto_type_cast,
 )
-from sm_bluesky.common.sim_devices import SimStage
 
 DEFAULT_METADATA = {
     "energy": {"value": 1.8, "unit": "eV"},
@@ -97,3 +98,49 @@ def test_add_extra_names_to_meta_dictionary_fail_value_not_list() -> None:
     md = {"Bound": some_plan}
     with pytest.raises(TypeError):
         md = add_extra_names_to_meta(md=md, key="Bound", names=["James"])
+
+
+class TestCasting:
+    @auto_type_cast
+    def set_params(
+        self,
+        integer: int = 1,
+        double: float = 5.0,
+        string: str = "string",
+    ):
+        return integer, double, string
+
+
+@pytest.fixture
+def test_casting():
+    return TestCasting()
+
+
+def test_auto_type_cast_default(test_casting: TestCasting):
+    interger, number, string = test_casting.set_params()
+
+    assert interger == 1
+    assert number == 5
+    assert string == "string"
+    assert isinstance(interger, int)
+    assert isinstance(number, float)
+    assert isinstance(string, str)
+
+
+def test_cast_invalid(test_casting: TestCasting):
+    with pytest.raises(TypeError, match="Argument 'integer' casting failed"):
+        test_casting.set_params(b"not_an_int", b"1.0", b"test")  # pyright: ignore[reportArgumentType]
+
+
+@pytest.mark.parametrize(
+    "test_input, expected_result",
+    [
+        ([b"5", b"6.5", b"hello"], (5, 6.5, "hello")),
+        ([b"10", b"0.0", b"world"], (10, 0.0, "world")),
+        ([b"1", b"1.1"], (1, 1.1, "string")),
+        ([b"1"], (1, 5, "string")),
+    ],
+)
+def test_auto_type_cast_multi(test_input, expected_result, test_casting: TestCasting):
+    result = test_casting.set_params(*test_input)
+    assert result == expected_result

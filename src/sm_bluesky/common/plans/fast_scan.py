@@ -12,8 +12,8 @@ from numpy import linspace
 from ophyd_async.core import FlyMotorInfo
 from ophyd_async.epics.motor import Motor
 
-from sm_bluesky.common.helper import add_extra_names_to_meta
 from sm_bluesky.common.plan_stubs import check_within_limit
+from sm_bluesky.common.utils import add_extra_names_to_meta
 from sm_bluesky.log import LOGGER
 
 

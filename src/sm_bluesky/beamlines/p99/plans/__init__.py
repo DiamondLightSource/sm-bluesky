@@ -1,5 +1,5 @@
-from sm_bluesky.common.helper import add_default_metadata
 from sm_bluesky.common.plans import grid_fast_scan, grid_step_scan
+from sm_bluesky.common.utils import add_default_metadata
 
 P99_DEFAULT_METADATA = {
     "energy": {"value": 1.8, "unit": "eV"},
