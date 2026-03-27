@@ -1,4 +1,4 @@
-from time import sleep, time
+from time import sleep
 from typing import Literal
 
 import numpy as np
@@ -131,22 +131,26 @@ class HF2Server(AbstractInstrumentServer):
 
     def _get_lockin_data(self, duration: float) -> tuple[float, float, float, float]:
         """Averages demodulator data over a specific duration."""
-        x, y = [], []
-        start_time = time()
-        end_time = start_time + duration
-        start_avg_time = start_time + (duration * 0.5)
 
-        # Wait for stabilization
-        while time() < start_avg_time:
-            sleep(0.01)
+        path = f"/{self.device_id}/demods/0/sample"
+        self.device.subscribe(path)
+        try:
+            poll_results = self.device.poll(
+                recording_time_s=duration, timeout_ms=500, flat=True
+            )
+            if path in poll_results:
+                samples = poll_results[path]
+                avg_x = float(np.mean(samples["x"]))
+                avg_y = float(np.mean(samples["y"]))
+            else:
+                LOGGER.warning(
+                    f"Poll returned no data for {path}, falling back to getSample"
+                )
+                sample = self.device.getSample(path)
+                avg_x, avg_y = float(sample["x"]), float(sample["y"])
+        finally:
+            self.device.unsubscribe(path)
 
-        # Collect samples
-        while time() < end_time:
-            sample = self.device.getSample(f"/{self.device_id}/demods/0/sample")
-            x.append(sample["x"])
-            y.append(sample["y"])
-
-        avg_x, avg_y = float(np.mean(x)), float(np.mean(y))
         r = float(np.abs(avg_x + 1j * avg_y))
         theta = float(np.rad2deg(np.arctan2(avg_y, avg_x)))
         return avg_x, avg_y, r, theta

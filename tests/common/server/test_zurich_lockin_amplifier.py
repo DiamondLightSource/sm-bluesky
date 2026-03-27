@@ -163,27 +163,41 @@ def test_get_single_scope_shot_frequncy_error(mock_server: HF2Server):
         mock_server._get_single_scope_shot()
 
 
-@patch("sm_bluesky.common.server.zurich_lockin_amplifier.time")
-@patch("sm_bluesky.common.server.zurich_lockin_amplifier.sleep")
-def test_get_lockin_data_averaging(
-    mock_sleep: MagicMock, mock_time: MagicMock, mock_server: HF2Server
-):
+def test_get_lockin_data_averaging_polling_failed(mock_server: HF2Server):
     mock_server._device = MagicMock()
-    mock_time.side_effect = [100, 100.2, 100.4, 100.7, 100.8, 100.9, 102]
-    mock_server._device.getSample.side_effect = [
-        {"x": 1.0, "y": 2.0},
-        {"x": 3.0, "y": 4.0},
-    ]
+    mock_server._device.poll.return_value = {}
+    mock_server._device.getSample.return_value = {"x": 1.0, "y": 2.0}
 
     x, y, r, theta = mock_server._get_lockin_data(1.0)
+
+    assert x == 1.0
+    assert y == 2.0
+    assert r == pytest.approx(2.236, rel=1e-4)
+
+    assert theta == pytest.approx(63.434, rel=1e-4)
+    assert mock_server._device.getSample.call_count == 1
+
+
+def test_get_lockin_data_averaging_polling(mock_server: HF2Server):
+    path = f"/{mock_server.device_id}/demods/0/sample"
+    mock_server._device = MagicMock()
+    mock_server._device.poll.side_effect = [
+        {path: {"x": [1, 3.0], "y": [2, 4]}},
+    ]
+    duration = 1.0
+    x, y, r, theta = mock_server._get_lockin_data(duration)
 
     assert x == 2.0
     assert y == 3.0
     assert r == pytest.approx(3.60555, rel=1e-4)
 
     assert theta == pytest.approx(56.3099, rel=1e-4)
-    mock_sleep.assert_called_with(0.01)
-    assert mock_server._device.getSample.call_count == 2
+    mock_server._device.subscribe.assert_called_once_with(path)
+    mock_server._device.poll.assert_called_once_with(
+        recording_time_s=duration, timeout_ms=500, flat=True
+    )
+    mock_server._device.unsubscribe.assert_called_once_with(path)
+    assert mock_server._device.getSample.call_count == 0
 
 
 def test_get_lockin_data_fail(mock_server: HF2Server):
@@ -288,7 +302,7 @@ def test_get_combined_data(
     mock_server: HF2Server,
 ):
     duration = b"0.2"
-    mock_server._get_lockin_data = MagicMock(return_value={1, 2, 3, 4})
+    mock_server._get_lockin_data = MagicMock(return_value=(1, 2, 3, 4))
     mock_server._get_single_scope_shot = MagicMock(return_value=5)
     mock_server._send_response = MagicMock()
     mock_server._get_combined_data(duration)  # type: ignore
