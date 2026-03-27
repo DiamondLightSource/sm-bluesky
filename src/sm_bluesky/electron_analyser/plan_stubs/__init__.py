@@ -1,3 +1,3 @@
-from .analyser_per_step import analyser_nd_step, analyser_shot
+from .wrapped import set_region
 
-__all__ = ["analyser_shot", "analyser_nd_step"]
+__all__ = ["set_region"]
