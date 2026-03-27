@@ -48,7 +48,7 @@ async def test_analyserscan(
     args: list[SimMotor | int],
 ) -> None:
     run_engine(
-        analyserscan(sim_analyser, load_sequence(), extra_detectors, *args, num=10)
+        analyserscan(sim_analyser, load_sequence(), extra_detectors, args, num=10)
     )
 
 
@@ -66,4 +66,4 @@ async def test_grid_analyserscan(
     extra_detectors: Sequence[Readable],
     args: list[SimMotor | int],
 ) -> None:
-    run_engine(grid_analyserscan(sim_analyser, load_sequence(), extra_detectors, *args))
+    run_engine(grid_analyserscan(sim_analyser, load_sequence(), extra_detectors, args))
