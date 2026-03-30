@@ -22,6 +22,8 @@ class AbstractInstrumentServer(ABC):
         self._hardware_connected: bool = False
         self._server_socket: socket.socket
         self._conn: socket.socket | None = None
+        self._current_deadline: float | None = None
+        self._timeout_seconds: float = 60.0
         self.address_type = socket.AF_INET6 if ipv6 else socket.AF_INET
         self._command_registry: dict[bytes, Callable] = {
             b"connect_hardware": self.connect_hardware,
@@ -72,15 +74,16 @@ class AbstractInstrumentServer(ABC):
             LOGGER.info(f"Client {addr} disconnected. Server ready.")
 
     @contextmanager
-    def _timeout_context(self, seconds: int):
+    def _timeout_context(self, seconds: float):
         """
         Provides a deadline for hardware operations.
         """
-        deadline = time() + seconds
+        self._timeout_seconds = seconds
+        self._current_deadline = time() + seconds
         try:
-            yield deadline
+            yield self._current_deadline
         finally:
-            pass
+            self._current_deadline = None
 
     def stop(self) -> None:
         """Stops the server, closes sockets, and disconnects hardware."""
@@ -155,7 +158,7 @@ class AbstractInstrumentServer(ABC):
             )
         else:
             try:
-                with self._timeout_context(seconds=60):
+                with self._timeout_context(seconds=self._timeout_seconds):
                     arg_list = args.split(b"\t") if args else []
                     handler(*arg_list)
 
@@ -178,6 +181,12 @@ class AbstractInstrumentServer(ABC):
         err_msg = f"{message}: {error}" if error else message
         LOGGER.log(level=level, msg=err_msg)
         self._send_error(err_msg)
+
+    def _check_timeout(self, context: str = "Hardware operation"):
+        """Raises TimeoutError if the current operation has exceeded its deadline."""
+        if hasattr(self, "_current_deadline") and self._current_deadline is not None:
+            if time() > self._current_deadline:
+                raise TimeoutError(f"{context} exceeded {self._timeout_seconds}s limit")
 
     @abstractmethod
     def connect_hardware(self) -> bool:
