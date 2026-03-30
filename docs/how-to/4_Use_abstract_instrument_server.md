@@ -1,4 +1,4 @@
-# AbstractInstrumentServer
+# Instrument Server (AbstractInstrumentServer)
 
 A TCP server framework designed for interfacing with scientific instruments. This base class handles the network management, socket lifecycles, and command buffering, allowing you to focus exclusively on hardware-specific logic.
 
@@ -26,6 +26,16 @@ Commands must be newline-terminated.
 
 ---
 
+## Default Methods
+
+| Command | Arguments | Description |
+| :--- | :--- | :--- |
+ |`ping` | None | Returns `1\t` if server is alive. |
+| `connect_hardware`| None | Re-establishes connection to hardware server. |
+| `disconnect_hardware`| None | Safely disconnects from hardware. |
+| `shutdown` | None | Stops the server and disconnects hardware. |
+
+
 ## Implementation Guide
 
 To use this framework, create a subclass and implement the mandatory abstract methods.
@@ -38,7 +48,7 @@ class MyMotorServer(AbstractInstrumentServer):
     def __init__(self, host, port):
         super().__init__(host, port)
         # Add custom hardware commands to the registry
-        self._command_registry[b"move_abs"] = self.move_absolute
+        self._command_registry[b"move_abs"] = self._move_absolute
 
     def connect_hardware(self) -> bool:
         # Logic to initialize your physical device
@@ -49,7 +59,7 @@ class MyMotorServer(AbstractInstrumentServer):
         # Logic to safely shut down hardware
         print("Parking Motor...")
 
-    def move_absolute(self, position: bytes):
+    def _move_absolute(self, position: bytes):
         # Hardware logic: convert bytes arg to float
         pos_mm = float(position)
         print(f"Moving to {pos_mm}mm")
@@ -58,3 +68,10 @@ class MyMotorServer(AbstractInstrumentServer):
         self._check_timeout("Motor Move")
         
         self._send_response(b"Moved to " + position)
+if __name__ == "__main__":
+    # Initialize and start the server
+    server = MyInstrumentServer("127.0.0.1", 5000)
+    try:
+        server.start()
+    except KeyboardInterrupt:
+        server.stop()
