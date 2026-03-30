@@ -67,7 +67,12 @@ def auto_type_cast(func: Callable) -> Callable:
             if isinstance(value, bytes) and name in hints:
                 target_type = hints[name]
                 try:
-                    str_val = value.decode("utf-8")
+                    str_val = value.decode("utf-8").strip()
+                    if not str_val:
+                        default_val = sig.parameters[name].default
+                        if default_val is not inspect.Parameter.empty:
+                            bound_args.arguments[name] = default_val
+                            continue
                     if target_type in (int, float, str):
                         bound_args.arguments[name] = target_type(str_val)
                 except (ValueError, UnicodeDecodeError) as e:

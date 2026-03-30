@@ -137,7 +137,7 @@ def test_cast_invalid(test_casting: TestCasting):
     [
         ([b"5", b"6.5", b"hello"], (5, 6.5, "hello")),
         ([b"10", b"0.0", b"world"], (10, 0.0, "world")),
-        ([b"1", b"1.1"], (1, 1.1, "string")),
+        ([b"1", b"1.1", b""], (1, 1.1, "string")),
         ([b"1"], (1, 5, "string")),
     ],
 )
