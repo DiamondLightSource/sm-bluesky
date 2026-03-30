@@ -1,4 +1,5 @@
 import socket
+from time import sleep
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -235,3 +236,21 @@ def test__timeout_context_timeout(mock_instrument: AbstractInstrumentServer):
     args_called, _ = mock_instrument._error_helper.call_args
     assert "hardware not responding" in args_called[0].lower()
     assert isinstance(args_called[1], TimeoutError)
+
+
+def test_check_timeout_raises_when_expired(mock_instrument: AbstractInstrumentServer):
+    with mock_instrument._timeout_context(seconds=0.1):
+        sleep(0.15)
+        with pytest.raises(TimeoutError, match="Test Operation exceeded 0.1s limit"):
+            mock_instrument._check_timeout("Test Operation")
+
+
+def test_check_timeout_passes_when_valid(mock_instrument: AbstractInstrumentServer):
+    """Verify that _check_timeout does nothing if time remains."""
+    with mock_instrument._timeout_context(seconds=10):
+        try:
+            assert mock_instrument._current_deadline is not None
+            mock_instrument._check_timeout("Quick Task")
+        except TimeoutError:
+            pytest.fail("TimeoutError raised unexpectedly")
+    assert mock_instrument._current_deadline is None
