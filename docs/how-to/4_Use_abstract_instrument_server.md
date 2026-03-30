@@ -43,6 +43,7 @@ To use this framework, create a subclass and implement the mandatory abstract me
 ### 1. Define your Hardware Class
 ```python
 from sm_bluesky.servers import AbstractInstrumentServer
+from sm_bluesky.common.utils import auto_type_cast
 
 class MyMotorServer(AbstractInstrumentServer):
     def __init__(self, host, port):
@@ -59,8 +60,9 @@ class MyMotorServer(AbstractInstrumentServer):
         # Logic to safely shut down hardware
         print("Parking Motor...")
 
-    def _move_absolute(self, position: bytes):
-        # Hardware logic: convert bytes arg to float
+    @auto_type_cast
+    def _move_absolute(self, position: float):
+        # auto_type_cast will try to map the bytes to to hinted types.
         pos_mm = float(position)
         print(f"Moving to {pos_mm}mm")
         
