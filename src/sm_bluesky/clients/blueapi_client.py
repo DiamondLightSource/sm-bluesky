@@ -48,13 +48,3 @@ print(devs)
 print(plans)
 
 print("Please remember to configure the correct instrument session for bc.")
-
-
-def show_devices(bc: BlueapiClient = bc):
-    for device in bc.devices:
-        print(device)
-
-
-def show_plans(bc: BlueapiClient = bc):
-    for plan in bc.plans:
-        print(plan)
