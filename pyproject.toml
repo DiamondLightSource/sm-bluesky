@@ -92,6 +92,10 @@ data_file = "/tmp/sm_bluesky.coverage"
 # Tests are run from installed location, map back to the src directory
 source = ["src", "**/site-packages/"]
 
+[tool.coverage.report]
+# Exclude blueapi client startup scripts from code coverage report
+omit = ["*/sm_bluesky/clients/*"]
+
 [tool.tox]
 skipsdist = true
 # envs to runs automatically with tox -p
