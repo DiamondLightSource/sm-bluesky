@@ -24,6 +24,7 @@ bc = BlueapiClient.from_config(
         ),
     )
 )
+print('Created BlueapiClient "bc" object.')
 print("Logging in...")
 bc.login()
 
