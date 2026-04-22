@@ -1,6 +1,6 @@
 """
 Start this script by running:
-$ python -i src/sm_bluesky/clients/i09/blueapi_client.py
+$ python -i src/sm_bluesky/clients/blueapi_client.py
 """
 
 from os import environ
