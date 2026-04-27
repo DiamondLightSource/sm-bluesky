@@ -19,7 +19,7 @@ dependencies = [
     #
     "bluesky",
     #"my_bluesky @ file:///scratch/bluesky_development/my_bluesky",
-    "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git@single_electron_analyser_detector",
+    "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git@single_electron_analyser_per_region",
     "ophyd-async[sim]",
     "scanspec",
 ]
