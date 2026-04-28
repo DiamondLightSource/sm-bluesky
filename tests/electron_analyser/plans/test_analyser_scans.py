@@ -69,9 +69,8 @@ def assert_analyserscan_config(
 def assert_other_devices_config(
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     extra_detectors: Sequence[Readable],
-    args: list[SimMotor | int],
+    motors: Sequence[SimMotor],
 ) -> None:
-    motors = [a for a in args if isinstance(a, SimMotor)]
     for descriptor in run_engine_documents["descriptor"]:
         for m in motors:
             assert descriptor["configuration"][m.name]["data"]
@@ -161,8 +160,8 @@ async def test_analyserscan(
         sequence,
         energy_monitor_values,
     )
-    assert_other_devices_config(run_engine_documents, extra_detectors, args)
     motors = [a for a in args if isinstance(a, SimMotor)]
+    assert_other_devices_config(run_engine_documents, extra_detectors, motors)
     assert_event_data(
         run_engine_documents,
         sim_analyser,
@@ -197,12 +196,12 @@ async def test_grid_analyserscan(
         sequence,
         energy_monitor_values,
     )
-    assert_other_devices_config(run_engine_documents, extra_detectors, args)
 
     motors = [a for a in args if isinstance(a, SimMotor)]
     # For args, start at index 3, get every 4th value
     dimensions: list[int] = [v for v in args[3::4] if isinstance(v, int)]
     motor_iterations = math.prod(dimensions)
+    assert_other_devices_config(run_engine_documents, extra_detectors, motors)
     assert_event_data(
         run_engine_documents,
         sim_analyser,
