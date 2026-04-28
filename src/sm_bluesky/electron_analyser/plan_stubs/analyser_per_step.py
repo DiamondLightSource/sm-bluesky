@@ -17,7 +17,7 @@ def get_first_of_type(objects: Iterable[Any], target_type: type[T]) -> T:
     for obj in objects:
         if isinstance(obj, target_type):
             return obj
-    raise ValueError(f"Cannot find object from {objects} with type {target_type}")
+    raise RuntimeError(f"Cannot find object from {objects} with type {target_type}")
 
 
 @plan
@@ -46,7 +46,10 @@ def analyser_nd_step(
 
     analyser = get_first_of_type(detectors, ElectronAnalyserDetector)
     if analyser.sequence.data is None:
-        raise ValueError("Sequence is None!")
+        raise RuntimeError(
+            f"Electron analyser {analyser.name}.sequence is None. It must be configured"
+            " using prepare plan stub."
+        )
 
     # Step provides the map of motors to single position to move to. Move motors to
     # required positions.

@@ -1,4 +1,5 @@
 import asyncio
+import re
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from inspect import iscoroutinefunction
@@ -12,6 +13,7 @@ from bluesky import plan_stubs as bps
 from bluesky.protocols import Movable, Readable, Triggerable
 from dodal.devices.electron_analyser.base import (
     AbstractBaseSequence,
+    ElectronAnalyserDetector,
     GenericElectronAnalyserDetector,
 )
 from ophyd_async.core import AsyncStatus
@@ -49,7 +51,9 @@ def pos_cache() -> dict[Movable, Any]:
 
 
 def run_engine_setup_decorator(
-    func, sim_analyser: GenericElectronAnalyserDetector, sequence: AbstractBaseSequence
+    func,
+    sim_analyser: GenericElectronAnalyserDetector,
+    sequence: AbstractBaseSequence,
 ):
 
     def wrapper(all_detectors, step, pos_cache):
@@ -65,9 +69,14 @@ def run_engine_setup_decorator(
 
 @pytest.fixture
 def analyser_nd_step(
-    sim_analyser: GenericElectronAnalyserDetector, sequence: AbstractBaseSequence
+    sim_analyser: GenericElectronAnalyserDetector,
+    sequence: AbstractBaseSequence,
 ) -> Callable:
-    return run_engine_setup_decorator(aps.analyser_nd_step, sim_analyser, sequence)
+    return run_engine_setup_decorator(
+        aps.analyser_nd_step,
+        sim_analyser,
+        sequence,
+    )
 
 
 def fake_status(region=None) -> AsyncStatus:
@@ -164,3 +173,34 @@ async def test_analyser_nd_step_func_moves_motors_correctly(
     # Check motors moved to correct position
     for m in motors:
         assert await m.user_readback.get_value() == step[m]
+
+
+async def test_analyser_nd_step_raises_error_with_no_analyser(
+    run_engine: RunEngine,
+    analyser_nd_step: Callable,
+    step: dict[SimMotor, Any],
+    pos_cache: dict[SimMotor, Any],
+):
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            f"Cannot find object from {[]} with type {ElectronAnalyserDetector}"
+        ),
+    ):
+        run_engine(analyser_nd_step([], step, pos_cache))
+
+
+async def test_analyser_nd_step_raises_error_when_analyser_not_prepared_with_sequence(
+    run_engine: RunEngine,
+    sim_analyser: GenericElectronAnalyserDetector,
+    step: dict[SimMotor, Any],
+    pos_cache: dict[SimMotor, Any],
+):
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            f"Electron analyser {sim_analyser.name}.sequence is None. It must be "
+            "configured using prepare plan stub."
+        ),
+    ):
+        run_engine(aps.analyser_nd_step([sim_analyser], step, pos_cache))  # type: ignore
