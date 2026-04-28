@@ -94,7 +94,7 @@ source = ["src", "**/site-packages/"]
 
 [tool.coverage.report]
 # Exclude blueapi client startup scripts from code coverage report
-omit = ["*/sm_bluesky/clients/*"]
+omit = ["*/sm_bluesky/scripts/clients/*"]
 
 [tool.tox]
 skipsdist = true
