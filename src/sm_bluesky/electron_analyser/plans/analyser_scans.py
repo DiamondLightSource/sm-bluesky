@@ -1,7 +1,7 @@
 from collections.abc import Iterable, Sequence
 from typing import Any
 
-from bluesky.plan_stubs import mv
+from bluesky.plan_stubs import prepare
 from bluesky.plans import count, grid_scan, scan
 from bluesky.protocols import Movable, Readable
 from bluesky.utils import (
@@ -10,7 +10,10 @@ from bluesky.utils import (
     ScalarOrIterableFloat,
     plan,
 )
-from dodal.devices.electron_analyser.base import ElectronAnalyserDetector
+from dodal.devices.electron_analyser.base import (
+    AbstractBaseSequence,
+    ElectronAnalyserDetector,
+)
 
 from sm_bluesky.electron_analyser.plan_stubs import (
     analyser_nd_step,
@@ -20,14 +23,14 @@ from sm_bluesky.electron_analyser.plan_stubs import (
 
 def analysercount(
     analyser: ElectronAnalyserDetector,
-    sequence_file: str,
+    region: AbstractBaseSequence,
     detectors: Sequence[Readable],
     num: int = 1,
     delay: ScalarOrIterableFloat = 0.0,
     *,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
-    yield from mv(analyser.sequence_loader, sequence_file)
+    yield from prepare(analyser.sequence, region)
     yield from count(
         list(detectors) + [analyser],
         num,
@@ -40,13 +43,13 @@ def analysercount(
 @plan
 def analyserscan(
     analyser: ElectronAnalyserDetector,
-    sequence_file: str,
+    sequence: AbstractBaseSequence,
     detectors: Sequence[Readable],
     *args: Movable | Any,
     num: int | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
-    yield from mv(analyser.sequence_loader, sequence_file)
+    yield from prepare(analyser.sequence, sequence)
     yield from scan(
         list(detectors) + [analyser],
         *args,
@@ -59,13 +62,13 @@ def analyserscan(
 @plan
 def grid_analyserscan(
     analyser: ElectronAnalyserDetector,
-    sequence_file: str,
+    sequence: AbstractBaseSequence,
     detectors: Sequence[Readable],
-    *args,
+    *args: Any,
     snake_axes: Iterable | bool | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
-    yield from mv(analyser.sequence_loader, sequence_file)
+    yield from prepare(analyser.sequence, sequence)
     yield from grid_scan(
         list(detectors) + [analyser],
         *args,

@@ -5,6 +5,8 @@ import pytest
 from bluesky import RunEngine
 from bluesky.protocols import Readable, Reading
 from dodal.devices.electron_analyser.base import (
+    AbstractBaseRegion,
+    AbstractBaseSequence,
     AbstractEnergySource,
     DualEnergySource,
     GenericElectronAnalyserDetector,
@@ -36,13 +38,11 @@ def add_energy_source_monitor(energy_source: AbstractEnergySource) -> list[float
 def assert_analyserscan_config(
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     analyser: GenericElectronAnalyserDetector,
+    sequence: AbstractBaseSequence[AbstractBaseRegion],
     energy_values: list[float],
 ) -> None:
     """Check that the configuration for the analyser device is correct."""
     drv = analyser._controller.driver
-
-    sequence = analyser.sequence_loader.sequence
-    assert sequence is not None
 
     configuration_region_names = []
 
@@ -79,13 +79,14 @@ def assert_other_devices_config(
             assert descriptor["configuration"][d.name]["data"]
 
 
-def assert_analyser_event_data(
+def assert_event_data(
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     analyser: GenericElectronAnalyserDetector,
+    sequence: AbstractBaseSequence,
+    extra_detectors: Sequence[Readable],
+    motors: Sequence[SimMotor],
     motor_iterations: int,
 ) -> None:
-    sequence = analyser.sequence_loader.sequence
-    assert sequence is not None
     number_of_regions = sequence.get_enabled_regions()
     assert (
         len(run_engine_documents["event"]) == len(number_of_regions) * motor_iterations
@@ -96,6 +97,10 @@ def assert_analyser_event_data(
         assert drv.spectrum.name in event["data"]
         assert drv.image.name in event["data"]
         assert drv.total_intensity.name in event["data"]
+        for det in extra_detectors:
+            assert det.name in event["data"]
+        for m in motors:
+            assert m.name in event["data"]
 
 
 @pytest.fixture(params=[0, 1, 2])
@@ -109,19 +114,22 @@ async def test_analysercount(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     sim_analyser: GenericElectronAnalyserDetector,
-    sequence_file: str,
+    sequence: AbstractBaseSequence,
     extra_detectors: Sequence[Readable],
     dual_energy_source: DualEnergySource,
 ) -> None:
     energy_monitor_values = add_energy_source_monitor(dual_energy_source)
-    run_engine(analysercount(sim_analyser, sequence_file, extra_detectors))
+    run_engine(analysercount(sim_analyser, sequence, extra_detectors))
     assert_analyserscan_config(
         run_engine_documents,
         sim_analyser,
+        sequence,
         energy_monitor_values,
     )
     assert_other_devices_config(run_engine_documents, extra_detectors, [])
-    assert_analyser_event_data(run_engine_documents, sim_analyser, 1)
+    assert_event_data(
+        run_engine_documents, sim_analyser, sequence, extra_detectors, [], 1
+    )
 
 
 @pytest.mark.parametrize(
@@ -135,7 +143,7 @@ async def test_analyserscan(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     sim_analyser: GenericElectronAnalyserDetector,
-    sequence_file: str,
+    sequence: AbstractBaseSequence,
     extra_detectors: Sequence[Readable],
     args: list[SimMotor | int],
     dual_energy_source: DualEnergySource,
@@ -144,16 +152,25 @@ async def test_analyserscan(
     motor_iterations = 3
     run_engine(
         analyserscan(
-            sim_analyser, sequence_file, extra_detectors, *args, num=motor_iterations
+            sim_analyser, sequence, extra_detectors, *args, num=motor_iterations
         )
     )
     assert_analyserscan_config(
         run_engine_documents,
         sim_analyser,
+        sequence,
         energy_monitor_values,
     )
     assert_other_devices_config(run_engine_documents, extra_detectors, args)
-    assert_analyser_event_data(run_engine_documents, sim_analyser, motor_iterations)
+    motors = [a for a in args if isinstance(a, SimMotor)]
+    assert_event_data(
+        run_engine_documents,
+        sim_analyser,
+        sequence,
+        extra_detectors,
+        motors,
+        motor_iterations,
+    )
 
 
 @pytest.mark.parametrize(
@@ -167,21 +184,30 @@ async def test_grid_analyserscan(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     sim_analyser: GenericElectronAnalyserDetector,
-    sequence_file: str,
+    sequence: AbstractBaseSequence,
     extra_detectors: Sequence[Readable],
     args: list[SimMotor | int],
     dual_energy_source: DualEnergySource,
 ) -> None:
     energy_monitor_values = add_energy_source_monitor(dual_energy_source)
-    run_engine(grid_analyserscan(sim_analyser, sequence_file, extra_detectors, *args))
+    run_engine(grid_analyserscan(sim_analyser, sequence, extra_detectors, *args))
     assert_analyserscan_config(
         run_engine_documents,
         sim_analyser,
+        sequence,
         energy_monitor_values,
     )
     assert_other_devices_config(run_engine_documents, extra_detectors, args)
 
+    motors = [a for a in args if isinstance(a, SimMotor)]
     # For args, start at index 3, get every 4th value
     dimensions: list[int] = [v for v in args[3::4] if isinstance(v, int)]
     motor_iterations = math.prod(dimensions)
-    assert_analyser_event_data(run_engine_documents, sim_analyser, motor_iterations)
+    assert_event_data(
+        run_engine_documents,
+        sim_analyser,
+        sequence,
+        extra_detectors,
+        motors,
+        motor_iterations,
+    )

@@ -44,6 +44,8 @@ dev = [
     "tox-uv",
     "types-mock",
     "pytest-asyncio",
+    # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
+    "chardet==7.4.3",
 
     #usefull stuff for testing
     "jupyter",
@@ -52,7 +54,6 @@ dev = [
     "numpy",
     "pyepics",
     "blueapi",
-
 ]
 
 [project.scripts]
@@ -120,7 +121,7 @@ commands = [
     [
         "pyright",
         "--pythonpath",
-        ".venv/bin/python",
+        "{env:VIRTUAL_ENV}/bin/python",
         "src",
         "tests",
         { replace = "posargs", default = [

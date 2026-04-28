@@ -2,12 +2,12 @@ from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 from bluesky.simulators import RunEngineSimulator
-from dodal.devices.current_amplifiers import CurrentAmpDet
-from dodal.devices.i10.rasor.rasor_motors import (
+from dodal.devices.beamlines.i10.rasor.rasor_motors import (
     DetSlits,
     Diffractometer,
 )
-from dodal.devices.i10.slits import I10Slits
+from dodal.devices.beamlines.i10.slits import I10Slits
+from dodal.devices.current_amplifiers import CurrentAmpDet
 from dodal.devices.motors import XYZStage
 from ophyd_async.core import StandardReadable
 

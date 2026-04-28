@@ -1,6 +1,7 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Sequence
+from inspect import iscoroutinefunction
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
@@ -9,27 +10,14 @@ import pytest
 from bluesky import RunEngine
 from bluesky import plan_stubs as bps
 from bluesky.protocols import Movable, Readable, Triggerable
-from dodal.devices.electron_analyser.base import GenericElectronAnalyserDetector
+from dodal.devices.electron_analyser.base import (
+    AbstractBaseSequence,
+    GenericElectronAnalyserDetector,
+)
 from ophyd_async.core import AsyncStatus
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
-
-
-@pytest.fixture
-async def analyser_with_sequence(
-    sim_analyser: GenericElectronAnalyserDetector, sequence_file: str
-) -> GenericElectronAnalyserDetector:
-    await sim_analyser.sequence_loader.set(sequence_file)
-    assert sim_analyser.sequence_loader.sequence is not None
-    return sim_analyser
-
-
-@pytest.fixture
-def number_of_regions(analyser_with_sequence: GenericElectronAnalyserDetector) -> float:
-    sequence = analyser_with_sequence.sequence_loader.sequence
-    assert sequence is not None
-    return len(sequence.get_enabled_regions())
 
 
 @pytest.fixture(params=[0, 1, 2])
@@ -41,10 +29,10 @@ def other_detectors(
 
 @pytest.fixture
 def all_detectors(
-    analyser_with_sequence: GenericElectronAnalyserDetector,
+    sim_analyser: GenericElectronAnalyserDetector,
     other_detectors: Sequence[Readable],
 ) -> Sequence[Readable]:
-    return [analyser_with_sequence] + list(other_detectors)
+    return [sim_analyser] + list(other_detectors)
 
 
 @pytest.fixture
@@ -60,8 +48,12 @@ def pos_cache() -> dict[Movable, Any]:
     return defaultdict(lambda: 0)
 
 
-def run_engine_setup_decorator(func):
+def run_engine_setup_decorator(
+    func, sim_analyser: GenericElectronAnalyserDetector, sequence: AbstractBaseSequence
+):
+
     def wrapper(all_detectors, step, pos_cache):
+        yield from bps.prepare(sim_analyser.sequence, sequence)
         yield from bps.open_run()
         yield from bps.stage_all(*all_detectors)
         yield from func(all_detectors, step, pos_cache)
@@ -72,8 +64,10 @@ def run_engine_setup_decorator(func):
 
 
 @pytest.fixture
-def analyser_nd_step() -> Callable:
-    return run_engine_setup_decorator(aps.analyser_nd_step)
+def analyser_nd_step(
+    sim_analyser: GenericElectronAnalyserDetector, sequence: AbstractBaseSequence
+) -> Callable:
+    return run_engine_setup_decorator(aps.analyser_nd_step, sim_analyser, sequence)
 
 
 def fake_status(region=None) -> AsyncStatus:
@@ -86,18 +80,16 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
     sim_analyser: GenericElectronAnalyserDetector,
+    sequence: AbstractBaseSequence,
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
 ) -> None:
     # Mock driver.set to track expected calls
     controller = sim_analyser._controller
     controller.setup_with_region = AsyncMock(side_effect=fake_status)
-    sequence = sim_analyser.sequence_loader.sequence
-    assert sequence is not None
     expected_driver_set_calls = [
         call(region) for region in sequence.get_enabled_regions()
     ]
-
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
     # Check that controller method was called with the number of regions.
@@ -107,7 +99,7 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
 async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
     run_engine: RunEngine,
     analyser_nd_step: Callable,
-    sim_analyser: GenericElectronAnalyserDetector,
+    sequence: AbstractBaseSequence,
     all_detectors: Sequence[Readable],
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
@@ -117,14 +109,13 @@ async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
             det.trigger = MagicMock(side_effect=fake_status)
 
         # Check if detector needs to be mocked with async or not.
-        if asyncio.iscoroutinefunction(det.read):
+        if iscoroutinefunction(det.read):
             det.read = AsyncMock(return_value=await det.read())
         else:
             det.read = MagicMock(return_value=det.read())
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
-    sequence = sim_analyser.sequence_loader.sequence
     assert sequence is not None
     n_regions = len(sequence.get_enabled_regions())
 

@@ -2,32 +2,18 @@ from typing import Any
 from unittest.mock import ANY
 
 from dodal.devices.electron_analyser.base import (
-    ElectronAnalyserDetector,
     GenericAnalyserDriverIO,
     GenericRegion,
 )
 from dodal.devices.electron_analyser.specs import AcquisitionMode as SpecsAcqusitionMode
 from dodal.devices.electron_analyser.specs import (
     SpecsAnalyserDriverIO,
-    SpecsDetector,
     SpecsRegion,
 )
 from dodal.devices.electron_analyser.vgscienta import (
     VGScientaAnalyserDriverIO,
     VGScientaRegion,
 )
-from ophyd_async.core import set_mock_value
-
-
-def analyser_setup_for_scan(sim_analyser: ElectronAnalyserDetector):
-    if isinstance(sim_analyser, SpecsDetector):
-        # Needed so we don't run into divide by zero errors on read and describe.
-        dummy_val = 10
-        set_mock_value(sim_analyser.driver.min_angle_axis, dummy_val)
-        set_mock_value(sim_analyser.driver.max_angle_axis, dummy_val)
-        set_mock_value(sim_analyser.driver.slices, dummy_val)
-        set_mock_value(sim_analyser.driver.low_energy, dummy_val)
-        set_mock_value(sim_analyser.driver.high_energy, dummy_val)
 
 
 def expected_analyser_config(
@@ -70,6 +56,7 @@ def expected_vgscienta_analyser_config(
         drv.region_min_y.name: epics_region.min_y,
         drv.region_size_y.name: epics_region.size_y,
         drv.energy_mode.name: epics_region.energy_mode,
+        drv.psu_mode.name: ANY,
     }
 
 

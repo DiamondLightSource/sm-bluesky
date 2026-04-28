@@ -44,6 +44,10 @@ def analyser_nd_step(
         mapping motors to their last-set positions
     """
 
+    analyser = get_first_of_type(detectors, ElectronAnalyserDetector)
+    if analyser.sequence.data is None:
+        raise ValueError("Sequence is None!")
+
     # Step provides the map of motors to single position to move to. Move motors to
     # required positions.
     yield from move_per_step(step, pos_cache)
@@ -54,13 +58,7 @@ def analyser_nd_step(
 
     readables = list(detectors) + motors
 
-    analyser = get_first_of_type(detectors, ElectronAnalyserDetector)
-
-    sequence = analyser.sequence_loader.sequence
-    if sequence is None:
-        raise ValueError(f"{analyser.sequence_loader.name}.sequence is None.")
-
-    for region in sequence.get_enabled_regions():
+    for region in analyser.sequence.data.get_enabled_regions():
         LOGGER.info(f"Scanning region {region.name}.")
         yield from mv(analyser, region)
         yield from trigger_and_read(readables, name=region.name)
