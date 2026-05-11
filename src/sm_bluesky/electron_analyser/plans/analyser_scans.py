@@ -1,5 +1,4 @@
 from collections.abc import Iterable, Sequence
-from typing import Any
 
 from bluesky.plan_stubs import prepare
 from bluesky.plans import count, grid_scan, scan
@@ -11,7 +10,7 @@ from bluesky.utils import (
     plan,
 )
 from dodal.devices.electron_analyser.base import (
-    AbstractBaseSequence,
+    BaseSequence,
     ElectronAnalyserDetector,
 )
 
@@ -23,7 +22,7 @@ from sm_bluesky.electron_analyser.plan_stubs import (
 
 def analysercount(
     analyser: ElectronAnalyserDetector,
-    region: AbstractBaseSequence,
+    region: BaseSequence,
     detectors: Sequence[Readable],
     num: int = 1,
     delay: ScalarOrIterableFloat = 0.0,
@@ -43,9 +42,9 @@ def analysercount(
 @plan
 def analyserscan(
     analyser: ElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
     detectors: Sequence[Readable],
-    *args: Movable | Any,
+    args: Sequence[Movable | float | int],
     num: int | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
@@ -62,9 +61,9 @@ def analyserscan(
 @plan
 def grid_analyserscan(
     analyser: ElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
     detectors: Sequence[Readable],
-    *args: Any,
+    args: Sequence[Movable | float | int],
     snake_axes: Iterable | bool | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:

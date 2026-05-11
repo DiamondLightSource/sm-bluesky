@@ -1239,8 +1239,8 @@ wheels = [
 
 [[package]]
 name = "dls-dodal"
-version = "2.2.3.dev14+ged7286be5"
-source = { git = "https://github.com/DiamondLightSource/dodal.git?rev=single_electron_analyser_per_region#ed7286be582ba67061cfce49ba1a09ba45054431" }
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
     { name = "aiohttp" },
@@ -1262,6 +1262,10 @@ dependencies = [
     { name = "requests" },
     { name = "scanspec" },
     { name = "zocalo" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0f/2a/12aa4b4fd50f54eeafe4c45d8bfb4a030fd8a92a27083349728662b5ccde/dls_dodal-2.3.0.tar.gz", hash = "sha256:55997aa455d1a9244a56c9779b78d7f5551337603d117664a380659e77f4ecac", size = 1673659, upload-time = "2026-05-11T08:15:45.451Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/37/7c/4d17a6ffa2005beb7f24923508e2835f4de44c98ae965eed56f38a9e80e3/dls_dodal-2.3.0-py3-none-any.whl", hash = "sha256:4e166fb8a7c23b887d0da740310aca2af124651b367db46b4350aa321630467b", size = 402573, upload-time = "2026-05-11T08:15:44.191Z" },
 ]
 
 [[package]]
@@ -4006,7 +4010,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -5478,7 +5482,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "bluesky" },
-    { name = "dls-dodal", git = "https://github.com/DiamondLightSource/dodal.git?rev=single_electron_analyser_per_region" },
+    { name = "dls-dodal" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "scanspec" },
 ]

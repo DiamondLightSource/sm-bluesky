@@ -7,7 +7,7 @@ from dodal.devices.common_dcm import (
     StationaryCrystal,
 )
 from dodal.devices.electron_analyser.base import (
-    AbstractBaseSequence,
+    BaseSequence,
     DualEnergySource,
     EnergySource,
     GenericElectronAnalyserDetector,
@@ -182,7 +182,5 @@ def load_sequence(
 
 
 @pytest.fixture
-def sequence(
-    load_sequence: JsonModelLoader[AbstractBaseSequence],
-) -> AbstractBaseSequence:
+def sequence(load_sequence: JsonModelLoader[BaseSequence]) -> BaseSequence:
     return load_sequence()

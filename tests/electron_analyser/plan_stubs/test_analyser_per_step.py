@@ -12,7 +12,7 @@ from bluesky import RunEngine
 from bluesky import plan_stubs as bps
 from bluesky.protocols import Movable, Readable, Triggerable
 from dodal.devices.electron_analyser.base import (
-    AbstractBaseSequence,
+    BaseSequence,
     ElectronAnalyserDetector,
     GenericElectronAnalyserDetector,
 )
@@ -53,7 +53,7 @@ def pos_cache() -> dict[Movable, Any]:
 def run_engine_setup_decorator(
     func,
     sim_analyser: GenericElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
 ):
 
     def wrapper(all_detectors, step, pos_cache):
@@ -70,7 +70,7 @@ def run_engine_setup_decorator(
 @pytest.fixture
 def analyser_nd_step(
     sim_analyser: GenericElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
 ) -> Callable:
     return run_engine_setup_decorator(
         aps.analyser_nd_step,
@@ -89,7 +89,7 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
     sim_analyser: GenericElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
 ) -> None:
@@ -108,7 +108,7 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
 async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
     run_engine: RunEngine,
     analyser_nd_step: Callable,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
     all_detectors: Sequence[Readable],
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],

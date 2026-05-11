@@ -5,9 +5,9 @@ import pytest
 from bluesky import RunEngine
 from bluesky.protocols import Readable, Reading
 from dodal.devices.electron_analyser.base import (
-    AbstractBaseRegion,
-    AbstractBaseSequence,
     AbstractEnergySource,
+    BaseRegion,
+    BaseSequence,
     DualEnergySource,
     GenericElectronAnalyserDetector,
 )
@@ -38,7 +38,7 @@ def add_energy_source_monitor(energy_source: AbstractEnergySource) -> list[float
 def assert_analyserscan_config(
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     analyser: GenericElectronAnalyserDetector,
-    sequence: AbstractBaseSequence[AbstractBaseRegion],
+    sequence: BaseSequence[BaseRegion],
     energy_values: list[float],
 ) -> None:
     """Check that the configuration for the analyser device is correct."""
@@ -81,7 +81,7 @@ def assert_other_devices_config(
 def assert_event_data(
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     analyser: GenericElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
     motors: Sequence[SimMotor],
     motor_iterations: int,
@@ -113,7 +113,7 @@ async def test_analysercount(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     sim_analyser: GenericElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
     dual_energy_source: DualEnergySource,
 ) -> None:
@@ -142,7 +142,7 @@ async def test_analyserscan(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     sim_analyser: GenericElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
     args: list[SimMotor | int],
     dual_energy_source: DualEnergySource,
@@ -151,7 +151,7 @@ async def test_analyserscan(
     motor_iterations = 3
     run_engine(
         analyserscan(
-            sim_analyser, sequence, extra_detectors, *args, num=motor_iterations
+            sim_analyser, sequence, extra_detectors, args, num=motor_iterations
         )
     )
     assert_analyserscan_config(
@@ -183,13 +183,13 @@ async def test_grid_analyserscan(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     sim_analyser: GenericElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
     args: list[SimMotor | int],
     dual_energy_source: DualEnergySource,
 ) -> None:
     energy_monitor_values = add_energy_source_monitor(dual_energy_source)
-    run_engine(grid_analyserscan(sim_analyser, sequence, extra_detectors, *args))
+    run_engine(grid_analyserscan(sim_analyser, sequence, extra_detectors, args))
     assert_analyserscan_config(
         run_engine_documents,
         sim_analyser,
