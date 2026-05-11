@@ -101,7 +101,9 @@ def set_slit_size(
 
 
 @plan
-def check_within_limit(values: list[float], device: HighLowLimitsDevice):
+def check_within_limit(
+    values: list[float], device: HighLowLimitsDevice
+) -> MsgGenerator:
     """Check if the given values are within the limits of the device.
     Parameters
     ----------

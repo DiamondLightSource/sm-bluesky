@@ -14,10 +14,11 @@ from dodal.devices.electron_analyser.base import (
     ElectronAnalyserDetector,
 )
 
-from sm_bluesky.electron_analyser.plan_stubs import (
+from sm_bluesky.electron_analyser.plan_stubs.analyser_per_step import (
     analyser_nd_step,
     analyser_shot,
 )
+from sm_bluesky.electron_analyser.plan_stubs.wrapped import dict_to_sequence
 
 
 def analysercount(
@@ -42,12 +43,15 @@ def analysercount(
 @plan
 def analyserscan(
     analyser: ElectronAnalyserDetector,
-    sequence: AbstractBaseSequence,
+    sequence: AbstractBaseSequence | dict[str, Any],
     detectors: Sequence[Readable],
-    *args: Movable | Any,
+    args: Sequence[Movable | Any],
     num: int | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
+
+    if isinstance(sequence, dict):
+        sequence = dict_to_sequence(analyser, sequence)
     reg_detectors = analyser.create_region_detector_list(sequence.get_enabled_regions())
     yield from scan(
         reg_detectors + list(detectors),
@@ -63,10 +67,12 @@ def grid_analyserscan(
     analyser: ElectronAnalyserDetector,
     sequence: AbstractBaseSequence,
     detectors: Sequence[Readable],
-    *args: Any,
+    args: Sequence[Movable | Any],
     snake_axes: Iterable | bool | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
+    if isinstance(sequence, dict):
+        sequence = dict_to_sequence(analyser, sequence)
     reg_detectors = analyser.create_region_detector_list(sequence.get_enabled_regions())
     yield from grid_scan(
         reg_detectors + list(detectors),

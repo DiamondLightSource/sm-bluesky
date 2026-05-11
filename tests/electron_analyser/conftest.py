@@ -146,17 +146,8 @@ async def ew4000(
 
 
 @pytest.fixture(params=["ew4000", "b07b_specs150"])
-def sim_analyser(
-    request: pytest.FixtureRequest,
-    ew4000: VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy],
-    b07b_specs150: SpecsDetector[b07.LensMode, b07_shared.PsuMode],
-) -> GenericElectronAnalyserDetector:
-    detectors = [ew4000, b07b_specs150]
-    for detector in detectors:
-        if detector.name == request.param:
-            return detector
-
-    raise ValueError(f"Detector with name '{request.param}' not found")
+def sim_analyser(request: pytest.FixtureRequest) -> GenericElectronAnalyserDetector:
+    return request.getfixturevalue(request.param)
 
 
 I09Sequence = VGScientaSequence[i09.LensMode, i09.PsuMode, i09.PassEnergy]
