@@ -93,13 +93,14 @@ def assert_event_data(
     drv = analyser._controller.driver
 
     for event in run_engine_documents["event"]:
-        assert drv.spectrum.name in event["data"]
-        assert drv.image.name in event["data"]
-        assert drv.total_intensity.name in event["data"]
+        event_data = event["data"]
+        assert drv.spectrum.name in event_data
+        assert drv.image.name in event_data
+        assert drv.total_intensity.name in event_data
         for det in extra_detectors:
-            assert det.name in event["data"]
+            assert det.name in event_data
         for m in motors:
-            assert m.name in event["data"]
+            assert m.name in event_data
 
 
 @pytest.fixture(params=[0, 1, 2])
