@@ -21,6 +21,7 @@ dependencies = [
     "dls-dodal>=2.2.0",
     "ophyd-async[sim]",
     "scanspec",
+    "blueapi",
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
@@ -52,7 +53,6 @@ dev = [
     "matplotlib",
     "numpy",
     "pyepics",
-    "blueapi",
 ]
 
 [project.scripts]
@@ -91,6 +91,10 @@ data_file = "/tmp/sm_bluesky.coverage"
 [tool.coverage.paths]
 # Tests are run from installed location, map back to the src directory
 source = ["src", "**/site-packages/"]
+
+[tool.coverage.report]
+# Exclude blueapi client startup scripts from code coverage report
+omit = ["*/sm_bluesky/scripts/clients/*"]
 
 [tool.tox]
 skipsdist = true
