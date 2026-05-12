@@ -22,16 +22,16 @@ from sm_bluesky.electron_analyser.plan_stubs import (
 
 def analysercount(
     analyser: ElectronAnalyserDetector,
-    region: BaseSequence,
+    sequence: BaseSequence,
     detectors: Sequence[Readable],
     num: int = 1,
     delay: ScalarOrIterableFloat = 0.0,
     *,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
-    yield from prepare(analyser.sequence, region)
+    yield from prepare(analyser.sequence, sequence)
     yield from count(
-        list(detectors) + [analyser],
+        [*detectors, analyser],
         num,
         delay,
         per_shot=analyser_shot,
@@ -50,7 +50,7 @@ def analyserscan(
 ) -> MsgGenerator:
     yield from prepare(analyser.sequence, sequence)
     yield from scan(
-        list(detectors) + [analyser],
+        [*detectors, analyser],
         *args,
         num,
         per_step=analyser_nd_step,
@@ -69,7 +69,7 @@ def grid_analyserscan(
 ) -> MsgGenerator:
     yield from prepare(analyser.sequence, sequence)
     yield from grid_scan(
-        list(detectors) + [analyser],
+        [*detectors, analyser],
         *args,
         snake_axes=snake_axes,
         per_step=analyser_nd_step,
