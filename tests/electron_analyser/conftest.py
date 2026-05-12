@@ -7,6 +7,7 @@ from dodal.devices.common_dcm import (
     StationaryCrystal,
 )
 from dodal.devices.electron_analyser.base import (
+    BaseSequence,
     DualEnergySource,
     EnergySource,
     GenericElectronAnalyserDetector,
@@ -16,7 +17,7 @@ from dodal.devices.electron_analyser.vgscienta import (
     VGScientaDetector,
     VGScientaSequence,
 )
-from dodal.devices.fast_shutter import DualFastShutter, GenericFastShutter
+from dodal.devices.fast_shutter import DualFastShutter, FastShutter
 from dodal.devices.pgm import PlaneGratingMonochromator
 from dodal.devices.selectable_source import SourceSelector
 from ophyd_async.core import InOut, init_devices, set_mock_value
@@ -66,9 +67,9 @@ async def dual_energy_source(source_selector: SourceSelector) -> DualEnergySourc
 
 
 @pytest.fixture
-def shutter1() -> GenericFastShutter[InOut]:
+def shutter1() -> FastShutter[InOut]:
     with init_devices(mock=True):
-        shutter1 = GenericFastShutter[InOut](
+        shutter1 = FastShutter[InOut](
             pv="TEST:",
             open_state=InOut.OUT,
             close_state=InOut.IN,
@@ -77,9 +78,9 @@ def shutter1() -> GenericFastShutter[InOut]:
 
 
 @pytest.fixture
-def shutter2() -> GenericFastShutter[InOut]:
+def shutter2() -> FastShutter[InOut]:
     with init_devices(mock=True):
-        shutter2 = GenericFastShutter[InOut](
+        shutter2 = FastShutter[InOut](
             pv="TEST:",
             open_state=InOut.OUT,
             close_state=InOut.IN,
@@ -89,8 +90,8 @@ def shutter2() -> GenericFastShutter[InOut]:
 
 @pytest.fixture
 def dual_fast_shutter(
-    shutter1: GenericFastShutter[InOut],
-    shutter2: GenericFastShutter[InOut],
+    shutter1: FastShutter[InOut],
+    shutter2: FastShutter[InOut],
     source_selector: SourceSelector,
 ) -> DualFastShutter[InOut]:
     with init_devices(mock=True):
@@ -105,7 +106,7 @@ def dual_fast_shutter(
 @pytest.fixture
 async def b07b_specs150(
     single_energy_source: EnergySource,
-    shutter1: GenericFastShutter,
+    shutter1: FastShutter,
 ) -> SpecsDetector[b07.LensMode, b07_shared.PsuMode]:
     with init_devices(mock=True):
         b07b_specs150 = SpecsDetector[b07.LensMode, b07_shared.PsuMode](
@@ -178,3 +179,8 @@ def load_sequence(
     elif isinstance(sim_analyser, SpecsDetector):
         return load_b07b_specs_test_seq
     raise TypeError(f"Undefined sim_analyser type {type(sim_analyser)}")
+
+
+@pytest.fixture
+def sequence(load_sequence: JsonModelLoader[BaseSequence]) -> BaseSequence:
+    return load_sequence()
