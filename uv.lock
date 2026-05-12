@@ -5448,6 +5448,7 @@ wheels = [
 name = "sm-bluesky"
 source = { editable = "." }
 dependencies = [
+    { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal" },
     { name = "ophyd-async", extra = ["sim"] },
@@ -5456,7 +5457,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "blueapi" },
     { name = "chardet" },
     { name = "copier" },
     { name = "ipython" },
@@ -5481,6 +5481,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal" },
     { name = "ophyd-async", extras = ["sim"] },
@@ -5489,7 +5490,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "blueapi" },
     { name = "chardet", specifier = "==7.4.3" },
     { name = "copier" },
     { name = "ipython" },
