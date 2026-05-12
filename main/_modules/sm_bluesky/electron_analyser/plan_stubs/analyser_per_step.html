@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.electron_analyser.plan_stubs.analyser_per_step &#8212; sm-bluesky 1.0.2.dev48+g8668d2156 documentation</title>
+    <title>sm_bluesky.electron_analyser.plan_stubs.analyser_per_step &#8212; sm-bluesky 1.0.2.dev60+g2e984e5e6 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../../_static/styles/theme.css?digest=7f76b32a3354e82990f2" rel="stylesheet" />
-<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=7f76b32a3354e82990f2" rel="stylesheet" />
+  <link href="../../../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../../_static/scripts/fontawesome.js?digest=7f76b32a3354e82990f2"></script>
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=7f76b32a3354e82990f2" />
-<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=7f76b32a3354e82990f2" />
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../../_static/documentation_options.js?v=fd3bbad3"></script>
+    <script src="../../../../_static/documentation_options.js?v=82234c80"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -48,7 +48,7 @@
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/electron_analyser/plan_stubs/analyser_per_step';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.17.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -78,7 +78,9 @@
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
-
+  
+  
+  
   
   <dialog id="pst-search-dialog">
     
@@ -447,28 +449,26 @@
                 <article class="bd-article">
                   
   <h1>Source code for sm_bluesky.electron_analyser.plan_stubs.analyser_per_step</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TypeVar</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">move_per_step</span><span class="p">,</span>
-    <span class="n">trigger_and_read</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">move_per_step</span><span class="p">,</span> <span class="n">mv</span><span class="p">,</span> <span class="n">trigger_and_read</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">Movable</span><span class="p">,</span> <span class="n">Readable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">MsgGenerator</span><span class="p">,</span>
     <span class="n">plan</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.electron_analyser.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ElectronAnalyserRegionDetector</span><span class="p">,</span>
-    <span class="n">GenericElectronAnalyserRegionDetector</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.electron_analyser.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElectronAnalyserDetector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
 
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
 
-<span class="nd">@plan</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">analyser_shot</span><span class="p">(</span><span class="n">detectors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-    <span class="k">yield from</span> <span class="n">analyser_nd_step</span><span class="p">(</span><span class="n">detectors</span><span class="p">,</span> <span class="p">{},</span> <span class="p">{},</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_first_of_type</span><span class="p">(</span><span class="n">objects</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">target_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">target_type</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">obj</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find object from </span><span class="si">{</span><span class="n">objects</span><span class="si">}</span><span class="s2"> with type </span><span class="si">{</span><span class="n">target_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="analyser_nd_step">
@@ -497,13 +497,12 @@
 <span class="sd">        mapping motors to their last-set positions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">analyser_detectors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GenericElectronAnalyserRegionDetector</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">other_detectors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">det</span> <span class="ow">in</span> <span class="n">detectors</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">ElectronAnalyserRegionDetector</span><span class="p">):</span>
-            <span class="n">analyser_detectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">det</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">other_detectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">det</span><span class="p">)</span>
+    <span class="n">analyser</span> <span class="o">=</span> <span class="n">get_first_of_type</span><span class="p">(</span><span class="n">detectors</span><span class="p">,</span> <span class="n">ElectronAnalyserDetector</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">analyser</span><span class="o">.</span><span class="n">sequence</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Electron analyser </span><span class="si">{</span><span class="n">analyser</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.sequence is None. It must be configured&quot;</span>
+            <span class="s2">&quot; using prepare plan stub.&quot;</span>
+        <span class="p">)</span>
 
     <span class="c1"># Step provides the map of motors to single position to move to. Move motors to</span>
     <span class="c1"># required positions.</span>
@@ -513,20 +512,18 @@
     <span class="c1"># them Readable so positions can be measured.</span>
     <span class="n">motors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Readable</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Readable</span><span class="p">)]</span>
 
-    <span class="c1"># To get energy sources and open paired shutters, they need to be given in this</span>
-    <span class="c1"># plan. They could possibly come from step but we then have to extract them out.</span>
-    <span class="c1"># It would also mean forcefully adding in the devices at the wrapper level.</span>
-    <span class="c1"># It would easier if they are part of the detector and the plan just calls the</span>
-    <span class="c1"># common methods so it is more dynamic and configuration only for device.</span>
-    <span class="k">for</span> <span class="n">analyser_det</span> <span class="ow">in</span> <span class="n">analyser_detectors</span><span class="p">:</span>
-        <span class="n">dets</span> <span class="o">=</span> <span class="p">[</span><span class="n">analyser_det</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">other_detectors</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">motors</span><span class="p">)</span>
+    <span class="n">readables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">detectors</span><span class="p">)</span> <span class="o">+</span> <span class="n">motors</span>
 
-        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Scanning region </span><span class="si">{</span><span class="n">analyser_det</span><span class="o">.</span><span class="n">region</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-        <span class="k">yield from</span> <span class="n">trigger_and_read</span><span class="p">(</span>
-            <span class="n">dets</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">analyser_det</span><span class="o">.</span><span class="n">region</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-        <span class="p">)</span></div>
+    <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">analyser</span><span class="o">.</span><span class="n">sequence</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_enabled_regions</span><span class="p">():</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Scanning region </span><span class="si">{</span><span class="n">region</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">mv</span><span class="p">(</span><span class="n">analyser</span><span class="p">,</span> <span class="n">region</span><span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">trigger_and_read</span><span class="p">(</span><span class="n">readables</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">region</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
 
+
+
+<span class="nd">@plan</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyser_shot</span><span class="p">(</span><span class="n">detectors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+    <span class="k">yield from</span> <span class="n">analyser_nd_step</span><span class="p">(</span><span class="n">detectors</span><span class="p">,</span> <span class="p">{},</span> <span class="p">{},</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
 </pre></div>
 
                 </article>
@@ -556,8 +553,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../../_static/scripts/bootstrap.js?digest=7f76b32a3354e82990f2"></script>
-<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=7f76b32a3354e82990f2"></script>
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -569,7 +566,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.17.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.17.1.
 </p></div>
       
     </div>
