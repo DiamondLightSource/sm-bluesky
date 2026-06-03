@@ -6,9 +6,10 @@ import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
 from numpy import random
+from ophyd_async.core import set_mock_value
 from ophyd_async.epics.adandor import Andor2Detector
 from ophyd_async.epics.adcore import SingleTriggerDetector
-from ophyd_async.testing import assert_emitted, set_mock_value
+from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
 from sm_bluesky.common.plans.grid_scan import grid_fast_scan, grid_step_scan

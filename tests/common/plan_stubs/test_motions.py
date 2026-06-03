@@ -1,9 +1,9 @@
 import pytest
 from bluesky.run_engine import RunEngine
+from dodal.devices.motors import XYZStage
 from dodal.devices.slits import Slits
-from ophyd_async.core import init_devices
+from ophyd_async.core import callback_on_mock_put, init_devices, set_mock_value
 from ophyd_async.epics.motor import Motor
-from ophyd_async.testing import callback_on_mock_put, set_mock_value
 
 from sm_bluesky.common.plan_stubs import (
     check_within_limit,
@@ -11,12 +11,11 @@ from sm_bluesky.common.plan_stubs import (
     move_motor_with_look_up,
     set_slit_size,
 )
-from sm_bluesky.common.sim_devices import SimStage
 
 fake_motor_look_up = {"5000": 1.8, "1000": 8, "-500": 8.8, "100": 55, "50": -34.3}
 
 
-def test_check_within_limit(sim_stage_step: SimStage, run_engine: RunEngine) -> None:
+def test_check_within_limit(sim_stage_step: XYZStage, run_engine: RunEngine) -> None:
     set_mock_value(sim_stage_step.x.low_limit_travel, -10)
     set_mock_value(sim_stage_step.x.high_limit_travel, 20)
 
@@ -30,7 +29,7 @@ def test_check_within_limit(sim_stage_step: SimStage, run_engine: RunEngine) -> 
 
 
 def test_motor_with_look_up_fail(
-    run_engine: RunEngine, sim_stage_step: SimStage
+    run_engine: RunEngine, sim_stage_step: XYZStage
 ) -> None:
     size = 400
     with pytest.raises(ValueError) as e:
@@ -46,7 +45,7 @@ def test_motor_with_look_up_fail(
 
 
 def test_motor_with_look_up_fail_invalid_table(
-    run_engine: RunEngine, sim_stage_step: SimStage
+    run_engine: RunEngine, sim_stage_step: XYZStage
 ) -> None:
     bad_motor_look_up = {"5000": 1.8, "1000": 8, "-500": 8.8, "100": "sdsf", "50": 34.3}
 
@@ -65,7 +64,7 @@ def test_motor_with_look_up_fail_invalid_table(
 )
 async def test_motor_with_look_up_move_using_table_success(
     run_engine: RunEngine,
-    sim_stage_step: SimStage,
+    sim_stage_step: XYZStage,
     test_input: float,
     expected_centre: float,
 ) -> None:
@@ -83,7 +82,7 @@ async def test_motor_with_look_up_move_using_table_success(
 )
 async def test_motor_with_look_up_move_using_motor_position_success(
     run_engine: RunEngine,
-    sim_stage_step: SimStage,
+    sim_stage_step: XYZStage,
     test_input: float,
     expected_centre: float,
 ) -> None:

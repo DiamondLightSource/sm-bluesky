@@ -2,11 +2,8 @@ import random
 
 import pytest
 from bluesky import RunEngine
-from ophyd_async.core import (
-    init_devices,
-)
+from ophyd_async.core import get_mock_put, init_devices
 from ophyd_async.epics.adcore import ADBaseIO, AreaDetector, SingleTriggerDetector
-from ophyd_async.testing import get_mock_put
 
 from sm_bluesky.common.plan_stubs import set_area_detector_acquire_time
 
@@ -24,7 +21,7 @@ def test_set_area_detector_acquire_time_setting_single_trigger_detector(
     count_time = random.uniform(0, 1)
     run_engine(set_area_detector_acquire_time(mock_single_trigger_det, count_time))
     get_mock_put(mock_single_trigger_det.drv.acquire_time).assert_awaited_once_with(
-        count_time, wait=True
+        count_time
     )
 
 
@@ -33,6 +30,4 @@ def test_set_area_detector_acquire_time_setting_area_detector(
 ) -> None:
     count_time = random.uniform(0, 1)
     run_engine(set_area_detector_acquire_time(andor2, count_time))
-    get_mock_put(andor2.driver.acquire_time).assert_awaited_once_with(
-        count_time, wait=True
-    )
+    get_mock_put(andor2.driver.acquire_time).assert_awaited_once_with(count_time)

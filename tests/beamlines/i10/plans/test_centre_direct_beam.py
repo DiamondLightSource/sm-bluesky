@@ -2,8 +2,8 @@ from unittest.mock import Mock, call, patch
 
 from bluesky.run_engine import RunEngine
 from bluesky.simulators import RunEngineSimulator
+from dodal.devices.beamlines.i10.rasor.rasor_motors import Diffractometer
 from dodal.devices.current_amplifiers import CurrentAmpDet
-from dodal.devices.i10.rasor.rasor_motors import Diffractometer
 from dodal.devices.motors import XYZStage
 
 from sm_bluesky.beamlines.i10.configuration.default_setting import (
