@@ -254,3 +254,24 @@ def test_check_timeout_passes_when_valid(mock_instrument: AbstractInstrumentServ
         except TimeoutError:
             pytest.fail("TimeoutError raised unexpectedly")
     assert mock_instrument._current_deadline is None
+
+
+def test_send_command_list(mock_instrument: AbstractInstrumentServer):
+    """Verify that the command_list returns all registered commands separated by tabs."""
+    mock_instrument._conn = MagicMock()
+    mock_instrument._conn.sendall = MagicMock()
+    mock_instrument._handle_command(b"command_list", b"")
+    mock_instrument._conn.sendall.assert_called_once()
+    called_bytes = mock_instrument._conn.sendall.call_args[0][0]
+
+    assert called_bytes.startswith(b"1\t")
+    assert called_bytes.endswith(b"\n")
+
+    inner_payload = called_bytes[2:-1]
+    commands = inner_payload.split(b"\t")
+
+    assert b"ping" in commands
+    assert b"connect_hardware" in commands
+    assert b"disconnect_hardware" in commands
+    assert b"shutdown" in commands
+    assert b"command_list" in commands
