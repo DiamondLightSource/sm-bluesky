@@ -68,8 +68,8 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
     def _set_delay(self, value: bytes) -> None:
         delay = int(value.decode("utf-8"))
         if self.max_pulse_delay > delay >= 0:
-            self._send_hardware_command(b"AT+DLSET=" + value)
             LOGGER.info(f"Setting delay to {value}")
+            self._send_hardware_command(b"AT+DLSET=" + value)
         else:
             raise ValueError(
                 f"Delay {delay} is out of bounds (0-{self.max_pulse_delay - 1})"
@@ -87,7 +87,6 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         LOGGER.info("Reseting buffers")
         self.device.reset_input_buffer()
         self.device.reset_output_buffer()
-
 
     def _passthrough(self, value: bytes):
         self._send_hardware_command(value)
