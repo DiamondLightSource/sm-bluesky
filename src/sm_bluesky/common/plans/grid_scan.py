@@ -7,8 +7,8 @@ import bluesky.plans as bp
 from bluesky.preprocessors import finalize_wrapper
 from bluesky.protocols import Readable
 from bluesky.utils import MsgGenerator, plan
-from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
-from ophyd_async.epics.adcore import AreaDetector, SingleTriggerDetector
+from dodal.devices.single_trigger_detector import SingleTriggerDetector
+from ophyd_async.epics.adandor import AndorDetector
 from ophyd_async.epics.motor import Motor
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
@@ -29,7 +29,6 @@ class CleanUpArgs(TypedDict, total=False):
 
 
 @plan
-@attach_data_session_metadata_decorator()
 def grid_step_scan(
     dets: Sequence[Readable],
     count_time: float,
@@ -95,7 +94,7 @@ def grid_step_scan(
         )  # type: ignore
 
     main_det = dets[0]
-    if isinstance(main_det, AreaDetector | SingleTriggerDetector):
+    if isinstance(main_det, AndorDetector | SingleTriggerDetector):
         yield from set_area_detector_acquire_time(main_det, acquire_time=count_time)
 
     # Add 1 to step number to include the end point
@@ -121,7 +120,6 @@ def grid_step_scan(
 
 
 @plan
-@attach_data_session_metadata_decorator()
 def grid_fast_scan(
     dets: list[Readable],
     count_time: float,
@@ -194,9 +192,9 @@ def grid_fast_scan(
     step_acc = yield from bps.rd(step_motor.acceleration_time)
 
     main_det = dets[0]
-    if isinstance(main_det, AreaDetector):
+    if isinstance(main_det, AndorDetector):
         yield from set_area_detector_acquire_time(det=main_det, acquire_time=count_time)
-        deadtime = main_det._controller.get_deadtime(count_time)  # noqa: SLF001
+        deadtime = main_det._trigger_logic.get_deadtime(count_time)
     elif isinstance(main_det, SingleTriggerDetector):
         yield from set_area_detector_acquire_time(det=main_det, acquire_time=count_time)
         deadtime = count_time

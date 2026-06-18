@@ -10,16 +10,16 @@ from dodal.common.visit import (
     StaticVisitPathProvider,
 )
 from dodal.devices.motors import XYZStage
+from dodal.devices.single_trigger_detector import SingleTriggerDetector
 from ophyd_async.core import (
     FilenameProvider,
     StaticFilenameProvider,
     StaticPathProvider,
-    callback_on_mock_put,
     init_devices,
     set_mock_value,
 )
-from ophyd_async.epics.adandor import Andor2Detector
-from ophyd_async.epics.adcore import ADBaseIO, SingleTriggerDetector
+from ophyd_async.epics.adandor import AndorDetector
+from ophyd_async.epics.adcore import ADBaseIO, ADWriterFactory
 
 from sm_bluesky.common.sim_devices import SimDetector, SimStage
 
@@ -131,31 +131,15 @@ async def fake_detector() -> SimDetector:
 
 # area detector that is use for testing
 @pytest.fixture
-async def andor2(static_path_provider: StaticPathProvider) -> Andor2Detector:
+async def andor2(static_path_provider: StaticPathProvider) -> AndorDetector:
     async with init_devices(mock=True):
-        andor2 = Andor2Detector("p99", static_path_provider)
+        writer = ADWriterFactory.hdf(static_path_provider, writer_name="fileio")
+        andor2 = AndorDetector("p99", writer)
 
     set_mock_value(andor2.driver.array_size_x, 10)
     set_mock_value(andor2.driver.array_size_y, 20)
-    set_mock_value(andor2.fileio.file_path_exists, True)
-    set_mock_value(andor2.fileio.num_captured, 0)
-    set_mock_value(andor2.fileio.file_path, str(static_path_provider._directory_path))
-    set_mock_value(
-        andor2.fileio.full_file_name,
-        str(static_path_provider._directory_path) + "/test-andor2-hdf0",
-    )
-
     rbv_mocks = Mock()
     rbv_mocks.get.side_effect = range(0, 10000)
-    callback_on_mock_put(
-        andor2.fileio.capture,
-        lambda *_, **__: set_mock_value(andor2.fileio.capture, value=True),
-    )
-
-    callback_on_mock_put(
-        andor2.driver.acquire,
-        lambda *_, **__: set_mock_value(andor2.fileio.num_captured, rbv_mocks.get()),
-    )
 
     return andor2
 

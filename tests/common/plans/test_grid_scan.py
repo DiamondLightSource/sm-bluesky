@@ -5,10 +5,10 @@ from unittest.mock import ANY
 import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
+from dodal.devices.single_trigger_detector import SingleTriggerDetector
 from numpy import random
 from ophyd_async.core import set_mock_value
-from ophyd_async.epics.adandor import Andor2Detector
-from ophyd_async.epics.adcore import SingleTriggerDetector
+from ophyd_async.epics.adandor import AndorDetector
 from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
@@ -19,7 +19,7 @@ from sm_bluesky.common.sim_devices import SimStage
 async def test_grid_fast_zero_velocity_fail(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 10
@@ -49,7 +49,7 @@ async def test_grid_fast_zero_velocity_fail(
 async def test_grid_fast(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 50
@@ -88,7 +88,7 @@ async def test_grid_fast(
 async def test_grid_fast_with_too_little_time_grid_become_1d(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 1.5
@@ -123,7 +123,7 @@ async def test_grid_fast_with_too_little_time_grid_become_1d(
 
 async def test_grid_fast_with_too_little_time_grid_cannot_have_any_points(
     run_engine: RunEngine,
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 10
@@ -155,7 +155,7 @@ async def test_grid_fast_with_too_little_time_grid_cannot_have_any_points(
 async def test_grid_fast_with_speed_capped(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 10
@@ -196,7 +196,7 @@ async def test_grid_fast_with_speed_capped(
 async def test_grid_fast_unknown_step_snake(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     rng = random.default_rng()
@@ -254,7 +254,7 @@ async def test_grid_fast_unknown_step_snake(
 async def test_grid_fast_unknown_step_no_snake(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     step_motor_speed = 1
@@ -313,7 +313,7 @@ async def test_grid_fast_unknown_step_no_snake(
 async def test_grid_fast_unknown_step_snake_with_point_correction(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     rng = random.default_rng()
@@ -366,7 +366,7 @@ async def test_grid_step_with_home(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     sim_stage_step: SimStage,
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
 ) -> None:
     await sim_stage_step.x.set(-1)
     await sim_stage_step.y.set(-2)
@@ -465,7 +465,7 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
 async def test_grid_fast_sim_flyable_motor(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_stage_delay: XYZStage,
 ) -> None:
     plan_time = 1.5

@@ -78,7 +78,12 @@ addopts = """
     --tb=native -vv --doctest-modules --doctest-glob="*.rst"
     """
 # https://iscinumpy.gitlab.io/post/bound-version-constraints/#watch-for-warnings
-filterwarnings = "error"
+# Treat most warnings as errors, but ignore the known deprecation
+# about the SelectableGroups dict interface until upstream is fixed.
+filterwarnings = [
+    "error",
+    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning",
+]
 # Doctest python code in docs, python code in src docstrings, test functions in tests
 testpaths = "docs src tests"
 asyncio_mode = "auto"
