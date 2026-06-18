@@ -84,9 +84,10 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
             raise ConnectionError(
                 "Hardware not connected. Call connect_hardware first."
             )
+        LOGGER.info("Reseting buffers")
         self.device.reset_input_buffer()
         self.device.reset_output_buffer()
-        LOGGER.info("Reseting buffers")
+
 
     def _passthrough(self, value: bytes):
         self._send_hardware_command(value)
