@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from dodal.common.data_util import ModelLoader, ModelLoaderConfig, json_model_loader
 from dodal.devices.beamlines import b07, b07_shared, i09
@@ -149,6 +150,8 @@ async def ew4000(
             shutter=dual_fast_shutter,
             source_selector=source_selector,
         )
+    energy_axis = [1, 2, 3, 4, 5]
+    set_mock_value(ew4000.driver.energy_axis, np.array(energy_axis, dtype=float))
     return ew4000
 
 
@@ -166,7 +169,7 @@ def sim_analyser(
     raise ValueError(f"Detector with name '{request.param}' not found")
 
 
-I09Sequence = VGScientaSequence[i09.LensMode, i09.PsuMode]
+I09Sequence = VGScientaSequence[i09.LensMode, i09.PassEnergy]
 B09_loader = json_model_loader(I09Sequence)
 load_i09_vgscienta_test_seq = ModelLoader(
     B09_loader, ModelLoaderConfig.from_default_file(TEST_VGSCIENTA_SEQUENCE)
