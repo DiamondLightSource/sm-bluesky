@@ -94,7 +94,7 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     pos_cache: dict[Movable, Any],
 ) -> None:
     # Mock driver.set to track expected calls
-    controller = sim_analyser._controller
+    controller = sim_analyser._region_logic
     controller.setup_with_region = AsyncMock(side_effect=fake_status)
     expected_driver_set_calls = [
         call(region) for region in sequence.get_enabled_regions()
@@ -113,17 +113,21 @@ async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
 ) -> None:
+
     for det in all_detectors:
         if isinstance(det, Triggerable):
             det.trigger = MagicMock(side_effect=fake_status)
-
         # Check if detector needs to be mocked with async or not.
         if iscoroutinefunction(det.read):
-            det.read = AsyncMock(return_value=await det.read())
+            det.read = AsyncMock(return_value={"data": 1, "timestamps": {}})
         else:
-            det.read = MagicMock(return_value=det.read())
+            det.read = MagicMock(return_value={"data": 1, "timestamps": {}})
+        if iscoroutinefunction(det.describe):
+            det.describe = AsyncMock(return_value={"data": 1, "timestamps": {}})
+        else:
+            det.describe = MagicMock(return_value={"data": 1, "timestamps": {}})
 
-    run_engine(analyser_nd_step(all_detectors, step, pos_cache))
+        run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
     assert sequence is not None
     n_regions = len(sequence.get_enabled_regions())
