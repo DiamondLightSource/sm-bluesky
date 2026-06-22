@@ -21,6 +21,7 @@ from ophyd_async.core import (
 )
 from ophyd_async.epics.adandor import AndorDetector
 from ophyd_async.epics.adcore import ADBaseIO, ADWriterFactory
+from ophyd_async.epics.adcore._io import NDPluginFileIO
 
 from sm_bluesky.common.sim_devices import SimDetector, SimStage
 
@@ -140,8 +141,6 @@ async def andor2(static_path_provider: StaticPathProvider) -> AndorDetector:
     set_mock_value(andor2.driver.array_size_y, 20)
     writer_inst = getattr(andor2, "fileio", None) or getattr(andor2, "hdf", None)
     if writer_inst is None:
-        from ophyd_async.epics.adcore._io import NDPluginFileIO
-
         for name in dir(andor2):
             try:
                 val = getattr(andor2, name)

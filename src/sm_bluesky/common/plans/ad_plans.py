@@ -3,12 +3,10 @@ from typing import Any
 from bluesky import plan_stubs as bps
 from bluesky import preprocessors as bpp
 from bluesky.utils import Msg, MsgGenerator, plan
-from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
 from ophyd_async.epics.adandor import AndorDetector
 
 
 @plan
-@attach_data_session_metadata_decorator()
 def trigger_img(
     dets: AndorDetector, acquire_time: int, md: dict[str, Any] | None = None
 ) -> MsgGenerator:
