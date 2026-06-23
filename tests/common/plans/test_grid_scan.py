@@ -303,11 +303,10 @@ async def test_grid_fast_unknown_step_no_snake(
     number_of_point = rng.integers(low=5, high=25)
 
     plan_time = (
-        number_of_point**2 * (count_time + det_dead_time)
+        number_of_point**2 * (count_time + det_dead_time + 1)
         + number_of_point * (step_acc * 2 + scan_acc * 2)
         + step_range / step_motor_speed
         + (number_of_point) * (scan_range / scan_motor_speed + scan_acc * 2)
-        + 10
     )
     run_engine(
         grid_fast_scan(
@@ -327,7 +326,7 @@ async def test_grid_fast_unknown_step_no_snake(
 
     scan_max_vel = await sim_motor.y.max_velocity.get_value()
     deadtime = andor2._trigger_logic.get_deadtime(count_time)  # type: ignore
-    ideal_velocity, ideal_step_size = estimate_speed_steps(
+    _, ideal_step_size = estimate_speed_steps(
         plan_time=plan_time,
         deadtime=deadtime,
         step_start=step_start,
@@ -378,7 +377,7 @@ async def test_grid_fast_unknown_step_snake_with_point_correction(
     set_mock_value(sim_motor.y.high_limit_travel, 10)
     set_mock_value(sim_motor.y.acceleration_time, scan_acc)
 
-    plan_time = 100  # plan time to exercise point correction behavior
+    plan_time = 100
 
     run_engine(
         grid_fast_scan(
