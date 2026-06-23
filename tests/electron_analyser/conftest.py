@@ -43,9 +43,6 @@ async def single_energy_source(source_selector: SourceSelector) -> DualEnergySou
         )
     await dcm.energy_in_keV.set(2.2)
     async with init_devices(mock=True):
-        # Create a DualEnergySource that uses the same underlying signal for
-        # both source1 and source2. This preserves compatibility with the
-        # newer dodal API while providing a single-source behaviour.
         dcm_energy_source = DualEnergySource(
             source1=dcm.energy_in_eV,
             source2=dcm.energy_in_eV,

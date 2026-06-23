@@ -326,7 +326,7 @@ def estimate_axis_points(
     """
     Estimate the number of points per axis for a scan.
     """
-    iteration_limit = 18  # Prevent infinite recursion
+    iteration_limit = 18  # Prevent infinite loop
 
     total_estimated_points = plan_time / deadtime
     num_points_per_axis = (
@@ -338,7 +338,7 @@ def estimate_axis_points(
     for _ in range(iteration_limit):
         old_points = num_points_per_axis
 
-        # Overhead time allocations
+        # Motion overhead
         point_step_axis = max(1, floor(num_points_per_axis * step_range))
         step_mv_time = point_step_axis * (step_acceleration * 2) + (
             step_range / step_speed
@@ -352,7 +352,7 @@ def estimate_axis_points(
                 point_scan_axis - 1
             ) * ((scan_range / scan_speed) + (scan_acceleration * 2))
 
-        # Recalculate remaining points available exclusively for collection
+        # Recalculate points with available time
         available_time = plan_time - step_mv_time - scan_mv_time
         if available_time <= 0:
             raise ValueError(
@@ -363,8 +363,8 @@ def estimate_axis_points(
         corrected_total_points = available_time / deadtime
         num_points_per_axis = sqrt(corrected_total_points / (scan_range * step_range))
 
-        # Check for convergence
-        if abs(num_points_per_axis - old_points) <= 0.5:
+        # Break if the improvement is less than 1/20 of a point
+        if abs(num_points_per_axis - old_points) <= 0.05:
             break
 
     return num_points_per_axis
