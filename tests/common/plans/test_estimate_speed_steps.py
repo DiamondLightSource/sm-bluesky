@@ -120,7 +120,9 @@ def test_estimate_speed_steps_insufficient_time_raises_error():
     scan_acceleration = 5.0
 
     # Act & Assert
-    with pytest.raises(ValueError, match="Plan execution window is too short"):
+    with pytest.raises(
+        ValueError, match="Plan execution window is physically too short for overhead. "
+    ):
         estimate_speed_steps(
             plan_time=plan_time,
             deadtime=deadtime,
