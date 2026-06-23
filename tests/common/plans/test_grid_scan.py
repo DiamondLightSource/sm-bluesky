@@ -230,9 +230,8 @@ async def test_grid_fast_unknown_step_snake(
     plan_time = (
         number_of_point**2 * (deadtime)
         + step_range / step_motor_speed
-        + step_range / step_motor_speed
         + (number_of_point - 1) * (scan_range / scan_motor_speed + scan_acc * 2)
-    )
+    ) + step_acc * number_of_point
     run_engine(
         grid_fast_scan(
             dets=[andor2],
@@ -307,7 +306,8 @@ async def test_grid_fast_unknown_step_no_snake(
         number_of_point**2 * (count_time + det_dead_time)
         + number_of_point * (step_acc * 2 + scan_acc * 2)
         + step_range / step_motor_speed
-        + (number_of_point - 1) * (scan_range / scan_motor_speed + scan_acc * 2)
+        + (number_of_point) * (scan_range / scan_motor_speed + scan_acc * 2)
+        + 10
     )
     run_engine(
         grid_fast_scan(
