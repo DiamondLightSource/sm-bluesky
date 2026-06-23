@@ -355,10 +355,13 @@ def estimate_axis_points(
         # Recalculate points with available time
         available_time = plan_time - step_mv_time - scan_mv_time
         if available_time <= 0:
-            raise ValueError(
-                f"Plan execution window is too short for mechanical overhead. "
-                f"Overhead: Step={step_mv_time:.2f}s, Scan={scan_mv_time:.2f}s."
-            )
+            num_points_per_axis = old_points * 0.5
+            if num_points_per_axis < 1:
+                raise ValueError(
+                    f"Plan execution window is physically too short for overhead. "
+                    f"Requested: {plan_time}s, Min Overhead: Step={step_mv_time:.2f}s."
+                )
+            continue
 
         corrected_total_points = available_time / deadtime
         num_points_per_axis = sqrt(corrected_total_points / (scan_range * step_range))
