@@ -50,7 +50,6 @@ def analyser_nd_step(
             f"Electron analyser {analyser.name}.sequence is None. It must be configured"
             " using prepare plan stub."
         )
-
     # Step provides the map of motors to single position to move to. Move motors to
     # required positions.
     yield from move_per_step(step, pos_cache)

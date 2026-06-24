@@ -92,10 +92,7 @@ def assert_event_data(
 
     for event in run_engine_documents["event"]:
         event_data = event["data"]
-        # assert drv.spectrum.name in event_data
-        # assert drv.image.name in event_data
-        # # assert drv.total_intensity.name in event_data
-        # assert event_data == ""
+        # ToDo - Add file path and intensity checks once added to electron analyser.
         for det in extra_detectors:
             assert det.name in event_data
         for m in motors:

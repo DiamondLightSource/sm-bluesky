@@ -1,6 +1,5 @@
-import numpy as np
 import pytest
-from dodal.common.data_util import ModelLoader, ModelLoaderConfig, json_model_loader
+from dodal.common.data_util import ModelLoader
 from dodal.devices.beamlines import b07, b07_shared, i09
 from dodal.devices.common_dcm import (
     DoubleCrystalMonochromatorWithDSpacing,
@@ -12,19 +11,16 @@ from dodal.devices.electron_analyser.base import (
     DualEnergySource,
     GenericElectronAnalyserDetector,
 )
-from dodal.devices.electron_analyser.specs import SpecsDetector, SpecsSequence
-from dodal.devices.electron_analyser.vgscienta import (
-    VGScientaDetector,
-    VGScientaSequence,
-)
+from dodal.devices.electron_analyser.specs import SpecsDetector
+from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
 from dodal.devices.fast_shutter import DualFastShutter, FastShutter
 from dodal.devices.pgm import PlaneGratingMonochromator
 from dodal.devices.selectable_source import SourceSelector
 from ophyd_async.core import InOut, init_devices, set_mock_value
 
-from tests.electron_analyser.test_data import (
-    TEST_SPECS_SEQUENCE,
-    TEST_VGSCIENTA_SEQUENCE,
+from tests.electron_analyser.util import (
+    load_b07_specs_test_seq,
+    load_i09_vgscienta_test_seq,
 )
 
 
@@ -147,8 +143,6 @@ async def ew4000(
             shutter=dual_fast_shutter,
             source_selector=source_selector,
         )
-    energy_axis = [1, 2, 3, 4, 5]
-    set_mock_value(ew4000.driver.energy_axis, np.array(energy_axis, dtype=float))
     return ew4000
 
 
@@ -166,18 +160,6 @@ def sim_analyser(
     raise ValueError(f"Detector with name '{request.param}' not found")
 
 
-I09Sequence = VGScientaSequence[i09.LensMode, i09.PassEnergy]
-B09_loader = json_model_loader(I09Sequence)
-load_i09_vgscienta_test_seq = ModelLoader(
-    B09_loader, ModelLoaderConfig.from_default_file(TEST_VGSCIENTA_SEQUENCE)
-)
-B07BSequence = SpecsSequence[b07.LensMode, b07_shared.PsuMode]
-BB7_loader = json_model_loader(B07BSequence)
-load_b07b_specs_test_seq = ModelLoader(
-    BB7_loader, ModelLoaderConfig.from_default_file(TEST_SPECS_SEQUENCE)
-)
-
-
 @pytest.fixture
 def load_sequence(
     sim_analyser: GenericElectronAnalyserDetector,
@@ -185,7 +167,7 @@ def load_sequence(
     if isinstance(sim_analyser, VGScientaDetector):
         return load_i09_vgscienta_test_seq
     elif isinstance(sim_analyser, SpecsDetector):
-        return load_b07b_specs_test_seq
+        return load_b07_specs_test_seq
     raise TypeError(f"Undefined sim_analyser type {type(sim_analyser)}")
 
 

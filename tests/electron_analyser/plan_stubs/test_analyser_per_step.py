@@ -1,4 +1,3 @@
-import asyncio
 import re
 from collections import defaultdict
 from collections.abc import Callable, Sequence
@@ -16,7 +15,6 @@ from dodal.devices.electron_analyser.base import (
     ElectronAnalyserDetector,
     GenericElectronAnalyserDetector,
 )
-from ophyd_async.core import AsyncStatus, DetectorTrigger, TriggerInfo
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
@@ -57,15 +55,14 @@ def run_engine_setup_decorator(
 ):
     def wrapper(all_detectors, step, pos_cache):
         yield from bps.prepare(sim_analyser.sequence, sequence)
-        default_trigger = TriggerInfo(
-            trigger=DetectorTrigger.INTERNAL, number_of_events=1
-        )
-        yield from bps.prepare(sim_analyser, default_trigger)
         yield from bps.open_run()
         yield from bps.stage_all(*all_detectors)
-        yield from func(all_detectors, step, pos_cache)
-        yield from bps.unstage_all(*all_detectors)
-        yield from bps.close_run()
+        # yield from bps.prepare(sim_analyser, TriggerInfo())
+        try:
+            yield from func(all_detectors, step, pos_cache)
+        finally:
+            yield from bps.unstage_all(*all_detectors)
+            yield from bps.close_run()
 
     return wrapper
 
@@ -82,17 +79,6 @@ def analyser_nd_step(
     )
 
 
-def fake_status(region=None) -> AsyncStatus:
-    status = AsyncStatus(asyncio.sleep(0.0))
-    return status
-
-
-async def fake_collect_asset_docs(*args, **kwargs):
-    """An empty async generator to mock out ophyd-async asset collection loops."""
-    if False:
-        yield
-
-
 def test_analyser_nd_step_func_has_expected_driver_set_calls(
     run_engine: RunEngine,
     analyser_nd_step: Callable,
@@ -104,7 +90,8 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
 ) -> None:
     # Mock driver.set to track expected calls
     controller = sim_analyser._region_logic
-    controller.setup_with_region = AsyncMock(side_effect=fake_status)
+    original_setup_with_region = controller.setup_with_region
+    controller.setup_with_region = AsyncMock(side_effect=original_setup_with_region)
     expected_driver_set_calls = [
         call(region) for region in sequence.get_enabled_regions()
     ]
@@ -124,24 +111,15 @@ async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
 ) -> None:
     for det in all_detectors:
         if isinstance(det, Triggerable):
-            det.trigger = MagicMock(side_effect=fake_status)
-        mock_read_val = {det.name: {"value": 1, "timestamp": 0.0}}
-        mock_desc_val = {det.name: {"source": "mock", "dtype": "number", "shape": []}}
+            original_trigger = det.trigger
+            det.trigger = MagicMock(side_effect=original_trigger)
 
+        # Check if detector needs to be mocked with async or not.
+        original_read = det.read
         if iscoroutinefunction(det.read):
-            det.read = AsyncMock(return_value=mock_read_val)
+            det.read = AsyncMock(wraps=original_read)
         else:
-            det.read = MagicMock(return_value=mock_read_val)
-
-        if iscoroutinefunction(det.describe):
-            det.describe = AsyncMock(return_value=mock_desc_val)
-        else:
-            det.describe = MagicMock(return_value=mock_desc_val)
-
-        if hasattr(det, "collect_asset_docs"):
-            det.collect_asset_docs = MagicMock(  # type: ignore
-                side_effect=fake_collect_asset_docs
-            )
+            det.read = MagicMock(wraps=original_read)
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
@@ -162,55 +140,35 @@ async def test_analyser_nd_step_func_moves_motors_before_detector_trigger(
     step: dict[SimMotor, Any],
     pos_cache: dict[SimMotor, Any],
 ) -> None:
-    call_timeline = []
 
-    def make_set_side_effect(motor_obj):
-        def side_effect(val):
-            call_timeline.append(("set", motor_obj, val))
-            return fake_status()
+    call_order = []
 
-        return side_effect
+    # Spy on motor moves
+    for motor in step:
+        original_set = motor.set
 
-    def make_trigger_side_effect(det_obj):
-        def side_effect():
-            call_timeline.append(("trigger", det_obj))
-            return fake_status()
+        def wrapped_set(*args, _original=original_set, **kwargs):
+            call_order.append("set")
+            return _original(*args, **kwargs)
 
-        return side_effect
+        motor.set = wrapped_set
 
+    # Spy on detector triggers
     for det in all_detectors:
-        if hasattr(det, "trigger"):
-            det.trigger = MagicMock(side_effect=make_trigger_side_effect(det))  # type: ignore
+        if isinstance(det, Triggerable):
+            original_trigger = det.trigger
 
-        mock_read_val = {det.name: {"value": 1, "timestamp": 0.0}}
-        mock_desc_val = {det.name: {"source": "mock", "dtype": "number", "shape": []}}
+            def wrapped_trigger(*args, _original=original_trigger, **kwargs):
+                call_order.append("trigger")
+                return _original(*args, **kwargs)
 
-        if iscoroutinefunction(det.read):
-            det.read = AsyncMock(return_value=mock_read_val)
-        else:
-            det.read = MagicMock(return_value=mock_read_val)
-
-        if iscoroutinefunction(det.describe):
-            det.describe = AsyncMock(return_value=mock_desc_val)
-        else:
-            det.describe = MagicMock(return_value=mock_desc_val)
-
-        if hasattr(det, "collect_asset_docs"):
-            det.collect_asset_docs = MagicMock(side_effect=fake_collect_asset_docs)  # type: ignore
-
-    motors = list(step.keys())
-    for m in motors:
-        m.set = MagicMock(side_effect=make_set_side_effect(m))
+            det.trigger = wrapped_trigger
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
-    # Check to see motor.set was called before any r_det.trigger was called.
-    for mot, val in step.items():
-        set_index = call_timeline.index(("set", mot, val))
-        for det in all_detectors:
-            if ("trigger", det) in call_timeline:
-                trigger_index = call_timeline.index(("trigger", det))
-                assert set_index < trigger_index
+    assert call_order.index("trigger") > max(
+        i for i, op in enumerate(call_order) if op == "set"
+    )
 
 
 async def test_analyser_nd_step_func_moves_motors_correctly(
