@@ -89,16 +89,16 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     pos_cache: dict[Movable, Any],
 ) -> None:
     # Mock driver.set to track expected calls
-    controller = sim_analyser._region_logic
-    original_setup_with_region = controller.setup_with_region
-    controller.setup_with_region = AsyncMock(side_effect=original_setup_with_region)
+    region_logic = sim_analyser._region_logic
+    original_setup_with_region = region_logic.setup_with_region
+    region_logic.setup_with_region = AsyncMock(side_effect=original_setup_with_region)
     expected_driver_set_calls = [
         call(region) for region in sequence.get_enabled_regions()
     ]
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
-    # Check that controller method was called with the number of regions.
-    assert controller.setup_with_region.call_args_list == expected_driver_set_calls
+    # Check that region_logic method was called with the number of regions.
+    assert region_logic.setup_with_region.call_args_list == expected_driver_set_calls
 
 
 async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
