@@ -166,6 +166,7 @@ async def test_analyser_nd_step_func_moves_motors_before_detector_trigger(
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
+    # Check to see motor.set was called before any det.trigger was called.
     assert call_order.index("trigger") > max(
         i for i, op in enumerate(call_order) if op == "set"
     )
