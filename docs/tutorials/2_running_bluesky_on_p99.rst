@@ -35,8 +35,6 @@ This notebook provides a starting point for interacting with p99 hardware.
 
     Devices are imported from the `dodal <https://github.com/DiamondLightSource/dodal/blob/main/src/dodal/beamlines/p99.py>`__ library. For detailed information on creating new devices, refer to the `ophyd-async <https://blueskyproject.io/ophyd-async/main/tutorials/implementing-devices.html>`__ documentation. 
 
-    The following `flowchart <https://diamondlightsource.github.io/dodal/main/how-to/make-new-ophyd-async-device.html>`__ can assist in determining the appropriate device type.
-
     Adhering to the `device standards <https://diamondlightsource.github.io/dodal/main/reference/device-standards.html>`__ is crucial when creating new devices.
 
 Local blueAPI
