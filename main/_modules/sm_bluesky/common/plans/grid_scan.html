@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans.grid_scan &#8212; sm-bluesky 1.0.4.dev1+g893b5c86b documentation</title>
+    <title>sm_bluesky.common.plans.grid_scan &#8212; sm-bluesky 1.0.4.dev2+ga08213d41 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="../../../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../../../_static/documentation_options.js?v=fca47740"></script>
+    <script src="../../../../_static/documentation_options.js?v=e068586c"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -48,7 +48,7 @@
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/common/plans/grid_scan';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -198,11 +198,18 @@
       
         <div class="navbar-item">
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -215,8 +222,7 @@
           
           
           
-          <a href="https://github.com/DiamondLightSource/sm-bluesky" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">GitHub</span></a>
+          <a href="https://github.com/DiamondLightSource/sm-bluesky" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
         </li>
         <li class="nav-item">
           
@@ -227,8 +233,7 @@
           
           
           
-          <a href="https://pypi.org/project/sm-bluesky" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fas fa-cube fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">PyPI</span></a>
+          <a href="https://pypi.org/project/sm-bluesky" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fas fa-cube fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
         </li>
 </ul></div>
       
@@ -335,11 +340,18 @@
         
           <div class="navbar-item">
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -352,8 +364,7 @@
           
           
           
-          <a href="https://github.com/DiamondLightSource/sm-bluesky" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">GitHub</span></a>
+          <a href="https://github.com/DiamondLightSource/sm-bluesky" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
         </li>
         <li class="nav-item">
           
@@ -364,8 +375,7 @@
           
           
           
-          <a href="https://pypi.org/project/sm-bluesky" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fas fa-cube fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">PyPI</span></a>
+          <a href="https://pypi.org/project/sm-bluesky" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fas fa-cube fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
         </li>
 </ul></div>
         
@@ -458,8 +468,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.preprocessors</span><span class="w"> </span><span class="kn">import</span> <span class="n">finalize_wrapper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">Readable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span><span class="p">,</span> <span class="n">plan</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.plan_stubs.data_session</span><span class="w"> </span><span class="kn">import</span> <span class="n">attach_data_session_metadata_decorator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.adcore</span><span class="w"> </span><span class="kn">import</span> <span class="n">AreaDetector</span><span class="p">,</span> <span class="n">SingleTriggerDetector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.single_trigger_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">SingleTriggerDetector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.adandor</span><span class="w"> </span><span class="kn">import</span> <span class="n">AndorDetector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.motor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Motor</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.math_functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">step_size_to_step_num</span>
@@ -482,7 +492,6 @@
 <div class="viewcode-block" id="grid_step_scan">
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.grid_step_scan">[docs]</a>
 <span class="nd">@plan</span>
-<span class="nd">@attach_data_session_metadata_decorator</span><span class="p">()</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">grid_step_scan</span><span class="p">(</span>
     <span class="n">dets</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span>
     <span class="n">count_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -548,7 +557,7 @@
         <span class="p">)</span>  <span class="c1"># type: ignore</span>
 
     <span class="n">main_det</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">AreaDetector</span> <span class="o">|</span> <span class="n">SingleTriggerDetector</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">AndorDetector</span> <span class="o">|</span> <span class="n">SingleTriggerDetector</span><span class="p">):</span>
         <span class="k">yield from</span> <span class="n">set_area_detector_acquire_time</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">acquire_time</span><span class="o">=</span><span class="n">count_time</span><span class="p">)</span>
 
     <span class="c1"># Add 1 to step number to include the end point</span>
@@ -577,7 +586,6 @@
 <div class="viewcode-block" id="grid_fast_scan">
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.grid_fast_scan">[docs]</a>
 <span class="nd">@plan</span>
-<span class="nd">@attach_data_session_metadata_decorator</span><span class="p">()</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">grid_fast_scan</span><span class="p">(</span>
     <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span>
     <span class="n">count_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -650,9 +658,9 @@
     <span class="n">step_acc</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">rd</span><span class="p">(</span><span class="n">step_motor</span><span class="o">.</span><span class="n">acceleration_time</span><span class="p">)</span>
 
     <span class="n">main_det</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">AreaDetector</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">AndorDetector</span><span class="p">):</span>
         <span class="k">yield from</span> <span class="n">set_area_detector_acquire_time</span><span class="p">(</span><span class="n">det</span><span class="o">=</span><span class="n">main_det</span><span class="p">,</span> <span class="n">acquire_time</span><span class="o">=</span><span class="n">count_time</span><span class="p">)</span>
-        <span class="n">deadtime</span> <span class="o">=</span> <span class="n">main_det</span><span class="o">.</span><span class="n">_controller</span><span class="o">.</span><span class="n">get_deadtime</span><span class="p">(</span><span class="n">count_time</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span>
+        <span class="n">deadtime</span> <span class="o">=</span> <span class="n">main_det</span><span class="o">.</span><span class="n">_trigger_logic</span><span class="o">.</span><span class="n">get_deadtime</span><span class="p">(</span><span class="n">count_time</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: SLF001</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">main_det</span><span class="p">,</span> <span class="n">SingleTriggerDetector</span><span class="p">):</span>
         <span class="k">yield from</span> <span class="n">set_area_detector_acquire_time</span><span class="p">(</span><span class="n">det</span><span class="o">=</span><span class="n">main_det</span><span class="p">,</span> <span class="n">acquire_time</span><span class="o">=</span><span class="n">count_time</span><span class="p">)</span>
         <span class="n">deadtime</span> <span class="o">=</span> <span class="n">count_time</span>
@@ -734,7 +742,7 @@
     <span class="n">step_range</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">step_start</span> <span class="o">-</span> <span class="n">step_end</span><span class="p">)</span>
     <span class="n">scan_range</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">scan_start</span> <span class="o">-</span> <span class="n">scan_end</span><span class="p">)</span>
 
-    <span class="n">point_per_axis</span> <span class="o">=</span> <span class="n">estimate_axis_points</span><span class="p">(</span>
+    <span class="n">points_per_unit_dist</span> <span class="o">=</span> <span class="n">estimate_axis_points</span><span class="p">(</span>
         <span class="n">plan_time</span><span class="o">=</span><span class="n">plan_time</span><span class="p">,</span>
         <span class="n">deadtime</span><span class="o">=</span><span class="n">deadtime</span><span class="p">,</span>
         <span class="n">step_range</span><span class="o">=</span><span class="n">step_range</span><span class="p">,</span>
@@ -746,8 +754,8 @@
         <span class="n">snake_axes</span><span class="o">=</span><span class="n">snake_axes</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">point_per_step_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">point_per_axis</span> <span class="o">*</span> <span class="n">correction</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
-    <span class="n">point_per_scan_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">point_per_axis</span> <span class="o">*</span> <span class="n">correction</span> <span class="o">*</span> <span class="n">scan_range</span><span class="p">))</span>
+    <span class="n">point_per_step_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">points_per_unit_dist</span> <span class="o">*</span> <span class="n">correction</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
+    <span class="n">point_per_scan_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">points_per_unit_dist</span> <span class="o">*</span> <span class="n">correction</span> <span class="o">*</span> <span class="n">scan_range</span><span class="p">))</span>
 
     <span class="c1"># Ideal step size is evenly distributed points within the two axes.</span>
     <span class="k">if</span> <span class="n">step_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -781,26 +789,27 @@
     <span class="n">scan_acceleration</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">scan_speed</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">snake_axes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">num_points_per_axis</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Estimate the number of points per axis for a scan.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">iteration_limit</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># Prevent infinite recursion</span>
-    <span class="n">iteration_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">iteration_limit</span> <span class="o">=</span> <span class="mi">18</span>  <span class="c1"># Prevent infinite loop</span>
 
-    <span class="k">if</span> <span class="n">num_points_per_axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">num_points_per_axis</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">((</span><span class="n">plan_time</span> <span class="o">/</span> <span class="n">deadtime</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">scan_range</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
-    <span class="n">old_num_points_per_axis</span> <span class="o">=</span> <span class="n">num_points_per_axis</span>
+    <span class="n">total_estimated_points</span> <span class="o">=</span> <span class="n">plan_time</span> <span class="o">/</span> <span class="n">deadtime</span>
+    <span class="n">num_points_per_axis</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">sqrt</span><span class="p">(</span><span class="n">total_estimated_points</span> <span class="o">/</span> <span class="p">(</span><span class="n">scan_range</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">scan_range</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">else</span> <span class="mf">1.0</span>
+    <span class="p">)</span>
 
-    <span class="k">while</span> <span class="p">(</span>
-        <span class="n">iteration_count</span> <span class="o">&lt;=</span> <span class="n">iteration_limit</span>
-        <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">-</span> <span class="n">old_num_points_per_axis</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">0.49</span>
-    <span class="p">):</span>
-        <span class="n">old_num_points_per_axis</span> <span class="o">=</span> <span class="n">num_points_per_axis</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iteration_limit</span><span class="p">):</span>
+        <span class="n">old_points</span> <span class="o">=</span> <span class="n">num_points_per_axis</span>
 
+        <span class="c1"># Motion overhead</span>
         <span class="n">point_step_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
-        <span class="n">step_mv_time</span> <span class="o">=</span> <span class="n">point_step_axis</span> <span class="o">*</span> <span class="n">step_acceleration</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">step_range</span> <span class="o">/</span> <span class="n">step_speed</span>
+        <span class="n">step_mv_time</span> <span class="o">=</span> <span class="n">point_step_axis</span> <span class="o">*</span> <span class="p">(</span><span class="n">step_acceleration</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="n">step_range</span> <span class="o">/</span> <span class="n">step_speed</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">snake_axes</span><span class="p">:</span>
             <span class="n">scan_mv_time</span> <span class="o">=</span> <span class="n">point_step_axis</span> <span class="o">*</span> <span class="p">(</span><span class="n">scan_acceleration</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
@@ -808,19 +817,27 @@
             <span class="n">point_scan_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">*</span> <span class="n">scan_range</span><span class="p">))</span>
             <span class="n">scan_mv_time</span> <span class="o">=</span> <span class="n">point_scan_axis</span> <span class="o">*</span> <span class="p">(</span><span class="n">scan_acceleration</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span>
                 <span class="n">point_scan_axis</span> <span class="o">-</span> <span class="mi">1</span>
-            <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">scan_range</span> <span class="o">/</span> <span class="n">scan_speed</span> <span class="o">+</span> <span class="n">scan_acceleration</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">scan_range</span> <span class="o">/</span> <span class="n">scan_speed</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">scan_acceleration</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
 
-        <span class="n">corrected_num_points</span> <span class="o">=</span> <span class="p">(</span><span class="n">plan_time</span> <span class="o">-</span> <span class="n">step_mv_time</span> <span class="o">-</span> <span class="n">scan_mv_time</span><span class="p">)</span> <span class="o">/</span> <span class="n">deadtime</span>
-        <span class="k">if</span> <span class="n">corrected_num_points</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Plan time too short for the area and count time required. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Plan time: </span><span class="si">{</span><span class="n">plan_time</span><span class="si">}</span><span class="s2">, Step move time: </span><span class="si">{</span><span class="n">step_mv_time</span><span class="si">}</span><span class="s2">, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Scan move time: </span><span class="si">{</span><span class="n">scan_mv_time</span><span class="si">}</span><span class="s2">, Deadtime: </span><span class="si">{</span><span class="n">deadtime</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-        <span class="n">iteration_count</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="n">num_points_per_axis</span> <span class="o">=</span> <span class="n">corrected_num_points</span>
-    <span class="n">point_per_axis</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">/</span> <span class="p">(</span><span class="n">scan_range</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">point_per_axis</span><span class="p">))</span>
+        <span class="c1"># Recalculate points with available time</span>
+        <span class="n">available_time</span> <span class="o">=</span> <span class="n">plan_time</span> <span class="o">-</span> <span class="n">step_mv_time</span> <span class="o">-</span> <span class="n">scan_mv_time</span>
+        <span class="k">if</span> <span class="n">available_time</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">num_points_per_axis</span> <span class="o">=</span> <span class="n">old_points</span> <span class="o">*</span> <span class="mf">0.5</span>
+            <span class="k">if</span> <span class="n">num_points_per_axis</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Plan execution window is physically too short for overhead. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Requested: </span><span class="si">{</span><span class="n">plan_time</span><span class="si">}</span><span class="s2">s, Min Overhead: Step=</span><span class="si">{</span><span class="n">step_mv_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">corrected_total_points</span> <span class="o">=</span> <span class="n">available_time</span> <span class="o">/</span> <span class="n">deadtime</span>
+        <span class="n">num_points_per_axis</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">corrected_total_points</span> <span class="o">/</span> <span class="p">(</span><span class="n">scan_range</span> <span class="o">*</span> <span class="n">step_range</span><span class="p">))</span>
+
+        <span class="c1"># Break if the improvement is less than 1/20 of a point</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">num_points_per_axis</span> <span class="o">-</span> <span class="n">old_points</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">0.05</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">num_points_per_axis</span>
 </pre></div>
 
                 </article>
@@ -850,8 +867,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -863,7 +880,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.17.1.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
 </p></div>
       
     </div>
