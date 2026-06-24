@@ -13,7 +13,6 @@ from dodal.devices.electron_analyser.base import (
     BaseSequence,
     ElectronAnalyserDetector,
 )
-from ophyd_async.core import TriggerInfo
 
 from sm_bluesky.electron_analyser.plan_stubs import (
     analyser_nd_step,
@@ -31,7 +30,6 @@ def analysercount(
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
     yield from prepare(analyser.sequence, sequence)
-    yield from prepare(analyser, TriggerInfo())
     yield from count(
         [*detectors, analyser],
         num,
@@ -51,7 +49,6 @@ def analyserscan(
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
     yield from prepare(analyser.sequence, sequence)
-    yield from prepare(analyser, TriggerInfo())
     yield from scan(
         [*detectors, analyser],
         *args,
@@ -71,7 +68,6 @@ def grid_analyserscan(
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
     yield from prepare(analyser.sequence, sequence)
-    yield from prepare(analyser, TriggerInfo())
     yield from grid_scan(
         [*detectors, analyser],
         *args,
