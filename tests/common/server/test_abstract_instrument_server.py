@@ -257,7 +257,7 @@ def test_check_timeout_passes_when_valid(mock_instrument: AbstractInstrumentServ
 
 
 def test_send_command_list(mock_instrument: AbstractInstrumentServer):
-    """Verify that the command_list returns all registered commands separated by tabs."""
+    """Verify that the command_list returns all registered commands."""
     mock_instrument._conn = MagicMock()
     mock_instrument._conn.sendall = MagicMock()
     mock_instrument._handle_command(b"command_list", b"")
