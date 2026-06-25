@@ -71,6 +71,8 @@ def main(args: Sequence[str] | None = None) -> None:
             except KeyboardInterrupt:
                 print("\nStopping server ...")
                 server.stop()
+        else:
+            start_parser.print_help()
 
     else:
         parser.print_help()

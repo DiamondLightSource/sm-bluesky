@@ -1,6 +1,7 @@
 import subprocess
 import sys
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -9,13 +10,12 @@ from sm_bluesky.common.cli import main
 
 
 @pytest.fixture
-def mock_sh_generator():
+def mock_sh_generator() -> Generator[MagicMock, None, None]:
     with patch("sm_bluesky.common.servers.GeneratorServerShanghaiTech") as mock_cls:
         yield mock_cls
 
 
-@patch("sm_bluesky.common.servers.GeneratorServerShanghaiTech")
-def test_cli_shanghai_tech_default_arguments(mock_sh_generator):
+def test_cli_shanghai_tech_default_arguments(mock_sh_generator: MagicMock) -> None:
     """Verify 'sm-bluesky start sh_pulse_generator' passes correct defaults."""
     mock_instance = mock_sh_generator.return_value
 
@@ -33,7 +33,7 @@ def test_cli_shanghai_tech_default_arguments(mock_sh_generator):
     mock_instance.start.assert_called_once()
 
 
-def test_cli_shanghai_tech_custom_flags(mock_sh_generator):
+def test_cli_shanghai_tech_custom_flags(mock_sh_generator: MagicMock) -> None:
     main(
         [
             "start",
@@ -65,7 +65,7 @@ def test_cli_shanghai_tech_custom_flags(mock_sh_generator):
     )
 
 
-def test_cli_handles_keyboard_interrupt(mock_sh_generator):
+def test_cli_handles_keyboard_interrupt(mock_sh_generator: MagicMock) -> None:
     mock_instance = mock_sh_generator.return_value
     mock_instance.start.side_effect = KeyboardInterrupt()
     main(["start", "sh_pulse_generator"])
@@ -77,20 +77,29 @@ def test_cli_handles_keyboard_interrupt(mock_sh_generator):
     [
         ([], "sm-bluesky CLI", False),
         (
+            ["junk"],
+            "invalid choice: 'junk'",
+            True,
+        ),
+        (
             ["start", "junk"],
             "invalid choice: 'junk'",
             True,
         ),
         (
-            ["junk"],
-            "invalid choice: 'junk'",
-            True,
+            ["start"],
+            "usage: ",
+            False,
         ),
     ],
 )
 def test_cli_shows_help_on_invalid_command(
-    command, expected_output, look_in_stderr, capsys
-):
+    command: list[str],
+    expected_output: str,
+    look_in_stderr: bool,
+    capsys: pytest.CaptureFixture[str],
+    mock_sh_generator: MagicMock,
+) -> None:
     if look_in_stderr:
         with pytest.raises(SystemExit) as exc_info:
             main(command)
