@@ -1,11 +1,8 @@
 from collections.abc import Iterable, Sequence
-from typing import Any
 
-from bluesky.plans import PerShot, PerStep, count, grid_scan, scan
-from bluesky.protocols import (
-    Movable,
-    Readable,
-)
+from bluesky.plan_stubs import prepare
+from bluesky.plans import count, grid_scan, scan
+from bluesky.protocols import Movable, Readable
 from bluesky.utils import (
     CustomPlanMetadata,
     MsgGenerator,
@@ -13,6 +10,7 @@ from bluesky.utils import (
     plan,
 )
 from dodal.devices.electron_analyser.base import (
+    BaseSequence,
     ElectronAnalyserDetector,
 )
 
@@ -22,52 +20,18 @@ from sm_bluesky.electron_analyser.plan_stubs import (
 )
 
 
-def process_detectors_for_analyserscan(
-    detectors: Sequence[Readable],
-    sequence_file: str,
-) -> Sequence[Readable]:
-    """
-    Check for instance of ElectronAnalyserDetector in the detector list. Provide it with
-    sequence file to read and create list of ElectronAnalyserRegionDetector's. Replace
-    ElectronAnalyserDetector in list of detectors with the
-    list[ElectronAnalyserRegionDetector] and flatten.
-
-    Args:
-        detectors:
-            Devices to measure with for a scan.
-        sequence_file:
-            The file to read to create list[ElectronAnalyserRegionDetector].
-
-    Returns:
-        list of detectors, with any instances of ElectronAnalyserDetector replaced by
-        ElectronAnalyserRegionDetector by the number of regions in the sequence file.
-
-    """
-    analyser_detector = None
-    region_detectors = []
-    for det in detectors:
-        if isinstance(det, ElectronAnalyserDetector):
-            analyser_detector = det
-            region_detectors = det.create_region_detector_list(sequence_file)
-            break
-
-    expansions = (
-        region_detectors if e == analyser_detector else [e] for e in detectors
-    )
-    return [v for vals in expansions for v in vals]
-
-
 def analysercount(
+    analyser: ElectronAnalyserDetector,
+    sequence: BaseSequence,
     detectors: Sequence[Readable],
-    sequence_file: str,
     num: int = 1,
     delay: ScalarOrIterableFloat = 0.0,
     *,
-    per_shot: PerShot | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
+    yield from prepare(analyser.sequence, sequence)
     yield from count(
-        process_detectors_for_analyserscan(detectors, sequence_file),
+        [*detectors, analyser],
         num,
         delay,
         per_shot=analyser_shot,
@@ -77,15 +41,16 @@ def analysercount(
 
 @plan
 def analyserscan(
+    analyser: ElectronAnalyserDetector,
+    sequence: BaseSequence,
     detectors: Sequence[Readable],
-    sequence_file: str,
-    *args: Movable | Any,
+    args: Sequence[Movable | float | int],
     num: int | None = None,
-    per_step: PerStep | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
+    yield from prepare(analyser.sequence, sequence)
     yield from scan(
-        process_detectors_for_analyserscan(detectors, sequence_file),
+        [*detectors, analyser],
         *args,
         num,
         per_step=analyser_nd_step,
@@ -95,14 +60,16 @@ def analyserscan(
 
 @plan
 def grid_analyserscan(
+    analyser: ElectronAnalyserDetector,
+    sequence: BaseSequence,
     detectors: Sequence[Readable],
-    sequence_file: str,
-    *args,
+    args: Sequence[Movable | float | int],
     snake_axes: Iterable | bool | None = None,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
+    yield from prepare(analyser.sequence, sequence)
     yield from grid_scan(
-        process_detectors_for_analyserscan(detectors, sequence_file),
+        [*detectors, analyser],
         *args,
         snake_axes=snake_axes,
         per_step=analyser_nd_step,

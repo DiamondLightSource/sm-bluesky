@@ -1,13 +1,13 @@
 import pytest
-from dodal.devices.current_amplifiers import CurrentAmpDet
-from dodal.devices.i10.rasor.rasor_current_amp import RasorFemto
-from dodal.devices.i10.rasor.rasor_motors import (
+from dodal.devices.beamlines.i10.rasor.rasor_current_amp import RasorFemto
+from dodal.devices.beamlines.i10.rasor.rasor_motors import (
     DetSlits,
     Diffractometer,
     PaStage,
 )
-from dodal.devices.i10.rasor.rasor_scaler_cards import RasorScalerCard1
-from dodal.devices.i10.slits import I10Slits
+from dodal.devices.beamlines.i10.rasor.rasor_scaler_cards import RasorScalerCard1
+from dodal.devices.beamlines.i10.slits import I10Slits
+from dodal.devices.current_amplifiers import CurrentAmpDet
 from dodal.devices.motors import XYStage, XYZStage
 from ophyd_async.core import init_devices
 

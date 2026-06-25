@@ -1,69 +1,176 @@
 import pytest
-from dodal.beamlines import b07, i09
+from dodal.common.data_util import ModelLoader
+from dodal.devices.beamlines import b07, b07_shared, i09
+from dodal.devices.common_dcm import (
+    DoubleCrystalMonochromatorWithDSpacing,
+    PitchAndRollCrystal,
+    StationaryCrystal,
+)
 from dodal.devices.electron_analyser.base import (
+    BaseSequence,
     DualEnergySource,
-    ElectronAnalyserDetector,
+    GenericElectronAnalyserDetector,
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
-from dodal.testing.electron_analyser import create_detector
-from ophyd_async.core import init_devices
-from ophyd_async.sim import SimMotor
+from dodal.devices.fast_shutter import DualFastShutter, FastShutter
+from dodal.devices.pgm import PlaneGratingMonochromator
+from dodal.devices.selectable_source import SourceSelector
+from ophyd_async.core import InOut, init_devices, set_mock_value
 
-from tests.electron_analyser.test_data import (
-    TEST_SPECS_SEQUENCE,
-    TEST_VGSCIENTA_SEQUENCE,
+from tests.electron_analyser.util import (
+    load_b07_specs_test_seq,
+    load_i09_vgscienta_test_seq,
 )
 
 
 @pytest.fixture
-async def pgm_energy() -> SimMotor:
-    with init_devices():
-        pgm_energy = SimMotor()
-    return pgm_energy
+async def source_selector() -> SourceSelector:
+    async with init_devices(mock=True):
+        source_selector = SourceSelector()
+    return source_selector
 
 
 @pytest.fixture
-async def dcm_energy() -> SimMotor:
-    with init_devices():
-        dcm_energy = SimMotor()
-    return dcm_energy
+async def single_energy_source(source_selector: SourceSelector) -> DualEnergySource:
+    async with init_devices(mock=True):
+        dcm = DoubleCrystalMonochromatorWithDSpacing(
+            "DCM:", PitchAndRollCrystal, StationaryCrystal
+        )
+    await dcm.energy_in_keV.set(2.2)
+    async with init_devices(mock=True):
+        dcm_energy_source = DualEnergySource(
+            source1=dcm.energy_in_eV,
+            source2=dcm.energy_in_eV,
+            selected_source=source_selector.selected_source,
+        )
+
+    return dcm_energy_source
 
 
 @pytest.fixture
-async def dual_energy_source(
-    dcm_energy: SimMotor, pgm_energy: SimMotor
-) -> DualEnergySource:
-    with init_devices():
+async def dual_energy_source(source_selector: SourceSelector) -> DualEnergySource:
+    async with init_devices(mock=True):
+        dcm = DoubleCrystalMonochromatorWithDSpacing(
+            "DCM:", PitchAndRollCrystal, StationaryCrystal
+        )
+        pgm = PlaneGratingMonochromator("PGM:", i09.Grating)
+    await dcm.energy_in_keV.set(2.2)
+    await pgm.energy.set(500)
+    async with init_devices(mock=True):
         dual_energy_source = DualEnergySource(
-            dcm_energy.user_readback, pgm_energy.user_readback
+            source1=dcm.energy_in_eV,
+            source2=pgm.energy.user_readback,
+            selected_source=source_selector.selected_source,
         )
     return dual_energy_source
 
 
-@pytest.fixture(
-    params=[
-        VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy],
-        SpecsDetector[b07.LensMode, b07.PsuMode],
-    ]
-)
-async def sim_analyser(
-    request: pytest.FixtureRequest,
-    dual_energy_source: DualEnergySource,
-) -> ElectronAnalyserDetector:
+@pytest.fixture
+def shutter1() -> FastShutter[InOut]:
     with init_devices(mock=True):
-        sim_analyser = create_detector(
-            request.param,
-            prefix="TEST:",
-            energy_source=dual_energy_source,
+        shutter1 = FastShutter[InOut](
+            pv="TEST:",
+            open_state=InOut.OUT,
+            close_state=InOut.IN,
         )
-    return sim_analyser
+    return shutter1
 
 
 @pytest.fixture
-def sequence_file(sim_analyser: ElectronAnalyserDetector) -> str:
+def shutter2() -> FastShutter[InOut]:
+    with init_devices(mock=True):
+        shutter2 = FastShutter[InOut](
+            pv="TEST:",
+            open_state=InOut.OUT,
+            close_state=InOut.IN,
+        )
+    return shutter2
+
+
+@pytest.fixture
+def dual_fast_shutter(
+    shutter1: FastShutter[InOut],
+    shutter2: FastShutter[InOut],
+    source_selector: SourceSelector,
+) -> DualFastShutter[InOut]:
+    with init_devices(mock=True):
+        dual_fast_shutter = DualFastShutter[InOut](
+            shutter1,
+            shutter2,
+            source_selector.selected_source,
+        )
+    return dual_fast_shutter
+
+
+@pytest.fixture
+async def b07b_specs150(
+    single_energy_source: DualEnergySource,
+    shutter1: FastShutter,
+) -> SpecsDetector[b07.LensMode, b07_shared.PsuMode]:
+    with init_devices(mock=True):
+        b07b_specs150 = SpecsDetector[b07.LensMode, b07_shared.PsuMode](
+            prefix="TEST:",
+            lens_mode_type=b07.LensMode,
+            psu_mode_type=b07_shared.PsuMode,
+            energy_source=single_energy_source.energy,
+            shutter=shutter1,
+        )
+    # Needed so we don't run into divide by zero errors on read and describe.
+    dummy_val = 10
+    set_mock_value(b07b_specs150.driver.slices, 1)
+    set_mock_value(b07b_specs150.driver.min_angle_axis, dummy_val)
+    set_mock_value(b07b_specs150.driver.max_angle_axis, dummy_val)
+    set_mock_value(b07b_specs150.driver.slices, dummy_val)
+    set_mock_value(b07b_specs150.driver.low_energy, dummy_val)
+    set_mock_value(b07b_specs150.driver.high_energy, dummy_val)
+    return b07b_specs150
+
+
+@pytest.fixture
+async def ew4000(
+    dual_energy_source: DualEnergySource,
+    dual_fast_shutter: DualFastShutter,
+    source_selector: SourceSelector,
+) -> VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy]:
+    with init_devices(mock=True):
+        ew4000 = VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy](
+            prefix="TEST:",
+            lens_mode_type=i09.LensMode,
+            psu_mode_type=i09.PsuMode,
+            pass_energy_type=i09.PassEnergy,
+            energy_source=dual_energy_source.energy,
+            shutter=dual_fast_shutter,
+            source_selector=source_selector,
+        )
+    return ew4000
+
+
+@pytest.fixture(params=["ew4000", "b07b_specs150"])
+def sim_analyser(
+    request: pytest.FixtureRequest,
+    ew4000: VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy],
+    b07b_specs150: SpecsDetector[b07.LensMode, b07_shared.PsuMode],
+) -> GenericElectronAnalyserDetector:
+    detectors = [ew4000, b07b_specs150]
+    for detector in detectors:
+        if detector.name == request.param:
+            return detector
+
+    raise ValueError(f"Detector with name '{request.param}' not found")
+
+
+@pytest.fixture
+def load_sequence(
+    sim_analyser: GenericElectronAnalyserDetector,
+) -> ModelLoader:
     if isinstance(sim_analyser, VGScientaDetector):
-        return TEST_VGSCIENTA_SEQUENCE
+        return load_i09_vgscienta_test_seq
     elif isinstance(sim_analyser, SpecsDetector):
-        return TEST_SPECS_SEQUENCE
+        return load_b07_specs_test_seq
     raise TypeError(f"Undefined sim_analyser type {type(sim_analyser)}")
+
+
+@pytest.fixture
+def sequence(load_sequence: ModelLoader[BaseSequence]) -> BaseSequence:
+    return load_sequence()

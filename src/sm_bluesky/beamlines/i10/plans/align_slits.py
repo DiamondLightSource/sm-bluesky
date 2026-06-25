@@ -4,7 +4,7 @@ from bluesky.plan_stubs import abs_set, mv, wait
 from dodal.beamlines.i10 import DetSlits, I10Slits
 from dodal.common import inject
 from dodal.common.types import MsgGenerator
-from dodal.devices.i10.rasor.rasor_motors import Diffractometer
+from dodal.devices.beamlines.i10.rasor.rasor_motors import Diffractometer
 from dodal.devices.motors import XYZStage
 from dodal.devices.slits import Slits
 from ophyd_async.core import StandardReadable

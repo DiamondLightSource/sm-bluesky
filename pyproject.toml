@@ -18,9 +18,10 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal>=1.68.0",
+    "dls-dodal",
     "ophyd-async[sim]",
     "scanspec",
+    "blueapi",
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
@@ -43,6 +44,8 @@ dev = [
     "tox-uv",
     "types-mock",
     "pytest-asyncio",
+    # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
+    "chardet==7.4.3",
 
     #usefull stuff for testing
     "jupyter",
@@ -50,8 +53,6 @@ dev = [
     "matplotlib",
     "numpy",
     "pyepics",
-    "blueapi",
-
 ]
 
 [project.scripts]
@@ -77,7 +78,12 @@ addopts = """
     --tb=native -vv --doctest-modules --doctest-glob="*.rst"
     """
 # https://iscinumpy.gitlab.io/post/bound-version-constraints/#watch-for-warnings
-filterwarnings = "error"
+# Treat most warnings as errors, but ignore the known deprecation
+# about the SelectableGroups dict interface until upstream is fixed.
+filterwarnings = [
+    "error",
+    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning",
+]
 # Doctest python code in docs, python code in src docstrings, test functions in tests
 testpaths = "docs src tests"
 asyncio_mode = "auto"
@@ -90,6 +96,10 @@ data_file = "/tmp/sm_bluesky.coverage"
 [tool.coverage.paths]
 # Tests are run from installed location, map back to the src directory
 source = ["src", "**/site-packages/"]
+
+[tool.coverage.report]
+# Exclude blueapi client startup scripts from code coverage report
+omit = ["*/sm_bluesky/scripts/clients/*"]
 
 [tool.tox]
 skipsdist = true
@@ -119,7 +129,7 @@ commands = [
     [
         "pyright",
         "--pythonpath",
-        ".venv/bin/python",
+        "{env:VIRTUAL_ENV}/bin/python",
         "src",
         "tests",
         { replace = "posargs", default = [

@@ -3,7 +3,7 @@ from collections.abc import Hashable
 import bluesky.plan_stubs as bps
 from dodal.common import inject
 from dodal.common.types import MsgGenerator
-from dodal.devices.i10.rasor.rasor_motors import Diffractometer
+from dodal.devices.beamlines.i10.rasor.rasor_motors import Diffractometer
 from dodal.devices.motors import XYZStage
 from ophyd_async.core import StandardReadable
 
