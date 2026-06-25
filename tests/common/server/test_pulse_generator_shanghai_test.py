@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from serial import Serial
 
-from sm_bluesky.common.server import GeneratorServerShanghaiTech
+from sm_bluesky.common.servers import GeneratorServerShanghaiTech
 
 
 @pytest.fixture

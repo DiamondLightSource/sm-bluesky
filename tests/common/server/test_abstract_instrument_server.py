@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from sm_bluesky.common.server import AbstractInstrumentServer
+from sm_bluesky.common.servers import AbstractInstrumentServer
 
 
 class MockInstrument(AbstractInstrumentServer):

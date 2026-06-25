@@ -2,7 +2,7 @@ import logging
 
 from serial import Serial
 
-from sm_bluesky.common.server import AbstractInstrumentServer
+from sm_bluesky.common.servers import AbstractInstrumentServer
 from sm_bluesky.log import LOGGER
 
 
