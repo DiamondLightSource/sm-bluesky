@@ -13,7 +13,7 @@ from sm_bluesky.common.servers import GeneratorServerShanghaiTech
 def mock_serial():
     """Patches Serial and returns the class mock."""
     with patch(
-        "sm_bluesky.common.server.pulse_generator_shanghai_tech.Serial", spec=True
+        "sm_bluesky.common.servers.pulse_generator_shanghai_tech.Serial", spec=True
     ) as mock_serial:
         yield mock_serial
 
@@ -36,7 +36,7 @@ def test_connect_hardware_failure(
     mock_server: GeneratorServerShanghaiTech, caplog: pytest.LogCaptureFixture
 ):
     with patch(
-        "sm_bluesky.common.server.pulse_generator_shanghai_tech.Serial"
+        "sm_bluesky.common.servers.pulse_generator_shanghai_tech.Serial"
     ) as mock_serial_class:
         error_message = "Connection failed"
         mock_serial_class.side_effect = Exception(error_message)
@@ -211,7 +211,7 @@ def test_send_hardware_command_fail_no_device(mock_server: GeneratorServerShangh
 @pytest.fixture
 def running_server():
     with patch(
-        "sm_bluesky.common.server.pulse_generator_shanghai_tech.Serial"
+        "sm_bluesky.common.servers.pulse_generator_shanghai_tech.Serial"
     ) as mock_serial_class:
         mock_device = MagicMock()
         mock_serial_class.return_value = mock_device
@@ -227,7 +227,7 @@ def running_server():
         server.stop()
 
 
-def test_full_tcp_command_flow(running_server):
+def test_full_tcp_command_flow(running_server: MagicMock):
     """Client sends a command via TCP and verifies the protocol response."""
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(("127.0.0.1", 9999))
