@@ -17,8 +17,9 @@ def main(args: Sequence[str] | None = None) -> None:
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Commands")
-    start_parser = subparsers.add_parser("start", help="Start an instrument server")
 
+    # ----------------- start command ----------------------------------------------
+    start_parser = subparsers.add_parser("start", help="Start an instrument server")
     server_subparsers = start_parser.add_subparsers(
         dest="server_type", help="Server types"
     )
@@ -48,6 +49,22 @@ def main(args: Sequence[str] | None = None) -> None:
         help="Max pulse delay configuration",
     )
 
+    # ----------------- send command ----------------------------------------------
+    """Quick command line to interact with server """
+    send_parser = subparsers.add_parser(
+        "send", help="Send a single text command to a running server"
+    )
+    send_parser.add_argument("payload", type=str, help="The command string to transmit")
+    send_parser.add_argument(
+        "--host", type=str, default="127.0.0.1", help="Target server IP"
+    )
+    send_parser.add_argument(
+        "--port", type=int, default=7891, help="Target server TCP port"
+    )
+    send_parser.add_argument(
+        "--timeout", type=float, default=2.0, help="Socket timeout"
+    )
+
     parsed_args = parser.parse_args(args)
 
     if parsed_args.command == "start":
@@ -73,6 +90,29 @@ def main(args: Sequence[str] | None = None) -> None:
                 server.stop()
         else:
             start_parser.print_help()
+    elif parsed_args.command == "send":
+        from sm_bluesky.common.client import InstrumentClient
 
+        print(
+            f"Sending command:{parsed_args.payload} to {parsed_args.host}:"
+            + f"{parsed_args.port}"
+        )
+        try:
+            parts = parsed_args.payload.split()
+            if not parts:
+                raise ValueError("Payload cannot be empty")
+
+            command = parts[0]
+            arguments = parts[1:]
+            client = InstrumentClient(
+                host=parsed_args.host,
+                port=parsed_args.port,
+                timeout=parsed_args.timeout,
+            )
+
+            result = client.send_payload(command, *arguments)
+            print(f"✅ SUCCESS: {result}" if result else "✅ SUCCESS")
+        except Exception as err:
+            print(f"\u274c FAILED: {err}")
     else:
         parser.print_help()

@@ -11,8 +11,14 @@ from sm_bluesky.common.cli import main
 
 @pytest.fixture
 def mock_sh_generator() -> Generator[MagicMock, None, None]:
-    with patch("sm_bluesky.common.servers.GeneratorServerShanghaiTech") as mock_cls:
-        yield mock_cls
+    with patch("sm_bluesky.common.servers.GeneratorServerShanghaiTech") as mock_server:
+        yield mock_server
+
+
+@pytest.fixture
+def mock_instrument_client() -> Generator[MagicMock, None, None]:
+    with patch("sm_bluesky.common.client.InstrumentClient") as mock_client:
+        yield mock_client
 
 
 def test_cli_shanghai_tech_default_arguments(mock_sh_generator: MagicMock) -> None:
@@ -98,7 +104,6 @@ def test_cli_shows_help_on_invalid_command(
     expected_output: str,
     look_in_stderr: bool,
     capsys: pytest.CaptureFixture[str],
-    mock_sh_generator: MagicMock,
 ) -> None:
     if look_in_stderr:
         with pytest.raises(SystemExit) as exc_info:
@@ -116,3 +121,44 @@ def test_cli_shows_help_on_invalid_command(
 def test_cli_version():
     cmd = [sys.executable, "-m", "sm_bluesky", "--version"]
     assert subprocess.check_output(cmd).decode().strip() == __version__
+
+
+def test_cli_send_command_success(
+    mock_instrument_client: MagicMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    mock_instance = mock_instrument_client.return_value
+    mock_instance.send_payload.return_value = "512"
+
+    main(["send", "SET_DELAY 512", "--host", "0.0.0.0", "--port", "8888"])
+
+    mock_instrument_client.assert_called_once_with(
+        host="0.0.0.0", port=8888, timeout=2.0
+    )
+    mock_instance.send_payload.assert_called_once_with("SET_DELAY", "512")
+
+    captured = capsys.readouterr()
+    assert "Sending command:SET_DELAY 512" in captured.out
+    assert "SUCCESS: 512" in captured.out
+
+
+def test_cli_send_command_failure(
+    mock_instrument_client: MagicMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    mock_instance = mock_instrument_client.return_value
+    mock_instance.send_payload.side_effect = ConnectionError("Help help")
+
+    main(["send", "do not matter"])
+
+    captured = capsys.readouterr()
+    assert "FAILED: Help help" in captured.out
+
+
+def test_cli_send_empty_payload(
+    mock_instrument_client: MagicMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+
+    main(["send", "   "])
+
+    captured = capsys.readouterr()
+    assert "FAILED: Payload cannot be empty" in captured.out
+    mock_instrument_client.assert_not_called()
