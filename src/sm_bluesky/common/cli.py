@@ -19,7 +19,12 @@ def main(args: Sequence[str] | None = None) -> None:
     subparsers = parser.add_subparsers(dest="command", help="Commands")
 
     # ----------------- start command ----------------------------------------------
-    start_parser = subparsers.add_parser("start", help="Start an instrument server")
+    start_parser = subparsers.add_parser(
+        "start",
+        help="Start an instrument server",
+        epilog="Example usage:\n  sm-bluesky start sh_pulse_generator --usb-port COM4 "
+        "--host 8.8.8.8 --port 7891 ",
+    )
     server_subparsers = start_parser.add_subparsers(
         dest="server_type", help="Server types"
     )
@@ -29,7 +34,7 @@ def main(args: Sequence[str] | None = None) -> None:
         "sh_pulse_generator", help="Launch ShanghaiTech pulse Generator Server"
     )
     sh_parser.add_argument(
-        "--host", type=str, default="0.0.0.0", help="Binding host IP"
+        "--host", type=str, default="127.0.0.1", help="Binding host IP"
     )
     sh_parser.add_argument("--port", type=int, default=7891, help="TCP Port")
     sh_parser.add_argument("--ipv6", action="store_true", help="Enable IPv6 support")
@@ -52,9 +57,16 @@ def main(args: Sequence[str] | None = None) -> None:
     # ----------------- send command ----------------------------------------------
     """Quick command line to interact with server """
     send_parser = subparsers.add_parser(
-        "send", help="Send a single text command to a running server"
+        "send",
+        help="Send a single text command to a running server",
+        epilog='Example usage:\n  sm-bluesky send "SET_DELAY 512" --host 8.8.8.8'
+        " --port 8888",
     )
-    send_parser.add_argument("payload", type=str, help="The command string to transmit")
+    send_parser.add_argument(
+        "payload",
+        type=str,
+        help='The command and arguments to send (e.g."SET_DELAY 512" or "GET_STATUS")',
+    )
     send_parser.add_argument(
         "--host", type=str, default="127.0.0.1", help="Target server IP"
     )
