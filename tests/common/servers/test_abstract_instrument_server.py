@@ -25,7 +25,7 @@ def mock_socket_instance():
 def mock_instrument(mock_socket_instance: MagicMock):
 
     with patch(
-        "sm_bluesky.common.server.abstract_instrument_server.socket.socket"
+        "sm_bluesky.common.servers.abstract_instrument_server.socket.socket"
     ) as mock_socket_class:
         mock_socket_class.return_value = mock_socket_instance
         mock_instrument = MockInstrument(host="localhost", port=8888)
