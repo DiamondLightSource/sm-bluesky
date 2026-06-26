@@ -1,6 +1,7 @@
 from bluesky.plan_stubs import abs_set
 from bluesky.utils import MsgGenerator, plan
-from ophyd_async.epics.adcore import AreaDetector, SingleTriggerDetector
+from dodal.devices.single_trigger_detector import SingleTriggerDetector
+from ophyd_async.epics.adcore import AreaDetector
 
 
 @plan

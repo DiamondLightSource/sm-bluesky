@@ -1,25 +1,28 @@
 from collections.abc import Mapping
-from math import floor
 from unittest.mock import ANY
 
 import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
+from dodal.devices.single_trigger_detector import SingleTriggerDetector
 from numpy import random
 from ophyd_async.core import set_mock_value
-from ophyd_async.epics.adandor import Andor2Detector
-from ophyd_async.epics.adcore import SingleTriggerDetector
+from ophyd_async.epics.adandor import AndorDetector
 from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
-from sm_bluesky.common.plans.grid_scan import grid_fast_scan, grid_step_scan
+from sm_bluesky.common.plans.grid_scan import (
+    estimate_speed_steps,
+    grid_fast_scan,
+    grid_step_scan,
+)
 from sm_bluesky.common.sim_devices import SimStage
 
 
 async def test_grid_fast_zero_velocity_fail(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 10
@@ -49,7 +52,7 @@ async def test_grid_fast_zero_velocity_fail(
 async def test_grid_fast(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 50
@@ -88,7 +91,7 @@ async def test_grid_fast(
 async def test_grid_fast_with_too_little_time_grid_become_1d(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 1.5
@@ -123,7 +126,7 @@ async def test_grid_fast_with_too_little_time_grid_become_1d(
 
 async def test_grid_fast_with_too_little_time_grid_cannot_have_any_points(
     run_engine: RunEngine,
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 10
@@ -155,7 +158,7 @@ async def test_grid_fast_with_too_little_time_grid_cannot_have_any_points(
 async def test_grid_fast_with_speed_capped(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     plan_time = 10
@@ -196,7 +199,7 @@ async def test_grid_fast_with_speed_capped(
 async def test_grid_fast_unknown_step_snake(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     rng = random.default_rng()
@@ -227,10 +230,8 @@ async def test_grid_fast_unknown_step_snake(
     plan_time = (
         number_of_point**2 * (deadtime)
         + step_range / step_motor_speed
-        + step_range / step_motor_speed
         + (number_of_point - 1) * (scan_range / scan_motor_speed + scan_acc * 2)
-        + 10  # extra overhead poor plan time guess
-    )
+    ) + step_acc * number_of_point
     run_engine(
         grid_fast_scan(
             dets=[andor2],
@@ -245,16 +246,35 @@ async def test_grid_fast_unknown_step_snake(
             home=True,
         ),
     )
+    scan_max_vel = await sim_motor.y.max_velocity.get_value()
+    deadtime = andor2._trigger_logic.get_deadtime(count_time)  # type: ignore
+    _, ideal_step_size = estimate_speed_steps(
+        plan_time=plan_time,
+        deadtime=deadtime,
+        step_start=step_start,
+        step_end=step_end,
+        step_size=None,
+        step_acceleration=step_acc,
+        step_speed=step_motor_speed,
+        scan_start=scan_start,
+        scan_end=scan_end,
+        scan_acceleration=scan_acc,
+        scan_speed=scan_motor_speed,
+        scan_max_vel=scan_max_vel,
+        snake_axes=True,
+        correction=1.0,
+    )
 
-    # +- one data point due to rounding
-    t = (number_of_point**2 / (step_range + scan_range)) ** 0.5 * step_range
-    assert run_engine_documents["event"].__len__() == pytest.approx(floor(t), rel=1)
+    expected_steps = step_size_to_step_num(step_start, step_end, ideal_step_size)
+    assert run_engine_documents["event"].__len__() == pytest.approx(
+        expected_steps, rel=1
+    )
 
 
 async def test_grid_fast_unknown_step_no_snake(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     step_motor_speed = 1
@@ -283,11 +303,10 @@ async def test_grid_fast_unknown_step_no_snake(
     number_of_point = rng.integers(low=5, high=25)
 
     plan_time = (
-        number_of_point**2 * (count_time + det_dead_time)
+        number_of_point**2 * (count_time + det_dead_time + 1)
         + number_of_point * (step_acc * 2 + scan_acc * 2)
         + step_range / step_motor_speed
-        + (number_of_point - 1) * (scan_range / scan_motor_speed + scan_acc * 2)
-        + 10  # extra overhead poor plan time guess
+        + (number_of_point) * (scan_range / scan_motor_speed + scan_acc * 2)
     )
     run_engine(
         grid_fast_scan(
@@ -305,15 +324,36 @@ async def test_grid_fast_unknown_step_no_snake(
         ),
     )
 
+    scan_max_vel = await sim_motor.y.max_velocity.get_value()
+    deadtime = andor2._trigger_logic.get_deadtime(count_time)  # type: ignore
+    _, ideal_step_size = estimate_speed_steps(
+        plan_time=plan_time,
+        deadtime=deadtime,
+        step_start=step_start,
+        step_end=step_end,
+        step_size=None,
+        step_acceleration=step_acc,
+        step_speed=step_motor_speed,
+        scan_start=scan_start,
+        scan_end=scan_end,
+        scan_acceleration=scan_acc,
+        scan_speed=scan_motor_speed,
+        scan_max_vel=scan_max_vel,
+        snake_axes=False,
+        correction=1,
+    )
+
+    expected_steps = step_size_to_step_num(step_start, step_end, ideal_step_size)
+
     assert run_engine_documents["event"].__len__() == pytest.approx(
-        number_of_point, abs=1
+        expected_steps, abs=1
     )
 
 
 async def test_grid_fast_unknown_step_snake_with_point_correction(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_motor: XYZStage,
 ) -> None:
     rng = random.default_rng()
@@ -322,7 +362,7 @@ async def test_grid_fast_unknown_step_snake_with_point_correction(
     scan_motor_speed = 10
     step_acc = 0.1
     scan_acc = 0.1
-    step_start = 1  # rng.uniform(low=-4, high=1)
+    step_start = rng.uniform(low=-4, high=1)
     step_end = 5
     scan_start = -1
     scan_end = 1
@@ -337,8 +377,7 @@ async def test_grid_fast_unknown_step_snake_with_point_correction(
     set_mock_value(sim_motor.y.high_limit_travel, 10)
     set_mock_value(sim_motor.y.acceleration_time, scan_acc)
 
-    plan_time = 100  # this will generate 28 steps without correction
-    point_step_axis = 28
+    plan_time = 100
 
     run_engine(
         grid_fast_scan(
@@ -356,9 +395,30 @@ async def test_grid_fast_unknown_step_snake_with_point_correction(
         ),
     )
 
+    deadtime = andor2._trigger_logic.get_deadtime(count_time)  # type: ignore
+    scan_max_vel = await sim_motor.y.max_velocity.get_value()
+    _, ideal_step_size = estimate_speed_steps(
+        plan_time=plan_time,
+        deadtime=deadtime,
+        step_start=step_start,
+        step_end=step_end,
+        step_size=None,
+        step_acceleration=step_acc,
+        step_speed=step_motor_speed,
+        scan_start=scan_start,
+        scan_end=scan_end,
+        scan_acceleration=scan_acc,
+        scan_speed=scan_motor_speed,
+        scan_max_vel=scan_max_vel,
+        snake_axes=True,
+        correction=point_correction,
+    )
+
+    expected_steps = step_size_to_step_num(step_start, step_end, ideal_step_size)
+
     # +- one data point due to rounding
     assert run_engine_documents["event"].__len__() == pytest.approx(
-        floor(point_step_axis * point_correction), abs=1
+        expected_steps, abs=1
     )
 
 
@@ -366,7 +426,7 @@ async def test_grid_step_with_home(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     sim_stage_step: SimStage,
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
 ) -> None:
     await sim_stage_step.x.set(-1)
     await sim_stage_step.y.set(-2)
@@ -437,8 +497,8 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
     andor2_point: SingleTriggerDetector,
     sim_stage_delay: XYZStage,
 ) -> None:
-    plan_time = 1.5
-    count_time = 0.2
+    plan_time = 0.5
+    count_time = 0.01
     step_size = 0.2
     step_start = -0.5
     step_end = 0.5
@@ -458,18 +518,17 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
             home=False,
         ),
     )
-    # The overhead is about 3 sec in pytest
     assert_emitted(run_engine_documents, start=1, descriptor=1, event=ANY, stop=1)
 
 
 async def test_grid_fast_sim_flyable_motor(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    andor2: Andor2Detector,
+    andor2: AndorDetector,
     sim_stage_delay: XYZStage,
 ) -> None:
-    plan_time = 1.5
-    count_time = 0.2
+    plan_time = 0.5
+    count_time = 0.01
     step_size = 0.2
     step_start = -0.5
     step_end = 0.5
@@ -489,7 +548,6 @@ async def test_grid_fast_sim_flyable_motor(
             home=False,
         ),
     )
-    # The overhead is about 3 sec in pytest
 
     assert_emitted(
         run_engine_documents,
