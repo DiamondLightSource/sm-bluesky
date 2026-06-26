@@ -34,6 +34,7 @@ Commands must be newline-terminated.
 | `connect_hardware`| None | Re-establishes connection to hardware server. |
 | `disconnect_hardware`| None | Safely disconnects from hardware. |
 | `shutdown` | None | Stops the server and disconnects hardware. |
+| `command_list` | None | Return a list of available commands. |
 
 
 ## Implementation Guide

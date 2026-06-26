@@ -51,7 +51,7 @@ def test_send_payload_network_failure(client, mock_network):
         "Connection timed out"
     )
     with pytest.raises(ConnectionError, match="Communication layer failure"):
-        client.send_payload("GET_STATUS")
+        client.send_payload("command_list")
 
 
 def test_send_payload_empty_response(client, mock_network):
