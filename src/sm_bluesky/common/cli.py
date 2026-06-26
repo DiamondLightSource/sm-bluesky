@@ -65,7 +65,8 @@ def main(args: Sequence[str] | None = None) -> None:
     send_parser.add_argument(
         "payload",
         type=str,
-        help='The command and arguments to send (e.g."SET_DELAY 512" or "GET_STATUS")',
+        help='The command and arguments to send (e.g."SET_DELAY 512" or '
+        '"command_list")',
     )
     send_parser.add_argument(
         "--host", type=str, default="127.0.0.1", help="Target server IP"

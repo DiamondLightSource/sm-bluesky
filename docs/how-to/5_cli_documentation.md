@@ -1,4 +1,4 @@
-# 🔫sm-bluesky CLI Reference🔫
+# 📟sm-bluesky CLI Reference
 
 The `sm-bluesky` command-line interface provides tools to launch instrument servers and interact with running instances via quick payloads (commands).
 
@@ -6,11 +6,13 @@ The `sm-bluesky` command-line interface provides tools to launch instrument serv
 
 ## 🚀 Commands Overview
 
-The interface is split into two primary operational modes:
-* **`-v`, `--version`**: Displays the currently installed package version of `sm-bluesky`.
-* **`start`**: Configures and spins up background hardware device drivers.
+The interface is split into two primary modes:
+* **`start`**: Configures and spins up background hardware device server.
 * **`send`**: A lightweight diagnostic utility to send arbitrary string payloads to an active server.
 
+For extra information use:
+* **`-h`, `--help`**: Displays general or command-specific help menus.
+* **`-v`, `--version`**: Displays the currently installed package version of `sm-bluesky`.
 ---
 
 ## 🛠️ Detailed Usage
@@ -54,7 +56,7 @@ sm-bluesky send "PAYLOAD" [FLAGS]
 
 ```bash
 # Verify status locally
-sm-bluesky send "GET_STATUS"
+sm-bluesky send "command_list"
 
 # Adjust settings on a remote beamline server
 sm-bluesky send "SET_DELAY 512" --host 192.168.1.50 --port 7891```
