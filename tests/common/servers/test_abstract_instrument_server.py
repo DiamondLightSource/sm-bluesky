@@ -65,7 +65,7 @@ def test_start_handles_timeout(
 ):
     mock_socket_instance.accept.side_effect = [
         socket.timeout,
-        (MagicMock(), ("8.8.8.8", 1234)),
+        (MagicMock(), ("192.168.1.88", 1234)),
     ]
     mock_instrument._serve_client = lambda: setattr(
         mock_instrument, "_is_running", False
@@ -193,11 +193,11 @@ def test_serve_client_exception(
 
 def test_full_connection_cycle_cleanup(mock_instrument, caplog):
     mock_instance = MagicMock()
-    mock_instance.accept.return_value = (MagicMock(), ("8.8.8.8", 1234))
+    mock_instance.accept.return_value = (MagicMock(), ("192.168.1.88", 1234))
     mock_instrument._server_socket = mock_instance
 
     with patch.object(mock_instrument, "_serve_client", side_effect=None):
-        client_info = (MagicMock(), "8.8.8.8")
+        client_info = (MagicMock(), "192.168.1.88")
         with mock_instrument._manage_connection(client_info):
             pass
     client_info[0].close.assert_called_once()

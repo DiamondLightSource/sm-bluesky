@@ -28,7 +28,7 @@ def test_cli_shanghai_tech_default_arguments(mock_sh_generator: MagicMock) -> No
     main(["start", "sh_pulse_generator"])
 
     mock_sh_generator.assert_called_once_with(
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=7891,
         ipv6=False,
         usb_port="COM4",
