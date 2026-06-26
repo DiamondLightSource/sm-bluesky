@@ -21,8 +21,9 @@ def mock_instrument_client() -> Generator[MagicMock, None, None]:
         yield mock_client
 
 
-def test_cli_shanghai_tech_default_arguments(mock_sh_generator: MagicMock) -> None:
-    """Verify 'sm-bluesky start sh_pulse_generator' passes correct defaults."""
+def test_cli_shanghai_tech_start_default_arguments(
+    mock_sh_generator: MagicMock,
+) -> None:
     mock_instance = mock_sh_generator.return_value
 
     main(["start", "sh_pulse_generator"])
@@ -39,7 +40,7 @@ def test_cli_shanghai_tech_default_arguments(mock_sh_generator: MagicMock) -> No
     mock_instance.start.assert_called_once()
 
 
-def test_cli_shanghai_tech_custom_flags(mock_sh_generator: MagicMock) -> None:
+def test_cli_shanghai_tech_start_custom_flags(mock_sh_generator: MagicMock) -> None:
     main(
         [
             "start",
