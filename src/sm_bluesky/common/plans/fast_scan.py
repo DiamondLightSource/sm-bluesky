@@ -182,7 +182,7 @@ def fast_scan_grid(
 
 
 @plan
-def reset_speed(old_speed, motor: Motor) -> MsgGenerator:
+def reset_speed(old_speed: float, motor: Motor) -> MsgGenerator:
     LOGGER.info(f"Clean up: setting motor speed to {old_speed}.")
     if old_speed:
         yield from bps.abs_set(motor.velocity, old_speed)
