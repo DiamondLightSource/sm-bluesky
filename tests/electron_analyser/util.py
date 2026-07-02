@@ -1,19 +1,44 @@
 from typing import Any
 from unittest.mock import ANY
 
+from dodal.common.data_util import ModelLoader, ModelLoaderConfig, json_model_loader
+from dodal.devices.beamlines import b07, b07_shared, i05_shared, i09
 from dodal.devices.electron_analyser.base import (
     GenericAnalyserDriverIO,
     GenericRegion,
 )
+from dodal.devices.electron_analyser.mbs import MbsSequence
 from dodal.devices.electron_analyser.specs import AcquisitionMode as SpecsAcqusitionMode
 from dodal.devices.electron_analyser.specs import (
     SpecsAnalyserDriverIO,
     SpecsRegion,
+    SpecsSequence,
 )
 from dodal.devices.electron_analyser.vgscienta import (
     VGScientaAnalyserDriverIO,
     VGScientaRegion,
+    VGScientaSequence,
 )
+
+from tests.electron_analyser.test_data import (
+    TEST_SPECS_SEQUENCE,
+    TEST_VGSCIENTA_SEQUENCE,
+)
+
+B07SpecsSequence = SpecsSequence[b07.LensMode, b07_shared.PsuMode]
+I09VGScientaSequence = VGScientaSequence[i09.LensMode, i09.PassEnergy]
+I05MbsSequence = MbsSequence[i05_shared.LensMode, i05_shared.PassEnergy]
+
+
+load_b07_specs_test_seq = ModelLoader[B07SpecsSequence](
+    json_model_loader(B07SpecsSequence),
+    ModelLoaderConfig.from_default_file(TEST_SPECS_SEQUENCE),
+)
+load_i09_vgscienta_test_seq = ModelLoader[I09VGScientaSequence](
+    json_model_loader(I09VGScientaSequence),
+    ModelLoaderConfig.from_default_file(TEST_VGSCIENTA_SEQUENCE),
+)
+# ToDo - Add Mbs
 
 
 def expected_analyser_config(

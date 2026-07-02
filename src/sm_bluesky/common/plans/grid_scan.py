@@ -7,8 +7,8 @@ import bluesky.plans as bp
 from bluesky.preprocessors import finalize_wrapper
 from bluesky.protocols import Readable
 from bluesky.utils import MsgGenerator, plan
-from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
-from ophyd_async.epics.adcore import AreaDetector, SingleTriggerDetector
+from dodal.devices.single_trigger_detector import SingleTriggerDetector
+from ophyd_async.epics.adandor import AndorDetector
 from ophyd_async.epics.motor import Motor
 
 from sm_bluesky.common.math_functions import step_size_to_step_num
@@ -29,7 +29,6 @@ class CleanUpArgs(TypedDict, total=False):
 
 
 @plan
-@attach_data_session_metadata_decorator()
 def grid_step_scan(
     dets: Sequence[Readable],
     count_time: float,
@@ -95,7 +94,7 @@ def grid_step_scan(
         )  # type: ignore
 
     main_det = dets[0]
-    if isinstance(main_det, AreaDetector | SingleTriggerDetector):
+    if isinstance(main_det, AndorDetector | SingleTriggerDetector):
         yield from set_area_detector_acquire_time(main_det, acquire_time=count_time)
 
     # Add 1 to step number to include the end point
@@ -121,7 +120,6 @@ def grid_step_scan(
 
 
 @plan
-@attach_data_session_metadata_decorator()
 def grid_fast_scan(
     dets: list[Readable],
     count_time: float,
@@ -194,9 +192,9 @@ def grid_fast_scan(
     step_acc = yield from bps.rd(step_motor.acceleration_time)
 
     main_det = dets[0]
-    if isinstance(main_det, AreaDetector):
+    if isinstance(main_det, AndorDetector):
         yield from set_area_detector_acquire_time(det=main_det, acquire_time=count_time)
-        deadtime = main_det._controller.get_deadtime(count_time)  # noqa: SLF001
+        deadtime = main_det._trigger_logic.get_deadtime(count_time)  # type: ignore # noqa: SLF001
     elif isinstance(main_det, SingleTriggerDetector):
         yield from set_area_detector_acquire_time(det=main_det, acquire_time=count_time)
         deadtime = count_time
@@ -277,7 +275,7 @@ def estimate_speed_steps(
     step_range = abs(step_start - step_end)
     scan_range = abs(scan_start - scan_end)
 
-    point_per_axis = estimate_axis_points(
+    points_per_unit_dist = estimate_axis_points(
         plan_time=plan_time,
         deadtime=deadtime,
         step_range=step_range,
@@ -289,8 +287,8 @@ def estimate_speed_steps(
         snake_axes=snake_axes,
     )
 
-    point_per_step_axis = max(1, floor(point_per_axis * correction * step_range))
-    point_per_scan_axis = max(1, floor(point_per_axis * correction * scan_range))
+    point_per_step_axis = max(1, round(points_per_unit_dist * correction * step_range))
+    point_per_scan_axis = max(1, round(points_per_unit_dist * correction * scan_range))
 
     # Ideal step size is evenly distributed points within the two axes.
     if step_size is not None:
@@ -324,26 +322,27 @@ def estimate_axis_points(
     scan_acceleration: float,
     scan_speed: float,
     snake_axes: bool = True,
-    num_points_per_axis: float | None = None,
-) -> int:
+) -> float:
     """
     Estimate the number of points per axis for a scan.
     """
-    iteration_limit = 10  # Prevent infinite recursion
-    iteration_count = 0
+    iteration_limit = 18  # Prevent infinite loop
 
-    if num_points_per_axis is None:
-        num_points_per_axis = sqrt((plan_time / deadtime) / (scan_range * step_range))
-    old_num_points_per_axis = num_points_per_axis
+    total_estimated_points = plan_time / deadtime
+    num_points_per_axis = (
+        sqrt(total_estimated_points / (scan_range * step_range))
+        if (scan_range * step_range) > 0
+        else 1.0
+    )
 
-    while (
-        iteration_count <= iteration_limit
-        and abs(num_points_per_axis - old_num_points_per_axis) <= 0.49
-    ):
-        old_num_points_per_axis = num_points_per_axis
+    for _ in range(iteration_limit):
+        old_points = num_points_per_axis
 
+        # Motion overhead
         point_step_axis = max(1, floor(num_points_per_axis * step_range))
-        step_mv_time = point_step_axis * step_acceleration * 2 + step_range / step_speed
+        step_mv_time = point_step_axis * (step_acceleration * 2) + (
+            step_range / step_speed
+        )
 
         if snake_axes:
             scan_mv_time = point_step_axis * (scan_acceleration * 2)
@@ -351,16 +350,24 @@ def estimate_axis_points(
             point_scan_axis = max(1, floor(num_points_per_axis * scan_range))
             scan_mv_time = point_scan_axis * (scan_acceleration * 2) + (
                 point_scan_axis - 1
-            ) * (scan_range / scan_speed + scan_acceleration * 2)
+            ) * ((scan_range / scan_speed) + (scan_acceleration * 2))
 
-        corrected_num_points = (plan_time - step_mv_time - scan_mv_time) / deadtime
-        if corrected_num_points <= 0:
-            raise ValueError(
-                f"Plan time too short for the area and count time required. "
-                f"Plan time: {plan_time}, Step move time: {step_mv_time}, "
-                f"Scan move time: {scan_mv_time}, Deadtime: {deadtime}"
-            )
-        iteration_count += 1
-        num_points_per_axis = corrected_num_points
-    point_per_axis = sqrt(num_points_per_axis / (scan_range * step_range))
-    return max(1, floor(point_per_axis))
+        # Recalculate points with available time
+        available_time = plan_time - step_mv_time - scan_mv_time
+        if available_time <= 0:
+            num_points_per_axis = old_points * 0.5
+            if num_points_per_axis < 1:
+                raise ValueError(
+                    f"Plan execution window is physically too short for overhead. "
+                    f"Requested: {plan_time}s, Min Overhead: Step={step_mv_time:.2f}s."
+                )
+            continue
+
+        corrected_total_points = available_time / deadtime
+        num_points_per_axis = sqrt(corrected_total_points / (scan_range * step_range))
+
+        # Break if the improvement is less than 1/20 of a point
+        if abs(num_points_per_axis - old_points) <= 0.05:
+            break
+
+    return num_points_per_axis

@@ -5,7 +5,6 @@ import pytest
 from bluesky import RunEngine
 from bluesky.protocols import Readable, Reading
 from dodal.devices.electron_analyser.base import (
-    AbstractEnergySource,
     BaseRegion,
     BaseSequence,
     DualEnergySource,
@@ -24,7 +23,7 @@ from tests.electron_analyser.util import (
 )
 
 
-def add_energy_source_monitor(energy_source: AbstractEnergySource) -> list[float]:
+def add_energy_source_monitor(energy_source: DualEnergySource) -> list[float]:
     energy_values = []
 
     def energy_monitor(reading: dict[str, Reading[float]], *args, **kwargs) -> None:
@@ -42,7 +41,7 @@ def assert_analyserscan_config(
     energy_values: list[float],
 ) -> None:
     """Check that the configuration for the analyser device is correct."""
-    drv = analyser._controller.driver
+    drv = analyser._region_logic.driver
 
     configuration_region_names = []
 
@@ -90,13 +89,10 @@ def assert_event_data(
     assert (
         len(run_engine_documents["event"]) == len(number_of_regions) * motor_iterations
     )
-    drv = analyser._controller.driver
 
     for event in run_engine_documents["event"]:
         event_data = event["data"]
-        assert drv.spectrum.name in event_data
-        assert drv.image.name in event_data
-        assert drv.total_intensity.name in event_data
+        # ToDo - Add file path and intensity checks once added to electron analyser.
         for det in extra_detectors:
             assert det.name in event_data
         for m in motors:

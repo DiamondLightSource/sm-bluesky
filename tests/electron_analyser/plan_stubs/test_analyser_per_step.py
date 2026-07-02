@@ -1,4 +1,3 @@
-import asyncio
 import re
 from collections import defaultdict
 from collections.abc import Callable, Sequence
@@ -16,7 +15,6 @@ from dodal.devices.electron_analyser.base import (
     ElectronAnalyserDetector,
     GenericElectronAnalyserDetector,
 )
-from ophyd_async.core import AsyncStatus
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
@@ -55,14 +53,16 @@ def run_engine_setup_decorator(
     sim_analyser: GenericElectronAnalyserDetector,
     sequence: BaseSequence,
 ):
-
     def wrapper(all_detectors, step, pos_cache):
         yield from bps.prepare(sim_analyser.sequence, sequence)
         yield from bps.open_run()
         yield from bps.stage_all(*all_detectors)
-        yield from func(all_detectors, step, pos_cache)
-        yield from bps.unstage_all(*all_detectors)
-        yield from bps.close_run()
+        # yield from bps.prepare(sim_analyser, TriggerInfo())
+        try:
+            yield from func(all_detectors, step, pos_cache)
+        finally:
+            yield from bps.unstage_all(*all_detectors)
+            yield from bps.close_run()
 
     return wrapper
 
@@ -79,11 +79,6 @@ def analyser_nd_step(
     )
 
 
-def fake_status(region=None) -> AsyncStatus:
-    status = AsyncStatus(asyncio.sleep(0.0))
-    return status
-
-
 def test_analyser_nd_step_func_has_expected_driver_set_calls(
     run_engine: RunEngine,
     analyser_nd_step: Callable,
@@ -94,15 +89,16 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     pos_cache: dict[Movable, Any],
 ) -> None:
     # Mock driver.set to track expected calls
-    controller = sim_analyser._controller
-    controller.setup_with_region = AsyncMock(side_effect=fake_status)
+    region_logic = sim_analyser._region_logic
+    original_setup_with_region = region_logic.setup_with_region
+    region_logic.setup_with_region = AsyncMock(side_effect=original_setup_with_region)
     expected_driver_set_calls = [
         call(region) for region in sequence.get_enabled_regions()
     ]
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
-    # Check that controller method was called with the number of regions.
-    assert controller.setup_with_region.call_args_list == expected_driver_set_calls
+    # Check that region_logic method was called with the number of regions.
+    assert region_logic.setup_with_region.call_args_list == expected_driver_set_calls
 
 
 async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
@@ -115,13 +111,15 @@ async def test_analyser_nd_step_func_calls_detectors_trigger_and_read_correctly(
 ) -> None:
     for det in all_detectors:
         if isinstance(det, Triggerable):
-            det.trigger = MagicMock(side_effect=fake_status)
+            original_trigger = det.trigger
+            det.trigger = MagicMock(side_effect=original_trigger)
 
         # Check if detector needs to be mocked with async or not.
+        original_read = det.read
         if iscoroutinefunction(det.read):
-            det.read = AsyncMock(return_value=await det.read())
+            det.read = AsyncMock(wraps=original_read)
         else:
-            det.read = MagicMock(return_value=det.read())
+            det.read = MagicMock(wraps=original_read)
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
@@ -142,21 +140,36 @@ async def test_analyser_nd_step_func_moves_motors_before_detector_trigger(
     step: dict[SimMotor, Any],
     pos_cache: dict[SimMotor, Any],
 ) -> None:
-    shared_mock = MagicMock(side_effect=fake_status)
-    for det in all_detectors:
-        det.trigger = shared_mock  # type: ignore
 
-    motors = list(step.keys())
-    for m in motors:
-        m.set = shared_mock
+    call_order = []
+
+    # Spy on motor moves
+    for motor in step:
+        original_set = motor.set
+
+        def wrapped_set(*args, _original=original_set, **kwargs):
+            call_order.append("set")
+            return _original(*args, **kwargs)
+
+        motor.set = wrapped_set
+
+    # Spy on detector triggers
+    for det in all_detectors:
+        if isinstance(det, Triggerable):
+            original_trigger = det.trigger
+
+            def wrapped_trigger(*args, _original=original_trigger, **kwargs):
+                call_order.append("trigger")
+                return _original(*args, **kwargs)
+
+            det.trigger = wrapped_trigger
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
 
-    # Check to see motor.set was called before any r_det.trigger was called.
-    for value in step.values():
-        assert shared_mock.mock_calls.index(
-            call.set(value)
-        ) < shared_mock.mock_calls.index(call.trigger())
+    # Check to see motor.set was called before any det.trigger was called.
+    assert call_order.index("trigger") > max(
+        i for i, op in enumerate(call_order) if op == "set"
+    )
 
 
 async def test_analyser_nd_step_func_moves_motors_correctly(
