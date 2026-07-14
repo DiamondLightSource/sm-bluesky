@@ -1,0 +1,21 @@
+``sm_bluesky.common.client``
+============================
+        
+
+.. automodule:: sm_bluesky.common.client
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        InstrumentClient
+    
+    

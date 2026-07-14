@@ -1,0 +1,23 @@
+``sm_bluesky.common.servers``
+=============================
+        
+        
+
+.. automodule:: sm_bluesky.common.servers
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        AbstractInstrumentServer
+        GeneratorServerShanghaiTech
+    
+    
