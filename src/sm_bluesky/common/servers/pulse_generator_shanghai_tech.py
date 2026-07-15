@@ -24,8 +24,6 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         self.max_pulse_delay: float = max_pulse_delay
         self.device: Serial | None = None
 
-        # Expand the registry with Pulse Generator specific commands
-
     def connect_hardware(self) -> bool:
         """Initialize the USB connection protocol."""
         try:
