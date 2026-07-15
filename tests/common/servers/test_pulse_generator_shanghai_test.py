@@ -141,7 +141,6 @@ def test_get_delay_failed(mock_server: GeneratorServerShanghaiTech) -> None:
     with patch.object(mock_server, "device") as mock_device:
         mock_device.write.side_effect = Exception("Read_failed")
         mock_server._send_error = MagicMock()
-        # mock_server._get_delay()
         mock_server._handle_command(cmd=b"get_delay", args_list=[])
         mock_server._send_error.assert_called_once_with(
             "Error handling command 'get_delay': Read_failed"

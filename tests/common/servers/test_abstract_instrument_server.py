@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from sm_bluesky.common.servers import AbstractInstrumentServer
+from sm_bluesky.common.servers import AbstractInstrumentServer, register_command
 
 
 class MockInstrument(AbstractInstrumentServer):
@@ -14,6 +14,14 @@ class MockInstrument(AbstractInstrumentServer):
 
     def disconnect_hardware(self) -> None:
         self._hardware_connected = False
+
+    @register_command(b"custom_ping")
+    def custom_ping(self) -> bytes:
+        return b"pong"
+
+    @register_command(b"set_val")
+    def set_value(self, value: bytes) -> None:
+        pass
 
 
 @pytest.fixture
@@ -275,3 +283,79 @@ def test_send_command_list(mock_instrument: AbstractInstrumentServer):
     assert b"disconnect_hardware" in commands
     assert b"shutdown" in commands
     assert b"command_list" in commands
+
+
+def test_register_command_success():
+    @register_command(b"valid_command")
+    def dummy_func():
+        pass
+
+    assert hasattr(dummy_func, "command_name")
+    assert dummy_func.command_name == b"valid_command"  # type: ignore
+
+
+def test_register_command_invalid_type():
+    with pytest.raises(TypeError, match="Command name must be bytes"):
+
+        @register_command("not_bytes")  # type: ignore # type violation
+        def dummy_func():
+            pass
+
+
+def test_register_command_empty():
+    with pytest.raises(ValueError, match="Command name cannot be empty"):
+
+        @register_command(b"")
+        def dummy_func():
+            pass
+
+
+@pytest.mark.parametrize(
+    "invalid_name",
+    [
+        b"command with spaces",
+        b"command\twith\ttabs",
+        b"command\nwith\nnewlines",
+    ],
+)
+def test_register_command_whitespace(invalid_name: bytes):
+    """Decorator should raise ValueError if the name contains whitespace."""
+    with pytest.raises(ValueError, match="Command names must not contain whitespace"):
+
+        @register_command(invalid_name)
+        def dummy_func():
+            pass
+
+
+def test_autodiscovery_on_initialization():
+    server = MockInstrument(host="127.0.0.1", port=9000)
+
+    assert b"shutdown" in server._command_registry
+    assert b"custom_ping" in server._command_registry
+    assert b"set_val" in server._command_registry
+
+    assert server._command_registry[b"custom_ping"] == server.custom_ping
+
+
+def test_overwrite_protection():
+    with pytest.raises(ValueError, match="Overwriting command 'ping' with method"):
+
+        class BrokenServer(MockInstrument):
+            @register_command(b"ping")
+            def duplicate_ping(self):
+                pass
+
+        BrokenServer(host="127.0.0.1", port=9000)
+
+
+def test_parameterless_commands_absorb_unexpected_arguments(mock_instrument):
+    mock_instrument._conn = MagicMock()
+    mock_instrument._handle_command(b"shutdown", [b"random"])
+    mock_instrument._handle_command(b"ping", [b"stuff"])
+    mock_instrument._handle_command(b"command_list", {b"bababa"})
+
+
+def test_dispatch_ignores_whitespace_only_messages(mock_instrument):
+    mock_instrument._handle_command = MagicMock()
+    mock_instrument._dispatch_command(b"\t\t   ")
+    mock_instrument._handle_command.assert_not_called()

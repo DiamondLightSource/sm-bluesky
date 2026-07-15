@@ -131,7 +131,7 @@ class AbstractInstrumentServer(ABC):
             self._current_deadline = None
 
     @register_command(b"shutdown")
-    def shutdown(self) -> None:
+    def shutdown(self, *args: Any) -> None:
         """Stops the server, closes sockets, and disconnects hardware."""
         self._disconnect_client()
         if hasattr(self, "_server_socket"):
@@ -164,7 +164,7 @@ class AbstractInstrumentServer(ABC):
                 while b"\n" in buffer:
                     line, buffer = buffer.split(b"\n", 1)
                     if line:
-                        self._dispatch_command(line.strip())
+                        self._dispatch_command(line)
 
             except (OSError, ConnectionResetError):
                 LOGGER.error("Client connection lost unexpectedly")
@@ -172,8 +172,8 @@ class AbstractInstrumentServer(ABC):
 
     def _dispatch_command(self, line: bytes) -> None:
         """Parses raw input into command/argument pairs and executes the handler."""
-
-        parts = [part for part in line.split(b"\t") if part]
+        striped_line = line.strip()
+        parts = [part for part in striped_line.split(b"\t") if part]
         if not parts:
             return
         cmd = parts[0]
@@ -182,10 +182,6 @@ class AbstractInstrumentServer(ABC):
             self._handle_command(cmd, args)
         except Exception as e:
             self._error_helper(message="Handler Error", error=e)
-
-    @register_command(b"ping")
-    def _send_ack(self, *args) -> None:
-        self._send_response()
 
     def _send_error(self, error_message: str) -> None:
         if self._conn:
@@ -235,8 +231,12 @@ class AbstractInstrumentServer(ABC):
             if time() > self._current_deadline:
                 raise TimeoutError(f"{context} exceeded {self._timeout_seconds}s limit")
 
+    @register_command(b"ping")
+    def _send_ack(self, *args: Any) -> None:
+        self._send_response()
+
     @register_command(b"command_list")
-    def _send_command_list(self, *args) -> None:
+    def _send_command_list(self, *args: Any) -> None:
         """Returns a tab-separated list of all available commands to the client."""
         available_commands = list(self._command_registry.keys())
         payload = b"\t".join(available_commands)
