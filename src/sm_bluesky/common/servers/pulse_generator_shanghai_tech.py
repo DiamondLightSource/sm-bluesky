@@ -2,7 +2,7 @@ import logging
 
 from serial import Serial
 
-from sm_bluesky.common.servers import AbstractInstrumentServer
+from sm_bluesky.common.servers import AbstractInstrumentServer, register_command
 from sm_bluesky.log import LOGGER
 
 
@@ -25,14 +25,6 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         self.device: Serial | None = None
 
         # Expand the registry with Pulse Generator specific commands
-        self._command_registry.update(
-            {
-                b"set_delay": self._set_delay,
-                b"get_delay": self._get_delay,
-                b"reset_serial_buffer": self._reset_serial_buffer,
-                b"pass_command": self._passthrough,
-            }
-        )
 
     def connect_hardware(self) -> bool:
         """Initialize the USB connection protocol."""
@@ -65,6 +57,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
                 level=logging.WARNING,
             )
 
+    @register_command(b"set_delay")
     def _set_delay(self, value: bytes) -> None:
         delay = int(value.decode("utf-8"))
         if self.max_pulse_delay > delay >= 0:
@@ -75,10 +68,12 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
                 f"Delay {delay} is out of bounds (0-{self.max_pulse_delay - 1})"
             )
 
+    @register_command(b"get_delay")
     def _get_delay(self):
         self._send_hardware_command(b"AT+DLSET=?")
         LOGGER.info("Reading delay")
 
+    @register_command(b"reset_serial_buffer")
     def _reset_serial_buffer(self):
         if not self.device:
             raise ConnectionError(
@@ -88,6 +83,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         self.device.reset_input_buffer()
         self.device.reset_output_buffer()
 
+    @register_command(b"pass_command")
     def _passthrough(self, value: bytes):
         self._send_hardware_command(value)
 
