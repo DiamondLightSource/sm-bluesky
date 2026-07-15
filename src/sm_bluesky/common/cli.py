@@ -100,7 +100,7 @@ def main(args: Sequence[str] | None = None) -> None:
                 server.start()
             except KeyboardInterrupt:
                 print("\nStopping server ...")
-                server.stop()
+                server.shutdown()
         else:
             start_parser.print_help()
     elif parsed_args.command == "send":

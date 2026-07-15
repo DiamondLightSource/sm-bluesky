@@ -121,14 +121,14 @@ def test_stop_server(
 def test_send_ack(mock_instrument: AbstractInstrumentServer):
     mock_instrument._conn = MagicMock()
     mock_instrument._conn.sendall = MagicMock()
-    mock_instrument._handle_command(b"ping", b"")
+    mock_instrument._handle_command(b"ping", [])
     mock_instrument._conn.sendall.assert_called_once_with(b"1\t\n")
 
 
 def test_send_unknow_command_error(mock_instrument: AbstractInstrumentServer):
     mock_instrument._conn = MagicMock()
     mock_instrument._conn.sendall = MagicMock()
-    mock_instrument._handle_command(b"sdljkfnsdouifn", b"")
+    mock_instrument._handle_command(b"sdljkfnsdouifn", [])
     mock_instrument._conn.sendall.assert_called_once_with(
         b"0\tReceived unknown command: 'sdljkfnsdouifn': Unknown command\n"
     )
@@ -142,7 +142,7 @@ def test_send_command_handling_error(mock_instrument: AbstractInstrumentServer):
         raise Exception(Exception("test_send_command_handling_error"))
 
     mock_instrument._command_registry.update({b"ping": handling_exception})
-    mock_instrument._handle_command(b"ping", b"")
+    mock_instrument._handle_command(b"ping", [])
     mock_instrument._conn.sendall.assert_called_once_with(
         b"0\tError handling command 'ping': test_send_command_handling_error\n"
     )
@@ -218,7 +218,7 @@ def test_dispatch_command_with_arg(mock_instrument: AbstractInstrumentServer):
     mock_instrument._handle_command = MagicMock()
     mock_instrument._dispatch_command(b"command\targument\targument2")
     mock_instrument._handle_command.assert_called_once_with(
-        b"command", b"argument\targument2"
+        b"command", [b"argument", b"argument2"]
     )
 
 
@@ -227,7 +227,7 @@ def test__timeout_context_timeout(mock_instrument: AbstractInstrumentServer):
     correctly."""
 
     cmd = b"getData"
-    args = b"0.1"
+    args = [b"0.1"]
     mock_handler = MagicMock(side_effect=TimeoutError("Hardware hung"))
     mock_instrument._command_registry[cmd] = mock_handler
     mock_instrument._error_helper = MagicMock()
@@ -260,7 +260,7 @@ def test_send_command_list(mock_instrument: AbstractInstrumentServer):
     """Verify that the command_list returns all registered commands."""
     mock_instrument._conn = MagicMock()
     mock_instrument._conn.sendall = MagicMock()
-    mock_instrument._handle_command(b"command_list", b"")
+    mock_instrument._handle_command(b"command_list", [])
     mock_instrument._conn.sendall.assert_called_once()
     called_bytes = mock_instrument._conn.sendall.call_args[0][0]
 

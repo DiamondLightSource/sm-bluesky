@@ -76,7 +76,7 @@ def test_cli_handles_keyboard_interrupt(mock_sh_generator: MagicMock) -> None:
     mock_instance = mock_sh_generator.return_value
     mock_instance.start.side_effect = KeyboardInterrupt()
     main(["start", "sh_pulse_generator"])
-    mock_instance.stop.assert_called_once()
+    mock_instance.shutdown.assert_called_once()
 
 
 @pytest.mark.parametrize(
