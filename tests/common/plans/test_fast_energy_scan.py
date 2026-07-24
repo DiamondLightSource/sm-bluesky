@@ -1,3 +1,4 @@
+import asyncio
 from collections import defaultdict
 from pathlib import Path
 from unittest.mock import ANY
@@ -155,7 +156,7 @@ async def test_soft_fly_energy_scan_success(
         capture_emitted,
         wait=True,
     )
-
+    await asyncio.sleep(0)
     assert_emitted(docs, start=1, descriptor=1, event=ANY, stop=1)
     # Number of event depend how fast motor is moving, it has to be more than 1
     assert len(docs["event"]) > 1
