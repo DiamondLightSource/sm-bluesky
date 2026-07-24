@@ -4,8 +4,9 @@ import bluesky.plan_stubs as bps
 from bluesky.plan_stubs import abs_set
 from bluesky.protocols import Flyable
 from bluesky.utils import MsgGenerator, plan, short_uid
+from dodal.devices.single_trigger_detector import SingleTriggerDetector
 from ophyd_async.core import FlyMotorInfo
-from ophyd_async.epics.adcore import AreaDetector, SingleTriggerDetector
+from ophyd_async.epics.adcore import AreaDetector
 
 from sm_bluesky.log import LOGGER
 
