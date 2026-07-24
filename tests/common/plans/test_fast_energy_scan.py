@@ -7,11 +7,9 @@ import pytest
 from bluesky.protocols import Readable
 from bluesky.run_engine import RunEngine
 from daq_config_server import ConfigClient
-from dodal.devices.beamlines.i10.i10_apple2 import (
-    I10Apple2,
-    I10Apple2Controller,
-)
 from dodal.devices.insertion_device import (
+    Apple2,
+    Apple2EnforceLHMoveController,
     BeamEnergy,
     InsertionDeviceEnergy,
     UndulatorGap,
@@ -74,11 +72,9 @@ async def mock_id(
     mock_id_gap: UndulatorGap,
     mock_phase_axes: UndulatorPhaseAxes,
     mock_jaw_phase: UndulatorJawPhase,
-) -> I10Apple2:
+) -> Apple2:
     async with init_devices(mock=True):
-        mock_id = I10Apple2(
-            id_gap=mock_id_gap, id_phase=mock_phase_axes, id_jaw_phase=mock_jaw_phase
-        )
+        mock_id = Apple2(id_gap=mock_id_gap, id_phase=mock_phase_axes)
     set_mock_value(mock_id.gap().acceleration_time, 0.2)
     set_mock_value(mock_id.gap().velocity, 2)
     set_mock_value(mock_id.gap().max_velocity, 200)
@@ -87,7 +83,7 @@ async def mock_id(
 
 
 @pytest.fixture
-def mock_i10_gap_energy_motor_lookup_idu(
+def mock_gap_energy_motor_lookup_idu(
     mock_config_client: ConfigClient,
 ) -> ConfigServerEnergyMotorLookup:
     return ConfigServerEnergyMotorLookup(
@@ -98,7 +94,7 @@ def mock_i10_gap_energy_motor_lookup_idu(
 
 
 @pytest.fixture
-def mock_i10_phase_energy_motor_lookup_idu(
+def mock_phase_energy_motor_lookup_idu(
     mock_config_client: ConfigClient,
 ) -> ConfigServerEnergyMotorLookup:
     return ConfigServerEnergyMotorLookup(
@@ -110,15 +106,15 @@ def mock_i10_phase_energy_motor_lookup_idu(
 
 @pytest.fixture
 async def mock_id_controller(
-    mock_id: I10Apple2,
-    mock_i10_gap_energy_motor_lookup_idu: ConfigServerEnergyMotorLookup,
-    mock_i10_phase_energy_motor_lookup_idu: ConfigServerEnergyMotorLookup,
-) -> I10Apple2Controller:
+    mock_id: Apple2,
+    mock_gap_energy_motor_lookup_idu: ConfigServerEnergyMotorLookup,
+    mock_phase_energy_motor_lookup_idu: ConfigServerEnergyMotorLookup,
+) -> Apple2EnforceLHMoveController:
     async with init_devices(mock=True):
-        mock_id_controller = I10Apple2Controller(
+        mock_id_controller = Apple2EnforceLHMoveController(
             apple2=mock_id,
-            gap_energy_motor_lut=mock_i10_gap_energy_motor_lookup_idu,
-            phase_energy_motor_lut=mock_i10_phase_energy_motor_lookup_idu,
+            gap_energy_motor_lut=mock_gap_energy_motor_lookup_idu,
+            phase_energy_motor_lut=mock_phase_energy_motor_lookup_idu,
         )
 
     return mock_id_controller
@@ -126,7 +122,7 @@ async def mock_id_controller(
 
 @pytest.fixture
 async def mock_id_energy(
-    mock_id_controller: I10Apple2Controller,
+    mock_id_controller: Apple2EnforceLHMoveController,
 ) -> InsertionDeviceEnergy:
     async with init_devices(mock=True):
         mock_id_energy = InsertionDeviceEnergy(id_controller=mock_id_controller)
