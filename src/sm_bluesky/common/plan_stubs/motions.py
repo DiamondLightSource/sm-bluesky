@@ -189,6 +189,18 @@ def get_velocity_and_step_size(
 def cache_speed(
     motor_and_speeds: list[Motor],
 ) -> MsgGenerator[dict[Motor, float]]:
+    """Cache the current velocity of each motor.
+
+    Parameters
+    ----------
+    motor_and_speeds : list[Motor]
+        List of motor devices whose velocity should be cached.
+
+    Returns
+    -------
+    dict[Motor, float]
+        Mapping of each motor to its current velocity.
+    """
     speeds = {}
     for axis in motor_and_speeds:
         speed = yield from bps.rd(axis.velocity)
@@ -202,6 +214,18 @@ def restore_speed(
     group: str | None = None,
     wait_for_all: bool = True,
 ) -> MsgGenerator:
+    """Restore cached velocities for motors.
+
+    Parameters
+    ----------
+    motor_and_speeds : dict[Motor, float]
+        Mapping of motor devices to the velocity values to restore.
+    group : str | None, optional
+        Optional Bluesky group identifier used during the restore moves.
+        If omitted, a unique reset group name is generated.
+    wait_for_all : bool, optional
+        If True, wait for all velocity restore operations to complete.
+    """
     reset_group = f"reset-{group if group else str(uuid.uuid4())[:6]}"
     for device, speed in motor_and_speeds.items():
         yield from bps.abs_set(device.velocity, speed, group=reset_group)
