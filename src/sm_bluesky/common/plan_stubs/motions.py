@@ -130,7 +130,7 @@ def check_within_limit(
 
 
 @plan
-def get_motor_positions(*arg: Motor) -> MsgGenerator[tuple[str, float]]:
+def get_motor_positions(*arg: Motor) -> MsgGenerator[list[tuple[str, float]]]:
     """
     Get the motor positions of the given motors and store them in a list.
 
@@ -147,7 +147,7 @@ def get_motor_positions(*arg: Motor) -> MsgGenerator[tuple[str, float]]:
     motor_position = []
     for motor in arg:
         motor_position.append(motor)
-        position = yield from bps.rd(motor)  # type: ignore
+        position = yield from bps.rd(motor)
         motor_position.append(position)
 
     LOGGER.info(f"Stored motor, position  = {motor_position}.")
