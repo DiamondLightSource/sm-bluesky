@@ -1,4 +1,3 @@
-import asyncio
 from collections import defaultdict
 from pathlib import Path
 from unittest.mock import ANY
@@ -30,10 +29,10 @@ from ophyd_async.core import (
     init_devices,
     set_mock_value,
 )
+from ophyd_async.sim import SimMotor
 from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.plans import soft_fly_energy_scan
-from sm_bluesky.common.sim_devices.sim_stage import SimMotorExtra
 from tests.test_data.common import (
     ID_ENERGY_2_GAP_CALIBRATIONS_CSV,
     ID_ENERGY_2_PHASE_CALIBRATIONS_CSV,
@@ -49,7 +48,7 @@ class Grating(StrictEnum):
 
 class FakePGM(Device):
     def __init__(self, name=""):
-        self.energy = SimMotorExtra(instant=False)
+        self.energy = SimMotor(instant=False)
         super().__init__(name=name)
 
 
@@ -61,9 +60,9 @@ async def mock_pgm(prefix: str = "BLXX-EA-DET-007:") -> FakePGM:
     set_mock_value(mock_pgm.energy.acceleration_time, 0.1)
     set_mock_value(mock_pgm.energy.user_readback, 500)
     set_mock_value(mock_pgm.energy.user_setpoint, 500)
-    set_mock_value(mock_pgm.energy.max_velocity, 50)
-    set_mock_value(mock_pgm.energy.high_limit_travel, 1700)
-    set_mock_value(mock_pgm.energy.low_limit_travel, 400)
+    # set_mock_value(mock_pgm.energy.max_velocity, 50)
+    # set_mock_value(mock_pgm.energy.high_limit_travel, 1700)
+    # set_mock_value(mock_pgm.energy.low_limit_travel, 400)
     return mock_pgm
 
 
@@ -152,7 +151,6 @@ async def test_soft_fly_energy_scan_success(
         capture_emitted,
         wait=True,
     )
-    await asyncio.sleep(0)
     assert_emitted(docs, start=1, descriptor=1, event=ANY, stop=1)
     # Number of event depend how fast motor is moving, it has to be more than 1
     assert len(docs["event"]) > 1
