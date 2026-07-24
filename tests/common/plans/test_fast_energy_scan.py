@@ -57,6 +57,7 @@ async def mock_pgm(prefix: str = "BLXX-EA-DET-007:") -> FakePGM:
         mock_pgm = FakePGM()
 
     set_mock_value(mock_pgm.energy.acceleration_time, 0.1)
+    set_mock_value(mock_pgm.energy.velocity, 50)
     set_mock_value(mock_pgm.energy.user_readback, 500)
     set_mock_value(mock_pgm.energy.user_setpoint, 500)
     # set_mock_value(mock_pgm.energy.max_velocity, 50)
@@ -165,7 +166,7 @@ async def test_soft_fly_energy_scan_success(
         "mock_pgm-energy": 810.0,
     }
     # speed reset
-    assert await mock_energy.mono_energy().velocity.get_value() == 1.0
+    assert await mock_energy.mono_energy().velocity.get_value() == 50.0
     assert (
         await mock_energy.id_energy()
         .id_controller()
