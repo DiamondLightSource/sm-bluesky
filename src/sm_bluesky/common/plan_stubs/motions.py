@@ -1,11 +1,11 @@
 import uuid
-from collections.abc import Generator, Hashable, Iterator
+from collections.abc import Hashable
 from typing import Any, Protocol
 
 import bluesky.plan_stubs as bps
 from bluesky.plan_stubs import abs_set
 from bluesky.protocols import HasName, Movable
-from bluesky.utils import Msg, MsgGenerator, plan
+from bluesky.utils import MsgGenerator, plan
 from dodal.devices.slits import Slits
 from ophyd_async.core import SignalRW
 from ophyd_async.epics.motor import Motor
@@ -33,7 +33,7 @@ def move_motor_with_look_up(
     use_motor_position: bool = False,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator:
+) -> MsgGenerator[None]:
     """Perform a step scan with the range and starting motor position
       given/calculated by using a look up table(dictionary).
       Move to the peak position after the scan and update the lookup table.
@@ -72,7 +72,7 @@ def set_slit_size(
     y_size: float | None = None,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator:
+) -> MsgGenerator[None]:
     """Set opening of x-y slit.
 
     Parameters
@@ -102,7 +102,9 @@ def set_slit_size(
 
 
 @plan
-def check_within_limit(values: list[float], device: HighLowLimitsDevice):
+def check_within_limit(
+    values: list[float], device: HighLowLimitsDevice
+) -> MsgGenerator[None]:
     """Check if the given values are within the limits of the device.
     Parameters
     ----------
@@ -127,7 +129,8 @@ def check_within_limit(values: list[float], device: HighLowLimitsDevice):
             )
 
 
-def get_motor_positions(*arg: Motor) -> Iterator[tuple[str, float]]:
+@plan
+def get_motor_positions(*arg: Motor) -> MsgGenerator[tuple[str, float]]:
     """
     Get the motor positions of the given motors and store them in a list.
 
@@ -153,7 +156,7 @@ def get_motor_positions(*arg: Motor) -> Iterator[tuple[str, float]]:
 
 def get_velocity_and_step_size(
     scan_motor: Motor, ideal_velocity: float, ideal_step_size: float
-) -> Iterator[Any]:
+) -> MsgGenerator[Any]:
     """
     Adjust the step size if the required velocity is higher than the max value.
 
@@ -182,9 +185,10 @@ def get_velocity_and_step_size(
     return ideal_velocity, ideal_step_size
 
 
+@plan
 def cache_speed(
     motor_and_speeds: list[Motor],
-) -> Generator[Msg, Any, dict[Motor, float]]:
+) -> MsgGenerator[dict[Motor, float]]:
     speeds = {}
     for axis in motor_and_speeds:
         speed = yield from bps.rd(axis.velocity)
