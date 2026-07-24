@@ -5,7 +5,7 @@ from unittest.mock import ANY
 import pytest
 from bluesky.protocols import Readable
 from bluesky.run_engine import RunEngine
-from daq_config_server.client import ConfigServer
+from daq_config_server import ConfigClient
 from dodal.devices.beamlines.i10.i10_apple2 import (
     I10Apple2,
     I10Apple2Controller,
@@ -87,7 +87,7 @@ async def mock_id(
 
 @pytest.fixture
 def mock_i10_gap_energy_motor_lookup_idu(
-    mock_config_client: ConfigServer,
+    mock_config_client: ConfigClient,
 ) -> ConfigServerEnergyMotorLookup:
     return ConfigServerEnergyMotorLookup(
         config_client=mock_config_client,
@@ -98,7 +98,7 @@ def mock_i10_gap_energy_motor_lookup_idu(
 
 @pytest.fixture
 def mock_i10_phase_energy_motor_lookup_idu(
-    mock_config_client: ConfigServer,
+    mock_config_client: ConfigClient,
 ) -> ConfigServerEnergyMotorLookup:
     return ConfigServerEnergyMotorLookup(
         config_client=mock_config_client,
@@ -172,10 +172,10 @@ async def test_soft_fly_energy_scan_success(
         "mock_pgm-energy": 810.0,
     }
     # speed reset
-    assert await mock_energy._mono_energy().velocity.get_value() == 1.0
+    assert await mock_energy.mono_energy().velocity.get_value() == 1.0
     assert (
-        await mock_energy._id_energy()
-        ._id_controller()
+        await mock_energy.id_energy()
+        .id_controller()
         .apple2()
         .gap()
         .velocity.get_value()
