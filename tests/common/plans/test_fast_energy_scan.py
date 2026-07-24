@@ -12,7 +12,6 @@ from dodal.devices.insertion_device import (
     BeamEnergy,
     InsertionDeviceEnergy,
     UndulatorGap,
-    UndulatorJawPhase,
     UndulatorPhaseAxes,
 )
 from dodal.devices.insertion_device.energy_motor_lookup import (
@@ -70,7 +69,6 @@ async def mock_pgm(prefix: str = "BLXX-EA-DET-007:") -> FakePGM:
 async def mock_id(
     mock_id_gap: UndulatorGap,
     mock_phase_axes: UndulatorPhaseAxes,
-    mock_jaw_phase: UndulatorJawPhase,
 ) -> Apple2:
     async with init_devices(mock=True):
         mock_id = Apple2(id_gap=mock_id_gap, id_phase=mock_phase_axes)
