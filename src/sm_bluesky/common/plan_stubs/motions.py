@@ -183,10 +183,10 @@ def get_velocity_and_step_size(
 
 
 def cache_speed(
-    devices_and_speeds: list[Motor],
+    motor_and_speeds: list[Motor],
 ) -> Generator[Msg, Any, dict[Motor, float]]:
     speeds = {}
-    for axis in devices_and_speeds:
+    for axis in motor_and_speeds:
         speed = yield from bps.rd(axis.velocity)
         speeds[axis] = speed
     return speeds
@@ -194,12 +194,12 @@ def cache_speed(
 
 @plan
 def restore_speed(
-    devices_and_speeds: dict[Motor, float],
+    motor_and_speeds: dict[Motor, float],
     group: str | None = None,
     wait_for_all: bool = True,
 ) -> MsgGenerator:
     reset_group = f"reset-{group if group else str(uuid.uuid4())[:6]}"
-    for device, speed in devices_and_speeds.items():
+    for device, speed in motor_and_speeds.items():
         yield from bps.abs_set(device.velocity, speed, group=reset_group)
     if wait_for_all:
         yield from bps.wait(reset_group)
