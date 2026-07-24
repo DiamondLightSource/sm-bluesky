@@ -154,6 +154,7 @@ def get_motor_positions(*arg: Motor) -> MsgGenerator[list[tuple[str, float]]]:
     return motor_position
 
 
+@plan
 def get_velocity_and_step_size(
     scan_motor: Motor, ideal_velocity: float, ideal_step_size: float
 ) -> MsgGenerator[Any]:
