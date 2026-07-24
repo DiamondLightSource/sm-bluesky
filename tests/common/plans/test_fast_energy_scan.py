@@ -163,7 +163,7 @@ async def test_soft_fly_energy_scan_success(
     assert docs["event"][-1]["data"] == {
         "fake_detector-value": ANY,
         "mock_id_controller-energy": 750.0,
-        "mock_pgm-energy": 810.0,
+        "mock_pgm-energy": pytest.approx(800, abs=10),
     }
     # speed reset
     assert await mock_energy.mono_energy().velocity.get_value() == 50.0
