@@ -130,7 +130,7 @@ def check_within_limit(
 
 
 @plan
-def get_motor_positions(*arg: Motor) -> MsgGenerator[list[tuple[str, float]]]:
+def get_motor_positions(*arg: Motor) -> MsgGenerator:
     """
     Get the motor positions of the given motors and store them in a list.
 
