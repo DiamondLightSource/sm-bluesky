@@ -30,11 +30,11 @@ class AbstractInstrumentServer(ABC):
             b"disconnect_hardware": self.disconnect_hardware,
             b"ping": self._send_ack,
             b"shutdown": self.stop,
+            b"command_list": self._send_command_list,
         }
 
     def start(self) -> None:
         """Initializes the server, connects hardware, and enters the listening loop."""
-        self._is_running = True
 
         self._hardware_connected = self.connect_hardware()
         if not self._hardware_connected:
@@ -187,6 +187,12 @@ class AbstractInstrumentServer(ABC):
         if hasattr(self, "_current_deadline") and self._current_deadline is not None:
             if time() > self._current_deadline:
                 raise TimeoutError(f"{context} exceeded {self._timeout_seconds}s limit")
+
+    def _send_command_list(self, *args) -> None:
+        """Returns a tab-separated list of all available commands to the client."""
+        available_commands = list(self._command_registry.keys())
+        payload = b"\t".join(available_commands)
+        self._send_response(payload)
 
     @abstractmethod
     def connect_hardware(self) -> bool:
