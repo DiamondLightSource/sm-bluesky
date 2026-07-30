@@ -59,7 +59,7 @@ def run_engine_setup_decorator(func: PerStepND) -> Callable:
 
 
 @pytest.fixture
-def analyser_nd_step(
+def analyser_nd_step_no_shutter(
     sim_analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
 ) -> Callable:
@@ -176,7 +176,39 @@ async def test_analyser_nd_step_func_moves_motors_correctly(
     motors = list(step.keys())
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
-
     # Check motors moved to correct position
     for m in motors:
         assert await m.user_readback.get_value() == step[m]
+
+
+@pytest.mark.parametrize(
+    "callable", [aps.make_analyser_per_step, aps.make_analyser_per_shot]
+)
+def test_make_analyser_per_step_requires_shutter_when_closing_per_region(
+    sim_analyser: ElectronAnalyserDetector, sequence: BaseSequence, callable: Callable
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match="close_shutter_per_region=True requires a shutter to be provided.",
+    ):
+        callable(
+            sim_analyser,
+            sequence,
+            close_shutter_per_region=True,
+            shutter=None,
+        )
+
+
+@pytest.mark.parametrize(
+    "callable", [aps.make_analyser_per_step, aps.make_analyser_per_shot]
+)
+def test_make_analyser_per_step_requires_enabled_regions(
+    sim_analyser: ElectronAnalyserDetector, callable: Callable
+) -> None:
+    with pytest.raises(ValueError, match="Sequence has zero enabled regions."):
+        callable(
+            sim_analyser,
+            BaseSequence(),
+            close_shutter_per_region=False,
+            shutter=None,
+        )

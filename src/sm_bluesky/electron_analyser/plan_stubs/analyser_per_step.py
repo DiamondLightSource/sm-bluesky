@@ -23,7 +23,7 @@ def _validate_args(
 
     if close_shutter_per_region and shutter is None:
         raise ValueError(
-            "closer_shutter_per_region=True requires a shutter to be provided."
+            "close_shutter_per_region=True requires a shutter to be provided."
         )
 
 
@@ -145,7 +145,7 @@ def make_analyser_per_step(
     ) -> MsgGenerator:
         yield from move_per_step(step, pos_cache)
 
-        # Get any readables from the movables
+        # Get any readables from the movables to measure with.
         readables: list[Readable] = [s for s in step.keys() if isinstance(s, Readable)]
         yield from _analyser_regions(
             analyser,
