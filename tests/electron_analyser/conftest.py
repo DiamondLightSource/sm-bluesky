@@ -126,7 +126,6 @@ def shutter(
 @pytest.fixture
 async def b07b_specs150(
     energy_source: SignalR[float],
-    shutter: GenericFastShutter,
 ) -> SpecsDetector[b07.LensMode, b07_shared.PsuMode]:
     with init_devices(mock=True):
         b07b_specs150 = SpecsDetector[b07.LensMode, b07_shared.PsuMode](
@@ -134,7 +133,7 @@ async def b07b_specs150(
             lens_mode_type=b07.LensMode,
             psu_mode_type=b07_shared.PsuMode,
             energy_source=energy_source,
-            shutter=shutter,
+            shutter=None,
         )
     # Needed so we don't run into divide by zero errors on read and describe.
     dummy_val = 10
@@ -150,7 +149,6 @@ async def b07b_specs150(
 @pytest.fixture
 async def ew4000(
     energy_source: SignalR[float],
-    shutter: DualFastShutter,
     source_selector: SourceSelector,
 ) -> VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy]:
     with init_devices(mock=True):
@@ -160,7 +158,7 @@ async def ew4000(
             psu_mode_type=i09.PsuMode,
             pass_energy_type=i09.PassEnergy,
             energy_source=energy_source,
-            shutter=shutter,
+            shutter=None,
             source_selector=source_selector,
         )
     return ew4000
