@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from inspect import iscoroutinefunction
@@ -9,12 +8,9 @@ import numpy as np
 import pytest
 from bluesky import RunEngine
 from bluesky import plan_stubs as bps
+from bluesky.plans import PerStepND
 from bluesky.protocols import Movable, Readable, Triggerable
-from dodal.devices.electron_analyser.base import (
-    BaseSequence,
-    ElectronAnalyserDetector,
-    GenericElectronAnalyserDetector,
-)
+from dodal.devices.electron_analyser.base import BaseSequence, ElectronAnalyserDetector
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
@@ -29,7 +25,7 @@ def other_detectors(
 
 @pytest.fixture
 def all_detectors(
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
     other_detectors: Sequence[Readable],
 ) -> Sequence[Readable]:
     return [sim_analyser] + list(other_detectors)
@@ -48,18 +44,13 @@ def pos_cache() -> dict[Movable, Any]:
     return defaultdict(lambda: 0)
 
 
-def run_engine_setup_decorator(
-    func,
-    sim_analyser: GenericElectronAnalyserDetector,
-    sequence: BaseSequence,
-):
-    def wrapper(all_detectors, step, pos_cache):
-        yield from bps.prepare(sim_analyser.sequence, sequence)
+def run_engine_setup_decorator(func: PerStepND) -> Callable:
+    def wrapper(all_detectors, step, pos_cache, take_reading=None):
         yield from bps.open_run()
         yield from bps.stage_all(*all_detectors)
-        # yield from bps.prepare(sim_analyser, TriggerInfo())
+
         try:
-            yield from func(all_detectors, step, pos_cache)
+            yield from func(all_detectors, step, pos_cache, take_reading)
         finally:
             yield from bps.unstage_all(*all_detectors)
             yield from bps.close_run()
@@ -69,13 +60,16 @@ def run_engine_setup_decorator(
 
 @pytest.fixture
 def analyser_nd_step(
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
 ) -> Callable:
     return run_engine_setup_decorator(
-        aps.analyser_nd_step,
-        sim_analyser,
-        sequence,
+        aps.make_analyser_per_step(
+            sim_analyser,
+            sequence,
+            close_shutter_per_region=False,
+            shutter=None,
+        )
     )
 
 
@@ -83,7 +77,7 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     run_engine: RunEngine,
     analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
@@ -95,7 +89,7 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     expected_driver_set_calls = [
         call(region) for region in sequence.get_enabled_regions()
     ]
-    run_engine(analyser_nd_step(all_detectors, step, pos_cache))
+    run_engine(analyser_nd_step(all_detectors, step, pos_cache, None))
 
     # Check that region_logic method was called with the number of regions.
     assert region_logic.setup_with_region.call_args_list == expected_driver_set_calls
@@ -186,34 +180,3 @@ async def test_analyser_nd_step_func_moves_motors_correctly(
     # Check motors moved to correct position
     for m in motors:
         assert await m.user_readback.get_value() == step[m]
-
-
-async def test_analyser_nd_step_raises_error_with_no_analyser(
-    run_engine: RunEngine,
-    analyser_nd_step: Callable,
-    step: dict[SimMotor, Any],
-    pos_cache: dict[SimMotor, Any],
-):
-    with pytest.raises(
-        RuntimeError,
-        match=re.escape(
-            f"Cannot find object from {[]} with type {ElectronAnalyserDetector}"
-        ),
-    ):
-        run_engine(analyser_nd_step([], step, pos_cache))
-
-
-async def test_analyser_nd_step_raises_error_when_analyser_not_prepared_with_sequence(
-    run_engine: RunEngine,
-    sim_analyser: GenericElectronAnalyserDetector,
-    step: dict[SimMotor, Any],
-    pos_cache: dict[SimMotor, Any],
-):
-    with pytest.raises(
-        RuntimeError,
-        match=re.escape(
-            f"Electron analyser {sim_analyser.name}.sequence is None. It must be "
-            "configured using prepare plan stub."
-        ),
-    ):
-        run_engine(aps.analyser_nd_step([sim_analyser], step, pos_cache))  # type: ignore
