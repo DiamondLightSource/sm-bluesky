@@ -16,7 +16,7 @@ from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
 from dodal.devices.fast_shutter import DualFastShutter, FastShutter, GenericFastShutter
 from dodal.devices.pgm import PlaneGratingMonochromator
 from dodal.devices.selectable_source import SourceSelector
-from ophyd_async.core import InOut, init_devices, set_mock_value
+from ophyd_async.core import InOut, SignalR, init_devices, set_mock_value
 
 from tests.electron_analyser.util import (
     load_b07_specs_test_seq,
@@ -32,24 +32,17 @@ async def source_selector() -> SourceSelector:
 
 
 @pytest.fixture
-async def single_energy_source(source_selector: SourceSelector) -> DualEnergySource:
+async def single_energy_source() -> SignalR[float]:
     async with init_devices(mock=True):
         dcm = DoubleCrystalMonochromatorWithDSpacing(
             "DCM:", PitchAndRollCrystal, StationaryCrystal
         )
     await dcm.energy_in_keV.set(2.2)
-    async with init_devices(mock=True):
-        dcm_energy_source = DualEnergySource(
-            source1=dcm.energy_in_eV,
-            source2=dcm.energy_in_eV,
-            selected_source=source_selector.selected_source,
-        )
-
-    return dcm_energy_source
+    return dcm.energy_in_eV
 
 
 @pytest.fixture
-async def dual_energy_source(source_selector: SourceSelector) -> DualEnergySource:
+async def dual_energy_source(source_selector: SourceSelector) -> SignalR[float]:
     async with init_devices(mock=True):
         dcm = DoubleCrystalMonochromatorWithDSpacing(
             "DCM:", PitchAndRollCrystal, StationaryCrystal
@@ -63,7 +56,7 @@ async def dual_energy_source(source_selector: SourceSelector) -> DualEnergySourc
             source2=pgm.energy.user_readback,
             selected_source=source_selector.selected_source,
         )
-    return dual_energy_source
+    return dual_energy_source.energy
 
 
 @pytest.fixture
@@ -103,29 +96,45 @@ def dual_fast_shutter(
     return dual_fast_shutter
 
 
-@pytest.fixture(params=["single", "dual"])
-def shutter(
+@pytest.fixture(params=["single_source_and_shutter", "dual_source_and_shutter"])
+def energy_source_fast_shutter_pair(
     request: pytest.FixtureRequest,
-    shutter1: FastShutter,
+    dual_energy_source: SignalR[float],
     dual_fast_shutter: DualFastShutter,
+    single_energy_source: SignalR[float],
+    shutter1: GenericFastShutter,
+) -> tuple[SignalR[float], GenericFastShutter]:
+    if request.param == "dual":
+        return (dual_energy_source, dual_fast_shutter)
+    return (single_energy_source, shutter1)
+
+
+@pytest.fixture
+def energy_source(
+    energy_source_fast_shutter_pair: tuple[SignalR[float], GenericFastShutter],
+) -> SignalR[float]:
+    return energy_source_fast_shutter_pair[0]
+
+
+@pytest.fixture
+def shutter(
+    energy_source_fast_shutter_pair: tuple[SignalR[float], GenericFastShutter],
 ) -> GenericFastShutter:
-    if request.param == "single":
-        return shutter1
-    return dual_fast_shutter
+    return energy_source_fast_shutter_pair[1]
 
 
 @pytest.fixture
 async def b07b_specs150(
-    single_energy_source: DualEnergySource,
-    shutter1: FastShutter,
+    energy_source: SignalR[float],
+    shutter: GenericFastShutter,
 ) -> SpecsDetector[b07.LensMode, b07_shared.PsuMode]:
     with init_devices(mock=True):
         b07b_specs150 = SpecsDetector[b07.LensMode, b07_shared.PsuMode](
             prefix="TEST:",
             lens_mode_type=b07.LensMode,
             psu_mode_type=b07_shared.PsuMode,
-            energy_source=single_energy_source.energy,
-            shutter=shutter1,
+            energy_source=energy_source,
+            shutter=shutter,
         )
     # Needed so we don't run into divide by zero errors on read and describe.
     dummy_val = 10
@@ -140,8 +149,8 @@ async def b07b_specs150(
 
 @pytest.fixture
 async def ew4000(
-    dual_energy_source: DualEnergySource,
-    dual_fast_shutter: DualFastShutter,
+    energy_source: SignalR[float],
+    shutter: DualFastShutter,
     source_selector: SourceSelector,
 ) -> VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy]:
     with init_devices(mock=True):
@@ -150,8 +159,8 @@ async def ew4000(
             lens_mode_type=i09.LensMode,
             psu_mode_type=i09.PsuMode,
             pass_energy_type=i09.PassEnergy,
-            energy_source=dual_energy_source.energy,
-            shutter=dual_fast_shutter,
+            energy_source=energy_source,
+            shutter=shutter,
             source_selector=source_selector,
         )
     return ew4000

@@ -7,9 +7,9 @@ from bluesky.protocols import Readable, Reading
 from dodal.devices.electron_analyser.base import (
     BaseRegion,
     BaseSequence,
-    DualEnergySource,
     GenericElectronAnalyserDetector,
 )
+from ophyd_async.core import SignalR
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plans.analyser_scans import (
@@ -23,14 +23,14 @@ from tests.electron_analyser.util import (
 )
 
 
-def add_energy_source_monitor(energy_source: DualEnergySource) -> list[float]:
+def add_energy_source_monitor(energy_source: SignalR[float]) -> list[float]:
     energy_values = []
 
     def energy_monitor(reading: dict[str, Reading[float]], *args, **kwargs) -> None:
-        value = reading[energy_source.energy.name]["value"]
+        value = reading[energy_source.name]["value"]
         energy_values.append(value)
 
-    energy_source.energy.subscribe_reading(energy_monitor)
+    energy_source.subscribe(energy_monitor)
     return energy_values
 
 
@@ -112,9 +112,9 @@ async def test_analysercount(
     sim_analyser: GenericElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
-    dual_energy_source: DualEnergySource,
+    energy_source: SignalR[float],
 ) -> None:
-    energy_monitor_values = add_energy_source_monitor(dual_energy_source)
+    energy_monitor_values = add_energy_source_monitor(energy_source)
     run_engine(analysercount(sim_analyser, sequence, extra_detectors))
     assert_analyserscan_config(
         run_engine_documents,
@@ -142,9 +142,9 @@ async def test_analyserscan(
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
     args: list[SimMotor | int],
-    dual_energy_source: DualEnergySource,
+    energy_source: SignalR[float],
 ) -> None:
-    energy_monitor_values = add_energy_source_monitor(dual_energy_source)
+    energy_monitor_values = add_energy_source_monitor(energy_source)
     motor_iterations = 3
     run_engine(
         analyserscan(
@@ -170,7 +170,7 @@ async def test_analyserscan(
 
 
 @pytest.mark.parametrize(
-    "args",
+    "close_shutter_beteen_region, args",
     [
         [SimMotor("motor1"), 1, 3, 3],
         [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2],
@@ -182,11 +182,22 @@ async def test_grid_analyserscan(
     sim_analyser: GenericElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
+    shutter,
+    close_shutter_beteen_region: bool,
     args: list[SimMotor | int],
-    dual_energy_source: DualEnergySource,
+    energy_source: SignalR[float],
 ) -> None:
-    energy_monitor_values = add_energy_source_monitor(dual_energy_source)
-    run_engine(grid_analyserscan(sim_analyser, sequence, extra_detectors, args))
+    energy_monitor_values = add_energy_source_monitor(energy_source)
+    run_engine(
+        grid_analyserscan(
+            sim_analyser,
+            sequence,
+            extra_detectors,
+            args,
+            shutter=shutter,
+            close_shutter_per_region=close_shutter_beteen_region,
+        )
+    )
     assert_analyserscan_config(
         run_engine_documents,
         sim_analyser,
