@@ -12,6 +12,21 @@ from dodal.log import LOGGER
 T = TypeVar("T")
 
 
+def _validate_args(
+    analyser: ElectronAnalyserDetector,
+    sequence: BaseSequence,
+    close_shutter_per_region: bool,
+    shutter: GenericFastShutter | None,
+) -> None:
+    if len(sequence.get_enabled_regions()) == 0:
+        raise ValueError("Sequence has zero enabled regions.")
+
+    if close_shutter_per_region and shutter is None:
+        raise ValueError(
+            "closer_shutter_per_region=True requires a shutter to be provided."
+        )
+
+
 @plan
 def _analyser_regions(
     analyser: ElectronAnalyserDetector,
@@ -78,10 +93,7 @@ def make_analyser_per_shot(
     shutter:
         Optional shutter to open before collecting each region.
     """
-    if close_shutter_per_region and shutter is None:
-        raise ValueError(
-            "closer_shutter_per_region=True requires a shutter to be provided."
-        )
+    _validate_args(analyser, sequence, close_shutter_per_region, shutter)
 
     @plan
     def analyser_shot(
@@ -122,10 +134,7 @@ def make_analyser_per_step(
     shutter:
         Optional shutter to open before collecting each region.
     """
-    if close_shutter_per_region and shutter is None:
-        raise ValueError(
-            "closer_shutter_per_region=True requires a shutter to be provided."
-        )
+    _validate_args(analyser, sequence, close_shutter_per_region, shutter)
 
     @plan
     def analyser_nd_step(
