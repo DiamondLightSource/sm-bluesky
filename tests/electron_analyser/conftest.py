@@ -13,7 +13,7 @@ from dodal.devices.electron_analyser.base import (
 )
 from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
-from dodal.devices.fast_shutter import DualFastShutter, FastShutter
+from dodal.devices.fast_shutter import DualFastShutter, FastShutter, GenericFastShutter
 from dodal.devices.pgm import PlaneGratingMonochromator
 from dodal.devices.selectable_source import SourceSelector
 from ophyd_async.core import InOut, init_devices, set_mock_value
@@ -100,6 +100,17 @@ def dual_fast_shutter(
             shutter2,
             source_selector.selected_source,
         )
+    return dual_fast_shutter
+
+
+@pytest.fixture(params=["single", "dual"])
+def shutter(
+    request: pytest.FixtureRequest,
+    shutter1: FastShutter,
+    dual_fast_shutter: DualFastShutter,
+) -> GenericFastShutter:
+    if request.param == "single":
+        return shutter1
     return dual_fast_shutter
 
 

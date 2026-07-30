@@ -11,6 +11,7 @@ from bluesky import plan_stubs as bps
 from bluesky.plans import PerStepND
 from bluesky.protocols import Movable, Readable, Triggerable
 from dodal.devices.electron_analyser.base import BaseSequence, ElectronAnalyserDetector
+from dodal.devices.fast_shutter import GenericFastShutter
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
@@ -59,7 +60,7 @@ def run_engine_setup_decorator(func: PerStepND) -> Callable:
 
 
 @pytest.fixture
-def analyser_nd_step_no_shutter(
+def analyser_nd_step(
     sim_analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
 ) -> Callable:
@@ -212,3 +213,41 @@ def test_make_analyser_per_step_requires_enabled_regions(
             close_shutter_per_region=False,
             shutter=None,
         )
+
+
+@pytest.mark.parametrize(
+    "close_shutter_per_region, expected_shutter_calls",
+    [[True, [call(True), call(False)]], [False, [call(True)]]],
+)
+def test_analyser_nd_step_operates_shutter_correctly(
+    run_engine: RunEngine,
+    sim_analyser: ElectronAnalyserDetector,
+    sequence: BaseSequence,
+    all_detectors: Sequence[Readable],
+    step: dict[Movable, Any],
+    pos_cache: dict[Movable, Any],
+    shutter: GenericFastShutter,
+    close_shutter_per_region: bool,
+    expected_shutter_calls: list,
+) -> None:
+    analyser_nd_step = run_engine_setup_decorator(
+        aps.make_analyser_per_step(
+            sim_analyser,
+            sequence,
+            close_shutter_per_region=close_shutter_per_region,
+            shutter=shutter,
+        )
+    )
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
+
+    run_engine(
+        analyser_nd_step(
+            all_detectors,
+            step,
+            pos_cache,
+            None,
+        )
+    )
+    n_regions = len(sequence.get_enabled_regions())
+    assert shutter.open.set.call_args_list == expected_shutter_calls * n_regions
