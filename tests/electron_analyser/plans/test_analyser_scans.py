@@ -9,6 +9,7 @@ from dodal.devices.electron_analyser.base import (
     BaseSequence,
     GenericElectronAnalyserDetector,
 )
+from dodal.devices.fast_shutter import GenericFastShutter
 from ophyd_async.core import SignalR
 from ophyd_async.sim import SimMotor
 
@@ -106,6 +107,7 @@ def extra_detectors(
     return [SimMotor("det" + str(i + 1)) for i in range(request.param)]
 
 
+@pytest.mark.parametrize("close_shutter_between_region", [True, False])
 async def test_analysercount(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
@@ -113,9 +115,19 @@ async def test_analysercount(
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
     energy_source: SignalR[float],
+    shutter: GenericFastShutter,
+    close_shutter_between_region: bool,
 ) -> None:
     energy_monitor_values = add_energy_source_monitor(energy_source)
-    run_engine(analysercount(sim_analyser, sequence, extra_detectors))
+    run_engine(
+        analysercount(
+            sim_analyser,
+            sequence,
+            extra_detectors,
+            shutter=shutter,
+            close_shutter_per_region=close_shutter_between_region,
+        )
+    )
     assert_analyserscan_config(
         run_engine_documents,
         sim_analyser,
@@ -129,10 +141,12 @@ async def test_analysercount(
 
 
 @pytest.mark.parametrize(
-    "args",
+    "close_shutter_between_region, args",
     [
-        [SimMotor("motor1"), -10, 10],
-        [SimMotor("motor1"), -10, 10, SimMotor("motor2"), -1, 1],
+        [True, [SimMotor("motor1"), 1, 3, 3]],
+        [False, [SimMotor("motor1"), 1, 3, 3]],
+        [True, [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2]],
+        [False, [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2]],
     ],
 )
 async def test_analyserscan(
@@ -141,6 +155,8 @@ async def test_analyserscan(
     sim_analyser: GenericElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
+    shutter: GenericFastShutter,
+    close_shutter_beteen_region: bool,
     args: list[SimMotor | int],
     energy_source: SignalR[float],
 ) -> None:
@@ -148,7 +164,13 @@ async def test_analyserscan(
     motor_iterations = 3
     run_engine(
         analyserscan(
-            sim_analyser, sequence, extra_detectors, args, num=motor_iterations
+            sim_analyser,
+            sequence,
+            extra_detectors,
+            args,
+            num=motor_iterations,
+            shutter=shutter,
+            close_shutter_per_region=close_shutter_beteen_region,
         )
     )
     assert_analyserscan_config(
@@ -170,10 +192,12 @@ async def test_analyserscan(
 
 
 @pytest.mark.parametrize(
-    "close_shutter_beteen_region, args",
+    "close_shutter_between_region, args",
     [
-        [SimMotor("motor1"), 1, 3, 3],
-        [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2],
+        [True, [SimMotor("motor1"), 1, 3, 3]],
+        [False, [SimMotor("motor1"), 1, 3, 3]],
+        [True, [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2]],
+        [False, [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2]],
     ],
 )
 async def test_grid_analyserscan(
@@ -183,7 +207,7 @@ async def test_grid_analyserscan(
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
     shutter,
-    close_shutter_beteen_region: bool,
+    close_shutter_between_region: bool,
     args: list[SimMotor | int],
     energy_source: SignalR[float],
 ) -> None:
@@ -195,7 +219,7 @@ async def test_grid_analyserscan(
             extra_detectors,
             args,
             shutter=shutter,
-            close_shutter_per_region=close_shutter_beteen_region,
+            close_shutter_per_region=close_shutter_between_region,
         )
     )
     assert_analyserscan_config(
