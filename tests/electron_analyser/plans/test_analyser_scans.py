@@ -9,8 +9,7 @@ from dodal.devices.electron_analyser.base import (
     BaseSequence,
     GenericElectronAnalyserDetector,
 )
-from dodal.devices.fast_shutter import GenericFastShutter
-from ophyd_async.core import SignalR
+from dodal.devices.selectable_source import SelectedSource
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plans.analyser_scans import (
@@ -19,27 +18,27 @@ from sm_bluesky.electron_analyser.plans.analyser_scans import (
     grid_analyserscan,
 )
 from tests.electron_analyser.util import (
+    BeamlineSourceGroup,
     assert_mapped_data_equals_expected,
     expected_analyser_config,
 )
 
 
-def add_energy_source_monitor(energy_source: SignalR[float]) -> list[float]:
-    energy_values = []
-
-    def energy_monitor(reading: dict[str, Reading[float]], *args, **kwargs) -> None:
-        value = reading[energy_source.name]["value"]
-        energy_values.append(value)
-
-    energy_source.subscribe(energy_monitor)
-    return energy_values
+def expected_energy_values(
+    sequence: BaseSequence[BaseRegion],
+    energy_values: Mapping[SelectedSource, float],
+) -> list[float]:
+    return [
+        energy_values[region.excitation_energy_source]
+        for region in sequence.get_enabled_regions()
+    ]
 
 
 def assert_analyserscan_config(
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
     analyser: GenericElectronAnalyserDetector,
     sequence: BaseSequence[BaseRegion],
-    energy_values: list[float],
+    source_to_energy_values: Mapping[SelectedSource, float],
 ) -> None:
     """Check that the configuration for the analyser device is correct."""
     drv = analyser._region_logic.driver
@@ -55,6 +54,7 @@ def assert_analyserscan_config(
         region = sequence.get_region_by_name(region_name)
         assert region is not None
 
+        energy_values = expected_energy_values(sequence, source_to_energy_values)
         epics_region = region.prepare_for_epics(energy_values[i])
 
         assert_mapped_data_equals_expected(
@@ -114,17 +114,15 @@ async def test_analysercount(
     sim_analyser: GenericElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
-    energy_source: SignalR[float],
-    shutter: GenericFastShutter,
+    beamline_source_group: BeamlineSourceGroup,
     close_shutter_between_region: bool,
 ) -> None:
-    energy_monitor_values = add_energy_source_monitor(energy_source)
     run_engine(
         analysercount(
             sim_analyser,
             sequence,
             extra_detectors,
-            shutter=shutter,
+            shutter=beamline_source_group.shutter,
             close_shutter_per_region=close_shutter_between_region,
         )
     )
@@ -132,7 +130,7 @@ async def test_analysercount(
         run_engine_documents,
         sim_analyser,
         sequence,
-        energy_monitor_values,
+        beamline_source_group.energy_values,
     )
     assert_other_devices_config(run_engine_documents, extra_detectors, [])
     assert_event_data(
@@ -143,10 +141,10 @@ async def test_analysercount(
 @pytest.mark.parametrize(
     "close_shutter_between_region, args",
     [
-        [True, [SimMotor("motor1"), 1, 3, 3]],
-        [False, [SimMotor("motor1"), 1, 3, 3]],
-        [True, [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2]],
-        [False, [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2]],
+        [True, [SimMotor("motor1"), 1, 3]],
+        [False, [SimMotor("motor1"), 1, 3]],
+        [True, [SimMotor("motor1"), 1, 3, SimMotor("motor2"), 1, 2]],
+        [False, [SimMotor("motor1"), 1, 3, SimMotor("motor2"), 1, 2]],
     ],
 )
 async def test_analyserscan(
@@ -155,12 +153,10 @@ async def test_analyserscan(
     sim_analyser: GenericElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
-    shutter: GenericFastShutter,
-    close_shutter_beteen_region: bool,
+    close_shutter_between_region: bool,
     args: list[SimMotor | int],
-    energy_source: SignalR[float],
+    beamline_source_group: BeamlineSourceGroup,
 ) -> None:
-    energy_monitor_values = add_energy_source_monitor(energy_source)
     motor_iterations = 3
     run_engine(
         analyserscan(
@@ -169,15 +165,15 @@ async def test_analyserscan(
             extra_detectors,
             args,
             num=motor_iterations,
-            shutter=shutter,
-            close_shutter_per_region=close_shutter_beteen_region,
+            shutter=beamline_source_group.shutter,
+            close_shutter_per_region=close_shutter_between_region,
         )
     )
     assert_analyserscan_config(
         run_engine_documents,
         sim_analyser,
         sequence,
-        energy_monitor_values,
+        beamline_source_group.energy_values,
     )
     motors = [a for a in args if isinstance(a, SimMotor)]
     assert_other_devices_config(run_engine_documents, extra_detectors, motors)
@@ -206,19 +202,17 @@ async def test_grid_analyserscan(
     sim_analyser: GenericElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
-    shutter,
     close_shutter_between_region: bool,
     args: list[SimMotor | int],
-    energy_source: SignalR[float],
+    beamline_source_group: BeamlineSourceGroup,
 ) -> None:
-    energy_monitor_values = add_energy_source_monitor(energy_source)
     run_engine(
         grid_analyserscan(
             sim_analyser,
             sequence,
             extra_detectors,
             args,
-            shutter=shutter,
+            shutter=beamline_source_group.shutter,
             close_shutter_per_region=close_shutter_between_region,
         )
     )
@@ -226,7 +220,7 @@ async def test_grid_analyserscan(
         run_engine_documents,
         sim_analyser,
         sequence,
-        energy_monitor_values,
+        beamline_source_group.energy_values,
     )
 
     motors = [a for a in args if isinstance(a, SimMotor)]

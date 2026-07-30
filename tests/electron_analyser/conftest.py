@@ -15,10 +15,11 @@ from dodal.devices.electron_analyser.specs import SpecsDetector
 from dodal.devices.electron_analyser.vgscienta import VGScientaDetector
 from dodal.devices.fast_shutter import DualFastShutter, FastShutter, GenericFastShutter
 from dodal.devices.pgm import PlaneGratingMonochromator
-from dodal.devices.selectable_source import SourceSelector
-from ophyd_async.core import InOut, SignalR, init_devices, set_mock_value
+from dodal.devices.selectable_source import SelectedSource, SourceSelector
+from ophyd_async.core import InOut, SignalR, SignalRW, init_devices, set_mock_value
 
 from tests.electron_analyser.util import (
+    BeamlineSourceGroup,
     load_b07_specs_test_seq,
     load_i09_vgscienta_test_seq,
 )
@@ -48,9 +49,6 @@ async def dual_energy_source(source_selector: SourceSelector) -> SignalR[float]:
             "DCM:", PitchAndRollCrystal, StationaryCrystal
         )
         pgm = PlaneGratingMonochromator("PGM:", i09.Grating)
-    await dcm.energy_in_keV.set(2.2)
-    await pgm.energy.set(500)
-    async with init_devices(mock=True):
         dual_energy_source = DualEnergySource(
             source1=dcm.energy_in_eV,
             source2=pgm.energy.user_readback,
@@ -97,43 +95,44 @@ def dual_fast_shutter(
 
 
 @pytest.fixture(params=["single_source_and_shutter", "dual_source_and_shutter"])
-def energy_source_fast_shutter_pair(
+def beamline_source_group(
     request: pytest.FixtureRequest,
-    dual_energy_source: SignalR[float],
+    dual_energy_source: SignalRW[float],
     dual_fast_shutter: DualFastShutter,
-    single_energy_source: SignalR[float],
+    single_energy_source: SignalRW[float],
     shutter1: GenericFastShutter,
-) -> tuple[SignalR[float], GenericFastShutter]:
-    if request.param == "dual":
-        return (dual_energy_source, dual_fast_shutter)
-    return (single_energy_source, shutter1)
+    source_selector: SourceSelector,
+) -> BeamlineSourceGroup:
+    if request.param == "dual_source_and_shutter":
+        group = BeamlineSourceGroup(
+            energy_source=dual_energy_source,
+            energy_values={SelectedSource.SOURCE1: 2200, SelectedSource.SOURCE2: 500},
+            source_selector=source_selector.selected_source,
+            shutter=dual_fast_shutter,
+        )
 
-
-@pytest.fixture
-def energy_source(
-    energy_source_fast_shutter_pair: tuple[SignalR[float], GenericFastShutter],
-) -> SignalR[float]:
-    return energy_source_fast_shutter_pair[0]
-
-
-@pytest.fixture
-def shutter(
-    energy_source_fast_shutter_pair: tuple[SignalR[float], GenericFastShutter],
-) -> GenericFastShutter:
-    return energy_source_fast_shutter_pair[1]
+    group = BeamlineSourceGroup(
+        energy_source=single_energy_source,
+        energy_values={SelectedSource.SOURCE1: 2200},
+        source_selector=None,
+        shutter=shutter1,
+    )
+    group.setup_test()
+    return group
 
 
 @pytest.fixture
 async def b07b_specs150(
-    energy_source: SignalR[float],
+    beamline_source_group: BeamlineSourceGroup,
 ) -> SpecsDetector[b07.LensMode, b07_shared.PsuMode]:
     with init_devices(mock=True):
         b07b_specs150 = SpecsDetector[b07.LensMode, b07_shared.PsuMode](
             prefix="TEST:",
             lens_mode_type=b07.LensMode,
             psu_mode_type=b07_shared.PsuMode,
-            energy_source=energy_source,
+            energy_source=beamline_source_group.energy_source,
             shutter=None,
+            source_selector=beamline_source_group.source_selector,
         )
     # Needed so we don't run into divide by zero errors on read and describe.
     dummy_val = 10
@@ -148,8 +147,7 @@ async def b07b_specs150(
 
 @pytest.fixture
 async def ew4000(
-    energy_source: SignalR[float],
-    source_selector: SourceSelector,
+    beamline_source_group: BeamlineSourceGroup,
 ) -> VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy]:
     with init_devices(mock=True):
         ew4000 = VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy](
@@ -157,9 +155,9 @@ async def ew4000(
             lens_mode_type=i09.LensMode,
             psu_mode_type=i09.PsuMode,
             pass_energy_type=i09.PassEnergy,
-            energy_source=energy_source,
+            energy_source=beamline_source_group.energy_source,
             shutter=None,
-            source_selector=source_selector,
+            source_selector=beamline_source_group.source_selector,
         )
     return ew4000
 
@@ -174,7 +172,6 @@ def sim_analyser(
     for detector in detectors:
         if detector.name == request.param:
             return detector
-
     raise ValueError(f"Detector with name '{request.param}' not found")
 
 
