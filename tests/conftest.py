@@ -49,6 +49,12 @@ A_BIT = 0.5
 pytest_plugins = ["dodal.testing.fixtures.run_engine"]
 
 
+@pytest.fixture(autouse=True)
+def allow_bluesky_verb_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    # This is a temp work around until we fix whole repo
+    monkeypatch.setenv("OPHYD_ASYNC_ALLOW_RESERVED_ATTRS", "YES")
+
+
 @pytest.fixture
 def static_filename_provider() -> StaticFilenameProvider:
     return StaticFilenameProvider("ophyd_async_tests")

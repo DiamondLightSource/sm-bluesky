@@ -217,7 +217,10 @@ def test_make_analyser_per_step_requires_enabled_regions(
 
 @pytest.mark.parametrize(
     "close_shutter_per_region, expected_shutter_calls",
-    [[True, [call(True), call(False)]], [False, [call(True)]]],
+    [
+        (True, [call(True), call(False)]),
+        (False, [call(True)]),
+    ],
 )
 def test_analyser_nd_step_operates_shutter_correctly(
     run_engine: RunEngine,
@@ -241,13 +244,6 @@ def test_analyser_nd_step_operates_shutter_correctly(
     original_set = shutter.open.set
     shutter.open.set = MagicMock(wraps=original_set)
 
-    run_engine(
-        analyser_nd_step(
-            all_detectors,
-            step,
-            pos_cache,
-            None,
-        )
-    )
+    run_engine(analyser_nd_step(all_detectors, step, pos_cache, None))
     n_regions = len(sequence.get_enabled_regions())
     assert shutter.open.set.call_args_list == expected_shutter_calls * n_regions

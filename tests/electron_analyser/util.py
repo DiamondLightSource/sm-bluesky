@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Any
 from unittest.mock import ANY
 
@@ -20,9 +19,6 @@ from dodal.devices.electron_analyser.vgscienta import (
     VGScientaRegion,
     VGScientaSequence,
 )
-from dodal.devices.fast_shutter import GenericFastShutter
-from dodal.devices.selectable_source import SelectedSource
-from ophyd_async.core import SignalR, SignalRW, set_mock_value
 
 from tests.electron_analyser.test_data import (
     TEST_SPECS_SEQUENCE,
@@ -133,17 +129,3 @@ def assert_mapped_data_equals_expected(
         if skip_expected_is_none and exp is None:
             continue
         assert data[key] == exp
-
-
-@dataclass
-class BeamlineSourceGroup:
-    energy_source: SignalR[float]
-    energy_values: dict[SelectedSource, float]
-    shutter: GenericFastShutter | None = None
-    source_selector: SignalRW[SelectedSource] | None = None
-
-    def setup_test(self):
-        for source, energy_val in self.energy_values.items():
-            if self.source_selector is not None:
-                self.source_selector.set(source)
-            set_mock_value(self.energy_source, energy_val)
