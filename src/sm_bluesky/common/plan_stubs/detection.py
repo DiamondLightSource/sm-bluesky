@@ -45,8 +45,8 @@ def fly_trigger_and_read(
     grp = short_uid("kickoff")
     yield from bps.kickoff(motor, group=grp, wait=True)
     LOGGER.info(f"flying motor =  {motor.name} at with info = {fly_info}")
-    done = yield from bps.complete(motor)
+    status = yield from bps.complete(motor)
     yield from bps.trigger_and_read(dets + [motor])
-    while not done.done:
+    while not status.done:
         yield from bps.trigger_and_read(dets + [motor])
         yield from bps.checkpoint()

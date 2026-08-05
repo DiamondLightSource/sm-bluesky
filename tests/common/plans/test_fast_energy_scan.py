@@ -1,4 +1,3 @@
-from collections import defaultdict
 from pathlib import Path
 from unittest.mock import ANY
 
@@ -138,29 +137,28 @@ async def mock_energy(
 
 
 async def test_soft_fly_energy_scan_success(
-    mock_energy: BeamEnergy, run_engine: RunEngine, fake_detector: Readable
+    mock_energy: BeamEnergy,
+    run_engine: RunEngine,
+    fake_detector: Readable,
+    run_engine_documents: dict[str, list[dict]],
 ) -> None:
-    docs = defaultdict(list)
-
-    def capture_emitted(name, doc):
-        docs[name].append(doc)
 
     run_engine(
         soft_fly_energy_scan([fake_detector], mock_energy, 700, 800, 0.2, 1e-3),
-        capture_emitted,
+        capture_emitted=run_engine_documents,
         wait=True,
     )
-    assert_emitted(docs, start=1, descriptor=1, event=ANY, stop=1)
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=ANY, stop=1)
     # Number of event depend how fast motor is moving, it has to be more than 1
-    assert len(docs["event"]) > 1
+    assert len(run_engine_documents["event"]) > 1
     # check the starting point
-    assert docs["event"][0]["data"] == {
+    assert run_engine_documents["event"][0]["data"] == {
         "fake_detector-value": ANY,
         "mock_id_controller-energy": 750.0,
         "mock_pgm-energy": 700.0,
     }
     # check end point
-    assert docs["event"][-1]["data"] == {
+    assert run_engine_documents["event"][-1]["data"] == {
         "fake_detector-value": ANY,
         "mock_id_controller-energy": 750.0,
         "mock_pgm-energy": pytest.approx(800, abs=10),
