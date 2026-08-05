@@ -27,7 +27,6 @@ def _validate_args(
         )
 
 
-@plan
 def _analyser_regions(
     analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
@@ -52,7 +51,7 @@ def _analyser_regions(
         Devices to trigger and read for each region.
     shutter:
         Optional shutter to open before collecting each region.
-    closer_shutter_per_region:
+    close_shutter_per_region:
         Whether to close the shutter after collecting each region.
     """
 
@@ -88,7 +87,7 @@ def make_analyser_per_shot(
         Electron analyser to configure for each region and measure with.
     sequence:
         Sequence containing the analyser regions to collect.
-    closer_shutter_per_region:
+    close_shutter_per_region:
         Whether to close the shutter after collecting each region.
     shutter:
         Optional shutter to open before collecting each region.
