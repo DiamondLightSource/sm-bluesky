@@ -7,6 +7,9 @@
         
         
         
+        
+        
+        
 
 .. automodule:: sm_bluesky.common.plan_stubs
     :members:
@@ -29,5 +32,8 @@
         check_within_limit
         get_motor_positions
         get_velocity_and_step_size
+        cache_speed
+        restore_speed
+        fly_trigger_and_read
     
     

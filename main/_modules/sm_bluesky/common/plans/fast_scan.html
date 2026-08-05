@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans.fast_scan &#8212; sm-bluesky 1.1.1.dev7+gf3765a216 documentation</title>
+    <title>sm_bluesky.common.plans.fast_scan &#8212; sm-bluesky 1.1.1.dev8+g9d82b03ad documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../../../_static/documentation_options.js?v=35c92c9b"></script>
+    <script src="../../../../_static/documentation_options.js?v=c23144f9"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -468,13 +468,19 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">Readable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">short_uid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.insertion_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeamEnergy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.plan_stubs.data_session</span><span class="w"> </span><span class="kn">import</span> <span class="n">attach_data_session_metadata_decorator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">linspace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlyMotorInfo</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.motor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Motor</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_extra_names_to_meta</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_within_limit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">cache_speed</span><span class="p">,</span>
+    <span class="n">check_within_limit</span><span class="p">,</span>
+    <span class="n">fly_trigger_and_read</span><span class="p">,</span>
+    <span class="n">restore_speed</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
 
 
@@ -648,13 +654,6 @@
 
 
 
-<span class="nd">@plan</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">reset_speed</span><span class="p">(</span><span class="n">old_speed</span><span class="p">,</span> <span class="n">motor</span><span class="p">:</span> <span class="n">Motor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Clean up: setting motor speed to </span><span class="si">{</span><span class="n">old_speed</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">old_speed</span><span class="p">:</span>
-        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">motor</span><span class="o">.</span><span class="n">velocity</span><span class="p">,</span> <span class="n">old_speed</span><span class="p">)</span>
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">clean_up</span><span class="p">():</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Clean up&quot;</span><span class="p">)</span>
     <span class="c1"># possibly use to move back to starting position.</span>
@@ -701,7 +700,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># read the current speed and store it</span>
-    <span class="n">old_speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">rd</span><span class="p">(</span><span class="n">motor</span><span class="o">.</span><span class="n">velocity</span><span class="p">)</span>
+    <span class="n">old_speed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Motor</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">cache_speed</span><span class="p">([</span><span class="n">motor</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">inner_fast_scan_1d</span><span class="p">(</span>
         <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
@@ -711,7 +710,7 @@
         <span class="n">motor_speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">motor_speed</span><span class="p">:</span>
-            <span class="n">motor_speed</span> <span class="o">=</span> <span class="n">old_speed</span>
+            <span class="n">motor_speed</span> <span class="o">=</span> <span class="n">old_speed</span><span class="p">[</span><span class="n">motor</span><span class="p">]</span>
 
         <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Starting 1d fly scan with </span><span class="si">{</span><span class="n">motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">:&quot;</span>
@@ -725,18 +724,51 @@
             <span class="n">time_for_move</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">end</span><span class="p">)</span> <span class="o">/</span> <span class="n">motor_speed</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">motor</span><span class="p">,</span> <span class="n">fly_info</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">grp</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">grp</span><span class="p">)</span>
-        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">kickoff</span><span class="p">(</span><span class="n">motor</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">grp</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;flying motor =  </span><span class="si">{</span><span class="n">motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> at speed = </span><span class="si">{</span><span class="n">motor_speed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">done</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">motor</span><span class="p">)</span>
-        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">trigger_and_read</span><span class="p">(</span><span class="n">dets</span> <span class="o">+</span> <span class="p">[</span><span class="n">motor</span><span class="p">])</span>
-        <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="o">.</span><span class="n">done</span><span class="p">:</span>
-            <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">trigger_and_read</span><span class="p">(</span><span class="n">dets</span> <span class="o">+</span> <span class="p">[</span><span class="n">motor</span><span class="p">])</span>
-            <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">()</span>
+        <span class="k">yield from</span> <span class="n">fly_trigger_and_read</span><span class="p">(</span><span class="n">motor</span><span class="p">,</span> <span class="n">fly_info</span><span class="p">,</span> <span class="n">dets</span><span class="p">)</span>
 
     <span class="k">yield from</span> <span class="n">finalize_wrapper</span><span class="p">(</span>
         <span class="n">plan</span><span class="o">=</span><span class="n">inner_fast_scan_1d</span><span class="p">(</span><span class="n">dets</span><span class="p">,</span> <span class="n">motor</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">motor_speed</span><span class="p">),</span>
-        <span class="n">final_plan</span><span class="o">=</span><span class="n">reset_speed</span><span class="p">(</span><span class="n">old_speed</span><span class="p">,</span> <span class="n">motor</span><span class="p">),</span>
+        <span class="n">final_plan</span><span class="o">=</span><span class="n">restore_speed</span><span class="p">(</span><span class="n">old_speed</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@plan</span>
+<span class="nd">@attach_data_session_metadata_decorator</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">soft_fly_energy_scan</span><span class="p">(</span>
+    <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span>
+    <span class="n">energy_device</span><span class="p">:</span> <span class="n">BeamEnergy</span><span class="p">,</span>
+    <span class="n">energy_start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">energy_end</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">energy_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">count_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+    <span class="n">old_speeds</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">cache_speed</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">energy_device</span><span class="o">.</span><span class="n">mono_energy</span><span class="p">(),</span>
+            <span class="n">energy_device</span><span class="o">.</span><span class="n">id_energy</span><span class="p">()</span><span class="o">.</span><span class="n">id_controller</span><span class="p">()</span><span class="o">.</span><span class="n">apple2</span><span class="p">()</span><span class="o">.</span><span class="n">gap</span><span class="p">(),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">fly_info</span> <span class="o">=</span> <span class="n">FlyMotorInfo</span><span class="p">(</span>
+        <span class="n">start_position</span><span class="o">=</span><span class="n">energy_start</span><span class="p">,</span>
+        <span class="n">end_position</span><span class="o">=</span><span class="n">energy_end</span><span class="p">,</span>
+        <span class="n">time_for_move</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">energy_end</span> <span class="o">-</span> <span class="n">energy_start</span><span class="p">)</span> <span class="o">/</span> <span class="n">energy_step</span> <span class="o">*</span> <span class="n">count_time</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@bpp</span><span class="o">.</span><span class="n">stage_decorator</span><span class="p">(</span><span class="n">dets</span><span class="p">)</span>
+    <span class="nd">@bpp</span><span class="o">.</span><span class="n">run_decorator</span><span class="p">(</span><span class="n">md</span><span class="o">=</span><span class="n">md</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inn_fly_energy_scan</span><span class="p">(</span>
+        <span class="n">energy_device</span><span class="p">:</span> <span class="n">BeamEnergy</span><span class="p">,</span>
+        <span class="n">fly_info</span><span class="p">:</span> <span class="n">FlyMotorInfo</span><span class="p">,</span>
+        <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Readable</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">energy_device</span><span class="p">,</span> <span class="n">fly_info</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">fly_trigger_and_read</span><span class="p">(</span><span class="n">energy_device</span><span class="p">,</span> <span class="n">fly_info</span><span class="p">,</span> <span class="n">dets</span><span class="p">)</span>
+
+    <span class="k">yield from</span> <span class="n">finalize_wrapper</span><span class="p">(</span>
+        <span class="n">plan</span><span class="o">=</span><span class="n">inn_fly_energy_scan</span><span class="p">(</span><span class="n">energy_device</span><span class="p">,</span> <span class="n">fly_info</span><span class="p">,</span> <span class="n">dets</span><span class="p">),</span>
+        <span class="n">final_plan</span><span class="o">=</span><span class="n">restore_speed</span><span class="p">(</span><span class="n">old_speeds</span><span class="p">),</span>
     <span class="p">)</span>
 </pre></div>
 

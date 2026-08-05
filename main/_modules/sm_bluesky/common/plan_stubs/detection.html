@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.helper.add_meta &#8212; sm-bluesky 1.1.1.dev8+g9d82b03ad documentation</title>
+    <title>sm_bluesky.common.plan_stubs.detection &#8212; sm-bluesky 1.1.1.dev8+g9d82b03ad documentation</title>
   
   
   
@@ -46,7 +46,7 @@
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=30646c52"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/common/helper/add_meta';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/common/plan_stubs/detection';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
@@ -441,7 +441,7 @@
     
     <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">sm_bluesky.common.helper.add_meta</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">sm_bluesky.common.plan_stubs.detection</span></li>
   </ul>
 </nav>
 </div>
@@ -458,58 +458,62 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for sm_bluesky.common.helper.add_meta</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">cast</span>
+  <h1>Source code for sm_bluesky.common.plan_stubs.detection</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">abs_set</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flyable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">short_uid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.single_trigger_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">SingleTriggerDetector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlyMotorInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.adcore</span><span class="w"> </span><span class="kn">import</span> <span class="n">AreaDetector</span>
 
-<span class="n">TCallable</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TCallable&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">MsgGenerator</span><span class="p">])</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
 
 
-<div class="viewcode-block" id="add_default_metadata">
-<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.helper.html#sm_bluesky.common.helper.add_default_metadata">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">add_default_metadata</span><span class="p">(</span>
-    <span class="n">func</span><span class="p">:</span> <span class="n">TCallable</span><span class="p">,</span> <span class="n">extra_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TCallable</span><span class="p">:</span>
+<div class="viewcode-block" id="set_area_detector_acquire_time">
+<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plan_stubs.html#sm_bluesky.common.plan_stubs.set_area_detector_acquire_time">[docs]</a>
+<span class="nd">@plan</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_area_detector_acquire_time</span><span class="p">(</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">AreaDetector</span> <span class="o">|</span> <span class="n">SingleTriggerDetector</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Decorator to add or update default metadata in the &#39;md&#39; keyword argument.</span>
+<span class="sd">    Set the acquire time on an area detector.</span>
 
-<span class="sd">    If &#39;md&#39; is not provided, it will be set to extra_metadata.</span>
-<span class="sd">    If &#39;md&#39; is provided and not None, it will be updated with extra_metadata.</span>
-<span class="sd">    If &#39;md&#39; is provided and is None, it will be set to extra_metadata.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    det : AreaDetector | SingleTriggerDetector</span>
+<span class="sd">        The detector whose acquire time is to be set.</span>
+<span class="sd">    acquire_time : float</span>
+<span class="sd">        The desired acquire time.</span>
+<span class="sd">    wait : bool, optional</span>
+<span class="sd">        Whether to wait for the operation to complete, by default True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MsgGenerator</span>
+<span class="sd">        A Bluesky generator for setting the acquire time.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">inner</span><span class="p">(</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-        <span class="n">md</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;md&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">extra_metadata</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">md</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;md&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">extra_metadata</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;md&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">md</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_metadata</span><span class="p">}</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;md is reserved for meta data.&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">md</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;md&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">TCallable</span><span class="p">,</span> <span class="n">inner</span><span class="p">)</span></div>
+    <span class="n">drv</span> <span class="o">=</span> <span class="n">det</span><span class="o">.</span><span class="n">drv</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">SingleTriggerDetector</span><span class="p">)</span> <span class="k">else</span> <span class="n">det</span><span class="o">.</span><span class="n">driver</span>
+    <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">drv</span><span class="o">.</span><span class="n">acquire_time</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">)</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">add_extra_names_to_meta</span><span class="p">(</span>
-    <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
-        <span class="n">md</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">md</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+</span> <span class="n">names</span>
-        <span class="k">return</span> <span class="n">md</span>
-    <span class="n">md</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span>
-    <span class="k">return</span> <span class="n">md</span>
+<span class="nd">@plan</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fly_trigger_and_read</span><span class="p">(</span>
+    <span class="n">motor</span><span class="p">:</span> <span class="n">Flyable</span><span class="p">,</span>
+    <span class="n">fly_info</span><span class="p">:</span> <span class="n">FlyMotorInfo</span><span class="p">,</span>
+    <span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+    <span class="n">grp</span> <span class="o">=</span> <span class="n">short_uid</span><span class="p">(</span><span class="s2">&quot;kickoff&quot;</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">kickoff</span><span class="p">(</span><span class="n">motor</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">grp</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;flying motor =  </span><span class="si">{</span><span class="n">motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> at with info = </span><span class="si">{</span><span class="n">fly_info</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">motor</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">trigger_and_read</span><span class="p">(</span><span class="n">dets</span> <span class="o">+</span> <span class="p">[</span><span class="n">motor</span><span class="p">])</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">status</span><span class="o">.</span><span class="n">done</span><span class="p">:</span>
+        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">trigger_and_read</span><span class="p">(</span><span class="n">dets</span> <span class="o">+</span> <span class="p">[</span><span class="n">motor</span><span class="p">])</span>
+        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">()</span>
 </pre></div>
 
                 </article>

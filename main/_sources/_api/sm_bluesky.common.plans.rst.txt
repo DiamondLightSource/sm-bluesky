@@ -9,6 +9,7 @@
         
         
         
+        
 
 .. automodule:: sm_bluesky.common.plans
     :members:
@@ -33,5 +34,6 @@
         grid_fast_scan
         grid_step_scan
         trigger_img
+        soft_fly_energy_scan
     
     
