@@ -68,6 +68,7 @@ def analyser_nd_step(
         aps.make_analyser_per_step(
             sim_analyser,
             sequence,
+            [],
             close_shutter_per_region=False,
             shutter=None,
         )
@@ -237,6 +238,7 @@ def test_analyser_nd_step_operates_shutter_correctly(
         aps.make_analyser_per_step(
             sim_analyser,
             sequence,
+            [],
             close_shutter_per_region=close_shutter_per_region,
             shutter=shutter,
         )
@@ -247,3 +249,36 @@ def test_analyser_nd_step_operates_shutter_correctly(
     run_engine(analyser_nd_step(all_detectors, step, pos_cache, None))
     n_regions = len(sequence.get_enabled_regions())
     assert shutter.open.set.call_args_list == expected_shutter_calls * n_regions
+
+
+def test_optional_close_shutter_plan(
+    run_engine: RunEngine, shutter: GenericFastShutter
+):
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
+    run_engine(aps.close_shutter(shutter))
+    shutter.open.set.assert_called_once_with(False)
+
+    # Test providing no shutter doesn't do anything.
+    run_engine(aps.close_shutter())
+    shutter.open.set.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "callable", [aps.make_analyser_per_step, aps.make_analyser_per_shot]
+)
+def test_make_analyserscan_plan_duplicate_analyser(
+    sim_analyser: ElectronAnalyserDetector, sequence: BaseSequence, callable: Callable
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=f"{sim_analyser.name} is provided as analyser argument and also in the "
+        "detectors list argument. Please remove it from detector list.",
+    ):
+        callable(
+            sim_analyser,
+            sequence,
+            detectors=[sim_analyser],
+            close_shutter_per_region=False,
+            shutter=None,
+        )

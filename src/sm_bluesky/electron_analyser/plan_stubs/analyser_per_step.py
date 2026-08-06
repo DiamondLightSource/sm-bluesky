@@ -15,6 +15,7 @@ T = TypeVar("T")
 def _validate_args(
     analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
+    detectors: Sequence[Readable],
     close_shutter_per_region: bool,
     shutter: GenericFastShutter | None,
 ) -> None:
@@ -24,6 +25,12 @@ def _validate_args(
     if close_shutter_per_region and shutter is None:
         raise ValueError(
             "close_shutter_per_region=True requires a shutter to be provided."
+        )
+
+    if analyser in detectors:
+        raise ValueError(
+            f"{analyser.name} is provided as analyser argument and also in the "
+            "detectors list argument. Please remove it from detector list."
         )
 
 
@@ -71,6 +78,7 @@ def _analyser_regions(
 def make_analyser_per_shot(
     analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
+    detectors: Sequence[Readable],
     close_shutter_per_region: bool,
     shutter: GenericFastShutter | None,
 ) -> PerShot:
@@ -92,7 +100,7 @@ def make_analyser_per_shot(
     shutter:
         Optional shutter to open before collecting each region.
     """
-    _validate_args(analyser, sequence, close_shutter_per_region, shutter)
+    _validate_args(analyser, sequence, detectors, close_shutter_per_region, shutter)
 
     @plan
     def analyser_shot(
@@ -112,6 +120,7 @@ def make_analyser_per_shot(
 def make_analyser_per_step(
     analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
+    detectors: Sequence[Readable],
     close_shutter_per_region: bool,
     shutter: GenericFastShutter | None,
 ) -> PerStepND:
@@ -133,9 +142,8 @@ def make_analyser_per_step(
     shutter:
         Optional shutter to open before collecting each region.
     """
-    _validate_args(analyser, sequence, close_shutter_per_region, shutter)
+    _validate_args(analyser, sequence, detectors, close_shutter_per_region, shutter)
 
-    @plan
     def analyser_nd_step(
         detectors: Sequence[Readable],
         step: Mapping[Movable, Any],
@@ -155,3 +163,10 @@ def make_analyser_per_step(
         )
 
     return analyser_nd_step
+
+
+@plan
+def close_shutter(shutter: GenericFastShutter | None = None) -> MsgGenerator:
+    if shutter is None:
+        return
+    yield from mv(shutter.open, False)

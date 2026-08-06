@@ -1,6 +1,7 @@
 from collections.abc import Iterable, Sequence
 
 from bluesky.plans import count, grid_scan, scan
+from bluesky.preprocessors import contingency_wrapper
 from bluesky.protocols import Movable, Readable
 from bluesky.utils import (
     CustomPlanMetadata,
@@ -12,6 +13,7 @@ from dodal.devices.electron_analyser.base import BaseSequence, ElectronAnalyserD
 from dodal.devices.fast_shutter import GenericFastShutter
 
 from sm_bluesky.electron_analyser.plan_stubs.analyser_per_step import (
+    close_shutter,
     make_analyser_per_shot,
     make_analyser_per_step,
 )
@@ -55,14 +57,17 @@ def analysercount(
         Additional metadata to include in the run.
     """
     per_shot = make_analyser_per_shot(
-        analyser, sequence, close_shutter_per_region, shutter
+        analyser, sequence, detectors, close_shutter_per_region, shutter
     )
-    yield from count(
-        [*detectors, analyser],
-        num=num,
-        delay=delay,
-        per_shot=per_shot,
-        md=md,
+    yield from contingency_wrapper(
+        plan=count(
+            [*detectors, analyser],
+            num=num,
+            delay=delay,
+            per_shot=per_shot,
+            md=md,
+        ),
+        final_plan=lambda: close_shutter(shutter),
     )
 
 
@@ -108,14 +113,17 @@ def analyserscan(
         Additional metadata to include in the run.
     """
     per_step = make_analyser_per_step(
-        analyser, sequence, close_shutter_per_region, shutter
+        analyser, sequence, detectors, close_shutter_per_region, shutter
     )
-    yield from scan(
-        [*detectors, analyser],
-        *args,
-        num=num,
-        per_step=per_step,
-        md=md,
+    yield from contingency_wrapper(
+        plan=scan(
+            [*detectors, analyser],
+            *args,
+            num=num,
+            per_step=per_step,
+            md=md,
+        ),
+        final_plan=lambda: close_shutter(shutter),
     )
 
 
@@ -163,12 +171,15 @@ def grid_analyserscan(
         Additional metadata to include in the run.
     """
     per_step = make_analyser_per_step(
-        analyser, sequence, close_shutter_per_region, shutter
+        analyser, sequence, detectors, close_shutter_per_region, shutter
     )
-    yield from grid_scan(
-        [*detectors, analyser],
-        *args,
-        snake_axes=snake_axes,
-        per_step=per_step,
-        md=md,
+    yield from contingency_wrapper(
+        plan=grid_scan(
+            [*detectors, analyser],
+            *args,
+            snake_axes=snake_axes,
+            per_step=per_step,
+            md=md,
+        ),
+        final_plan=lambda: close_shutter(shutter),
     )
