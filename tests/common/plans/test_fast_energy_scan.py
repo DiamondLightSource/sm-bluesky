@@ -4,7 +4,7 @@ from unittest.mock import ANY
 import pytest
 from bluesky.protocols import Readable
 from bluesky.run_engine import RunEngine
-from daq_config_server import ConfigClient
+from daq_config_server.client import ConfigClient
 from dodal.devices.insertion_device import (
     Apple2,
     Apple2EnforceLHMoveController,
