@@ -91,7 +91,7 @@ def grid_step_scan(
         # Store original positions to return to after scan
         clean_up_arg["Origin"] = yield from get_motor_positions(
             x_step_motor, y_step_motor
-        )  # type: ignore
+        )
 
     main_det = dets[0]
     if isinstance(main_det, AndorDetector | SingleTriggerDetector):
