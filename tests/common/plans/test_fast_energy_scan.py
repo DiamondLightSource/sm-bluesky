@@ -36,7 +36,7 @@ from tests.test_data.common import (
     ID_ENERGY_2_PHASE_CALIBRATIONS_CSV,
 )
 
-# add mock_config_client, mock_id_gap, mock_phase and mock_jaw_phase_axes to pytest.
+# mock_id_gap, mock_phase and mock_jaw_phase_axes to pytest.
 pytest_plugins = ["dodal.testing.fixtures.devices.apple2"]
 
 

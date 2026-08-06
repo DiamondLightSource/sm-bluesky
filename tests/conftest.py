@@ -2,6 +2,8 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from daq_config_server.client import ConfigClient
+from daq_config_server.testing import MockServerResponse, PathToMockDataDict
 from dodal.common.beamlines.beamline_utils import (
     set_path_provider,
 )
@@ -33,6 +35,16 @@ INCOMPLETE_RECORD = str(Path(__file__).parent / "panda" / "db" / "incomplete_pan
 EXTRA_BLOCKS_RECORD = str(
     Path(__file__).parent / "panda" / "db" / "extra_blocks_panda.db"
 )
+
+
+@pytest.fixture
+def path_to_mock_data() -> PathToMockDataDict:
+    return {}
+
+
+@pytest.fixture
+def mock_config_client(path_to_mock_data: PathToMockDataDict) -> ConfigClient:
+    return ConfigClient(server_response=MockServerResponse(path_to_mock_data))
 
 
 set_path_provider(
