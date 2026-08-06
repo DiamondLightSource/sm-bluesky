@@ -5,7 +5,11 @@ from bluesky.plan_stubs import TakeReading, move_per_step, mv, trigger_and_read
 from bluesky.plans import PerShot, PerStepND
 from bluesky.protocols import Movable, Readable
 from bluesky.utils import MsgGenerator, plan
-from dodal.devices.electron_analyser.base import BaseSequence, ElectronAnalyserDetector
+from dodal.devices.electron_analyser.base import (
+    BaseRegion,
+    BaseSequence,
+    ElectronAnalyserDetector,
+)
 from dodal.devices.fast_shutter import GenericFastShutter
 from dodal.log import LOGGER
 
@@ -36,7 +40,7 @@ def _validate_args(
 
 def _analyser_regions(
     analyser: ElectronAnalyserDetector,
-    sequence: BaseSequence,
+    sequence: BaseSequence[BaseRegion],
     readables: Sequence[Readable],
     shutter: GenericFastShutter | None,
     close_shutter_per_region: bool,

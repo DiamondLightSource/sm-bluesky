@@ -187,7 +187,10 @@ async def test_analyser_nd_step_func_moves_motors_correctly(
     "callable", [aps.make_analyser_per_step, aps.make_analyser_per_shot]
 )
 def test_make_analyser_per_step_requires_shutter_when_closing_per_region(
-    sim_analyser: ElectronAnalyserDetector, sequence: BaseSequence, callable: Callable
+    sim_analyser: ElectronAnalyserDetector,
+    sequence: BaseSequence,
+    all_detectors: Sequence[Readable],
+    callable: Callable,
 ) -> None:
     with pytest.raises(
         ValueError,
@@ -196,6 +199,7 @@ def test_make_analyser_per_step_requires_shutter_when_closing_per_region(
         callable(
             sim_analyser,
             sequence,
+            all_detectors,
             close_shutter_per_region=True,
             shutter=None,
         )
@@ -205,12 +209,15 @@ def test_make_analyser_per_step_requires_shutter_when_closing_per_region(
     "callable", [aps.make_analyser_per_step, aps.make_analyser_per_shot]
 )
 def test_make_analyser_per_step_requires_enabled_regions(
-    sim_analyser: ElectronAnalyserDetector, callable: Callable
+    sim_analyser: ElectronAnalyserDetector,
+    all_detectors: Sequence[Readable],
+    callable: Callable,
 ) -> None:
     with pytest.raises(ValueError, match="Sequence has zero enabled regions."):
         callable(
             sim_analyser,
             BaseSequence(),
+            all_detectors,
             close_shutter_per_region=False,
             shutter=None,
         )

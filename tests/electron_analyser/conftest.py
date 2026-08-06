@@ -4,8 +4,8 @@ from dodal.common.data_util import ModelLoader
 from dodal.devices.beamlines import b07, b07_shared, i09
 from dodal.devices.electron_analyser.base import (
     BaseSequence,
+    ElectronAnalyserDetector,
     ElectronAnalyserTriggerLogic,
-    GenericElectronAnalyserDetector,
     RegionLogic,
 )
 from dodal.devices.electron_analyser.specs import SpecsAnalyserDriverIO, SpecsDetector
@@ -173,7 +173,7 @@ def sim_analyser(
     request: pytest.FixtureRequest,
     ew4000: VGScientaDetector[i09.LensMode, i09.PsuMode, i09.PassEnergy],
     b07b_specs150: SpecsDetector[b07.LensMode, b07_shared.PsuMode],
-) -> GenericElectronAnalyserDetector:
+) -> ElectronAnalyserDetector:
     detectors = [ew4000, b07b_specs150]
     for detector in detectors:
         if detector.name == request.param:
@@ -183,7 +183,7 @@ def sim_analyser(
 
 @pytest.fixture
 def load_sequence(
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
 ) -> ModelLoader:
     if isinstance(sim_analyser, VGScientaDetector):
         return load_i09_vgscienta_test_seq
