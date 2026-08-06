@@ -1,5 +1,6 @@
 import math
 from collections.abc import Mapping, Sequence
+from unittest.mock import MagicMock, call
 
 import pytest
 from bluesky import RunEngine
@@ -7,12 +8,13 @@ from bluesky.protocols import Readable, Reading
 from dodal.devices.electron_analyser.base import (
     BaseRegion,
     BaseSequence,
-    GenericElectronAnalyserDetector,
+    ElectronAnalyserDetector,
 )
-from dodal.devices.selectable_source import DualEnergySource
+from dodal.devices.fast_shutter import GenericFastShutter
+from dodal.devices.selectable_source import SelectedSource
 from ophyd_async.sim import SimMotor
 
-from sm_bluesky.electron_analyser.plans.analyser_scan import (
+from sm_bluesky.electron_analyser.plans import (
     analysercount,
     analyserscan,
     grid_analyserscan,
@@ -23,22 +25,25 @@ from tests.electron_analyser.util import (
 )
 
 
-def add_energy_source_monitor(energy_source: DualEnergySource) -> list[float]:
-    energy_values = []
+def expected_energy_values(
+    sequence: BaseSequence[BaseRegion],
+) -> list[float]:
+    values = []
 
-    def energy_monitor(reading: dict[str, Reading[float]], *args, **kwargs) -> None:
-        value = reading[energy_source.energy.name]["value"]
-        energy_values.append(value)
+    for region in sequence.get_enabled_regions():
+        match region.excitation_energy_source:
+            case SelectedSource.SOURCE1:
+                values.append(2200.0)
+            case SelectedSource.SOURCE2:
+                values.append(500.0)
 
-    energy_source.energy.subscribe_reading(energy_monitor)
-    return energy_values
+    return values
 
 
 def assert_analyserscan_config(
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
-    analyser: GenericElectronAnalyserDetector,
+    analyser: ElectronAnalyserDetector,
     sequence: BaseSequence[BaseRegion],
-    energy_values: list[float],
 ) -> None:
     """Check that the configuration for the analyser device is correct."""
     drv = analyser._region_logic.driver
@@ -54,6 +59,7 @@ def assert_analyserscan_config(
         region = sequence.get_region_by_name(region_name)
         assert region is not None
 
+        energy_values = expected_energy_values(sequence)
         epics_region = region.prepare_for_epics(energy_values[i])
 
         assert_mapped_data_equals_expected(
@@ -79,7 +85,7 @@ def assert_other_devices_config(
 
 def assert_event_data(
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
-    analyser: GenericElectronAnalyserDetector,
+    analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
     motors: Sequence[SimMotor],
@@ -99,6 +105,24 @@ def assert_event_data(
             assert m.name in event_data
 
 
+def assert_shutter_calls(
+    expected_shutter_calls: list,
+    sequence: BaseSequence[BaseRegion],
+    motor_iterations: int,
+    mock_shutter_set: MagicMock,
+):
+    """Assert that the shutter was open/closed correct number of times per step per
+    region plus close at end.
+    """
+    n_regions = len(sequence.get_enabled_regions())
+    # Test that the shutter was open/closed correct number of times per step per region
+    # plus close at end.
+    assert (
+        mock_shutter_set.call_args_list
+        == expected_shutter_calls * n_regions * motor_iterations + [call(False)]
+    )
+
+
 @pytest.fixture(params=[0, 1, 2])
 def extra_detectors(
     request: pytest.FixtureRequest,
@@ -106,57 +130,97 @@ def extra_detectors(
     return [SimMotor("det" + str(i + 1)) for i in range(request.param)]
 
 
+@pytest.mark.parametrize(
+    "close_shutter_between_region, expected_shutter_calls",
+    [[True, [call(True), call(False)]], [False, [call(True)]]],
+)
 async def test_analysercount(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
-    dual_energy_source: DualEnergySource,
+    shutter: GenericFastShutter,
+    expected_shutter_calls: list,
+    close_shutter_between_region: bool,
 ) -> None:
-    energy_monitor_values = add_energy_source_monitor(dual_energy_source)
-    run_engine(analysercount(sim_analyser, sequence, extra_detectors))
-    assert_analyserscan_config(
-        run_engine_documents,
-        sim_analyser,
-        sequence,
-        energy_monitor_values,
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
+    run_engine(
+        analysercount(
+            sim_analyser,
+            sequence,
+            extra_detectors,
+            shutter=shutter,
+            close_shutter_per_region=close_shutter_between_region,
+        )
     )
+    assert_analyserscan_config(run_engine_documents, sim_analyser, sequence)
     assert_other_devices_config(run_engine_documents, extra_detectors, [])
     assert_event_data(
         run_engine_documents, sim_analyser, sequence, extra_detectors, [], 1
     )
+    assert_shutter_calls(expected_shutter_calls, sequence, 1, shutter.open.set)
+
+
+def test_analysercount_on_failure_closes_shutter(
+    run_engine: RunEngine,
+    sim_analyser: ElectronAnalyserDetector,
+    shutter: GenericFastShutter,
+):
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
+    with pytest.raises(ValueError):
+        run_engine(
+            analysercount(
+                sim_analyser,
+                BaseSequence(),
+                [],
+                shutter=shutter,
+            )
+        )
+        shutter.open.set.assert_called_once_with(False)
 
 
 @pytest.mark.parametrize(
-    "args",
+    "close_shutter_between_region, expected_shutter_calls, args",
     [
-        [SimMotor("motor1"), -10, 10],
-        [SimMotor("motor1"), -10, 10, SimMotor("motor2"), -1, 1],
+        [True, [call(True), call(False)], [SimMotor("motor1"), 1, 3]],
+        [False, [call(True)], [SimMotor("motor1"), 1, 3]],
+        [
+            True,
+            [call(True), call(False)],
+            [SimMotor("motor1"), 1, 3, SimMotor("motor2"), 1, 2],
+        ],
+        [False, [call(True)], [SimMotor("motor1"), 1, 3, SimMotor("motor2"), 1, 2]],
     ],
 )
 async def test_analyserscan(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
+    shutter: GenericFastShutter,
+    close_shutter_between_region: bool,
+    expected_shutter_calls: list,
     args: list[SimMotor | int],
-    dual_energy_source: DualEnergySource,
 ) -> None:
-    energy_monitor_values = add_energy_source_monitor(dual_energy_source)
     motor_iterations = 3
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
     run_engine(
         analyserscan(
-            sim_analyser, sequence, extra_detectors, args, num=motor_iterations
+            sim_analyser,
+            sequence,
+            extra_detectors,
+            args,
+            num=motor_iterations,
+            shutter=shutter,
+            close_shutter_per_region=close_shutter_between_region,
         )
     )
-    assert_analyserscan_config(
-        run_engine_documents,
-        sim_analyser,
-        sequence,
-        energy_monitor_values,
-    )
+    assert_analyserscan_config(run_engine_documents, sim_analyser, sequence)
     motors = [a for a in args if isinstance(a, SimMotor)]
     assert_other_devices_config(run_engine_documents, extra_detectors, motors)
     assert_event_data(
@@ -167,32 +231,72 @@ async def test_analyserscan(
         motors,
         motor_iterations,
     )
+    assert_shutter_calls(
+        expected_shutter_calls, sequence, motor_iterations, shutter.open.set
+    )
+
+
+def test_analyserscan_on_failure_closes_shutter(
+    run_engine: RunEngine,
+    sim_analyser: ElectronAnalyserDetector,
+    shutter: GenericFastShutter,
+):
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
+    with pytest.raises(ValueError):
+        run_engine(
+            analyserscan(
+                sim_analyser,
+                BaseSequence(),
+                [],
+                args=[SimMotor("motor1"), 1, 3],
+                shutter=shutter,
+            )
+        )
+        shutter.open.set.assert_called_once_with(False)
 
 
 @pytest.mark.parametrize(
-    "args",
+    "close_shutter_between_region, expected_shutter_calls, args",
     [
-        [SimMotor("motor1"), 1, 3, 3],
-        [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2],
+        [True, [call(True), call(False)], [SimMotor("motor1"), 1, 3, 3]],
+        [False, [call(True)], [SimMotor("motor1"), 1, 3, 3]],
+        [
+            True,
+            [call(True), call(False)],
+            [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2],
+        ],
+        [
+            False,
+            [call(True)],
+            [SimMotor("motor1"), 1, 3, 3, SimMotor("motor2"), 1, 2, 2],
+        ],
     ],
 )
 async def test_grid_analyserscan(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict[str, Reading]]],
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
     extra_detectors: Sequence[Readable],
+    shutter: GenericFastShutter,
+    close_shutter_between_region: bool,
+    expected_shutter_calls: list,
     args: list[SimMotor | int],
-    dual_energy_source: DualEnergySource,
 ) -> None:
-    energy_monitor_values = add_energy_source_monitor(dual_energy_source)
-    run_engine(grid_analyserscan(sim_analyser, sequence, extra_detectors, args))
-    assert_analyserscan_config(
-        run_engine_documents,
-        sim_analyser,
-        sequence,
-        energy_monitor_values,
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
+    run_engine(
+        grid_analyserscan(
+            sim_analyser,
+            sequence,
+            extra_detectors,
+            args,
+            shutter=shutter,
+            close_shutter_per_region=close_shutter_between_region,
+        )
     )
+    assert_analyserscan_config(run_engine_documents, sim_analyser, sequence)
 
     motors = [a for a in args if isinstance(a, SimMotor)]
     # For args, start at index 3, get every 4th value
@@ -207,3 +311,26 @@ async def test_grid_analyserscan(
         motors,
         motor_iterations,
     )
+    assert_shutter_calls(
+        expected_shutter_calls, sequence, motor_iterations, shutter.open.set
+    )
+
+
+def test_grid_analyserscan_on_failure_closes_shutter(
+    run_engine: RunEngine,
+    sim_analyser: ElectronAnalyserDetector,
+    shutter: GenericFastShutter,
+):
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
+    with pytest.raises(ValueError):
+        run_engine(
+            grid_analyserscan(
+                sim_analyser,
+                BaseSequence(),
+                [],
+                args=[SimMotor("motor1"), 1, 3, 1],
+                shutter=shutter,
+            )
+        )
+        shutter.open.set.assert_called_once_with(False)
