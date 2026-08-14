@@ -50,7 +50,7 @@ dev = [
     "types-mock",
     "pytest-asyncio",
     # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
-    "chardet==7.5.1",
+    "chardet==7.6.0",
 
     #usefull stuff for testing
     "jupyter",
