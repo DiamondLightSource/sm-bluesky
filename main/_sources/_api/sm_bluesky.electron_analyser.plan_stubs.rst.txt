@@ -1,23 +1,22 @@
 ``sm_bluesky.electron_analyser.plan_stubs``
 ===========================================
-        
-        
 
 .. automodule:: sm_bluesky.electron_analyser.plan_stubs
     :members:
 
     
     
-    
-
-    
-    
-    .. rubric:: Members
+    .. rubric:: Submodules
 
     .. autosummary::
-        :nosignatures:
+        :toctree:
+        :template: custom-module-template.rst
+        :recursive:
     
-        analyser_shot
-        analyser_nd_step
+        analyser_per_step
+    
+    
+
+    
     
     
