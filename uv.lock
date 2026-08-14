@@ -1232,7 +1232,7 @@ wheels = [
 
 [[package]]
 name = "daq-config-server"
-version = "1.5.1"
+version = "1.5.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
@@ -1247,9 +1247,9 @@ dependencies = [
     { name = "uvicorn" },
     { name = "xmltodict" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/a2/2fc42d3231be454be244c1dd19a1e36204fe68957b275fc37775efffc9ba/daq_config_server-1.5.1.tar.gz", hash = "sha256:e7dbcd335a1ec06faa777bc0f03039c90aa067b3b71df599cb59ae7cf5fac368", size = 236115, upload-time = "2026-07-28T14:03:52.265Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/50/50/5870d12cd0a1e93695c5dea7f5ad6714e1a8af6d48f9753678f5aa2a37b3/daq_config_server-1.5.2.tar.gz", hash = "sha256:ca8aada60107c0969f83112d3b6e1d07ab23d5e72d26a968e04bb36ec02f0507", size = 237348, upload-time = "2026-08-14T15:07:36.172Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/6a/7a8d2a4d7c35f1e384e58c559b44fa41d90878b67e1c9689831fe2a1d125/daq_config_server-1.5.1-py3-none-any.whl", hash = "sha256:3076083c3a9a007f635562654d834c8528997316e1764b4cbd46cb324e3904be", size = 35620, upload-time = "2026-07-28T14:03:51.285Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/5b/dc623b063822cae2494d6265ac1077406007495d42513ba2eae66e729b08/daq_config_server-1.5.2-py3-none-any.whl", hash = "sha256:7834f7479af40792a164355bd6acd15f32eeb6803b861eefb27dcb83355de786", size = 36376, upload-time = "2026-08-14T15:07:35.114Z" },
 ]
 
 [[package]]
@@ -1357,8 +1357,8 @@ wheels = [
 
 [[package]]
 name = "dls-dodal"
-version = "2.5.4.dev14+ge8348d1e7"
-source = { git = "https://github.com/DiamondLightSource/dodal.git?rev=move_shutter_state_to_plan#e8348d1e7b509f0bd6380e1fa6343bf4aa609a09" }
+version = "2.6.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
     { name = "aiohttp" },
@@ -1380,6 +1380,10 @@ dependencies = [
     { name = "requests" },
     { name = "scanspec" },
     { name = "zocalo" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/31/12/f3e8a6e568bdd4265228a457ff4ddf7b1a322502bcb0ff920f93e871eae1/dls_dodal-2.6.0.tar.gz", hash = "sha256:b467595edff22a2305ba3dd06dd666a693abcd51c1790b86846781771175f82d", size = 1746819, upload-time = "2026-08-14T16:00:07.591Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6e/66/007ddb7441157777edc2450e1271bc2702ec681cfe62e459dc8170399af4/dls_dodal-2.6.0-py3-none-any.whl", hash = "sha256:c509ee27be98511b1216bf67e400dd6c4d3b01a48999e5c1107edefa9df3aae8", size = 452020, upload-time = "2026-08-14T16:00:05.977Z" },
 ]
 
 [[package]]
@@ -5685,7 +5689,7 @@ dev = [
 requires-dist = [
     { name = "blueapi" },
     { name = "bluesky" },
-    { name = "dls-dodal", git = "https://github.com/DiamondLightSource/dodal.git?rev=move_shutter_state_to_plan" },
+    { name = "dls-dodal", specifier = "==2.6.0" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },
