@@ -2,6 +2,8 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from daq_config_server.client import ConfigClient
+from daq_config_server.testing import MockServerResponse, PathToMockDataDict
 from dodal.common.beamlines.beamline_utils import (
     set_path_provider,
 )
@@ -35,6 +37,16 @@ EXTRA_BLOCKS_RECORD = str(
 )
 
 
+@pytest.fixture
+def path_to_mock_data() -> PathToMockDataDict:
+    return {}
+
+
+@pytest.fixture
+def mock_config_client(path_to_mock_data: PathToMockDataDict) -> ConfigClient:
+    return ConfigClient(server_response=MockServerResponse(path_to_mock_data))
+
+
 set_path_provider(
     StaticVisitPathProvider(
         "p99",
@@ -47,6 +59,12 @@ A_BIT = 0.5
 
 
 pytest_plugins = ["dodal.testing.fixtures.run_engine"]
+
+
+@pytest.fixture(autouse=True)
+def allow_bluesky_verb_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    # This is a temp work around until we fix whole repo
+    monkeypatch.setenv("OPHYD_ASYNC_ALLOW_RESERVED_ATTRS", "YES")
 
 
 @pytest.fixture

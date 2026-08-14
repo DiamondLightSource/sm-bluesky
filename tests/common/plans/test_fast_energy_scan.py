@@ -4,7 +4,7 @@ from unittest.mock import ANY
 import pytest
 from bluesky.protocols import Readable
 from bluesky.run_engine import RunEngine
-from daq_config_server import ConfigClient
+from daq_config_server.client import ConfigClient
 from dodal.devices.insertion_device import (
     Apple2,
     Apple2EnforceLHMoveController,
@@ -36,7 +36,7 @@ from tests.test_data.common import (
     ID_ENERGY_2_PHASE_CALIBRATIONS_CSV,
 )
 
-# add mock_config_client, mock_id_gap, mock_phase and mock_jaw_phase_axes to pytest.
+# mock_id_gap, mock_phase and mock_jaw_phase_axes to pytest.
 pytest_plugins = ["dodal.testing.fixtures.devices.apple2"]
 
 
