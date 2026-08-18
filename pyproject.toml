@@ -34,11 +34,8 @@ requires-python = ">=3.11"
 server = ["pyserial"]
 [dependency-groups]
 dev = [
-<<<<<<< before updating
     "sm_bluesky[server]",
     "copier",
-=======
->>>>>>> after updating
     "myst-parser",
     "pre-commit",
     "pydata-sphinx-theme>=0.12",
