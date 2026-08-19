@@ -72,10 +72,10 @@ async def mock_id(
 ) -> Apple2:
     async with init_devices(mock=True):
         mock_id = Apple2(id_gap=mock_id_gap, id_phase=mock_phase_axes)
-    set_mock_value(mock_id.gap().acceleration_time, 0.2)
-    set_mock_value(mock_id.gap().velocity, 2)
-    set_mock_value(mock_id.gap().max_velocity, 200)
-    set_mock_value(mock_id.gap().min_velocity, 0.0)
+    set_mock_value(mock_id.gap_ref().acceleration_time, 0.2)
+    set_mock_value(mock_id.gap_ref().velocity, 2)
+    set_mock_value(mock_id.gap_ref().max_velocity, 200)
+    set_mock_value(mock_id.gap_ref().min_velocity, 0.0)
     return mock_id
 
 
@@ -143,6 +143,7 @@ async def test_soft_fly_energy_scan_success(
     run_engine_documents: dict[str, list[dict]],
 ) -> None:
 
+    print(await mock_energy.read())
     run_engine(
         soft_fly_energy_scan([fake_detector], mock_energy, 700, 800, 0.2, 1e-3),
         capture_emitted=run_engine_documents,
@@ -151,6 +152,8 @@ async def test_soft_fly_energy_scan_success(
     assert_emitted(run_engine_documents, start=1, descriptor=1, event=ANY, stop=1)
     # Number of event depend how fast motor is moving, it has to be more than 1
     assert len(run_engine_documents["event"]) > 1
+    for event in run_engine_documents["event"]:
+        print(event["data"])
     # check the starting point
     assert run_engine_documents["event"][0]["data"] == {
         "fake_detector-value": ANY,
