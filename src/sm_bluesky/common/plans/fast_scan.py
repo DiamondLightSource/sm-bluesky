@@ -279,7 +279,7 @@ def soft_fly_energy_scan(
     old_speeds = yield from cache_speed(
         [
             energy_device.mono_energy(),
-            energy_device.id_energy().id_controller().apple2().gap(),
+            energy_device.id_energy().id_controller().apple2_ref().gap_ref(),
         ]
     )
 
