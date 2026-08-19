@@ -168,8 +168,8 @@ async def test_soft_fly_energy_scan_success(
     assert (
         await mock_energy.id_energy()
         .id_controller()
-        .apple2()
-        .gap()
+        .apple2_ref()
+        .gap_ref()
         .velocity.get_value()
         == 2.0
     )
