@@ -2,9 +2,7 @@ from typing import Any
 
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
-from bluesky.preprocessors import (
-    finalize_wrapper,
-)
+from bluesky.preprocessors import finalize_wrapper
 from bluesky.protocols import Readable
 from bluesky.utils import MsgGenerator, plan, short_uid
 from dodal.devices.insertion_device import BeamEnergy
@@ -17,7 +15,7 @@ from sm_bluesky.common.helper import add_extra_names_to_meta
 from sm_bluesky.common.plan_stubs import (
     cache_speed,
     check_within_limit,
-    fly_trigger_and_read,
+    fly_kickoff_complete,
     restore_speed,
 )
 from sm_bluesky.log import LOGGER
@@ -257,7 +255,7 @@ def _fast_scan_1d(
             time_for_move=abs(start - end) / motor_speed,
         )
         yield from bps.prepare(motor, fly_info, group=grp, wait=True)
-        yield from fly_trigger_and_read(motor, fly_info, dets)
+        yield from fly_kickoff_complete(motor, dets)
 
     yield from finalize_wrapper(
         plan=inner_fast_scan_1d(dets, motor, start, end, motor_speed),
@@ -297,7 +295,7 @@ def soft_fly_energy_scan(
         dets: list[Readable],
     ) -> MsgGenerator:
         yield from bps.prepare(energy_device, fly_info, wait=True)
-        yield from fly_trigger_and_read(energy_device, fly_info, dets)
+        yield from fly_kickoff_complete(energy_device, dets)
 
     yield from finalize_wrapper(
         plan=inn_fly_energy_scan(energy_device, fly_info, dets),

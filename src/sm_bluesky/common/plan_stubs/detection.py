@@ -1,14 +1,11 @@
-from typing import Any
+from collections.abc import Sequence
 
 import bluesky.plan_stubs as bps
 from bluesky.plan_stubs import abs_set
-from bluesky.protocols import Flyable
+from bluesky.protocols import Flyable, Readable
 from bluesky.utils import MsgGenerator, plan, short_uid
 from dodal.devices.single_trigger_detector import SingleTriggerDetector
-from ophyd_async.core import FlyMotorInfo
 from ophyd_async.epics.adcore import AreaDetector
-
-from sm_bluesky.log import LOGGER
 
 
 @plan
@@ -37,16 +34,16 @@ def set_area_detector_acquire_time(
 
 
 @plan
-def fly_trigger_and_read(
-    motor: Flyable,
-    fly_info: FlyMotorInfo,
-    dets: list[Any],
+def fly_kickoff_complete(
+    flyable: Flyable,
+    dets: Sequence[Readable],
+    trigger_and_read: bps.TakeReading | None = None,
 ) -> MsgGenerator:
+    if trigger_and_read is None:
+        trigger_and_read = bps.trigger_and_read
     grp = short_uid("kickoff")
-    yield from bps.kickoff(motor, group=grp, wait=True)
-    LOGGER.info(f"flying motor =  {motor.name} at with info = {fly_info}")
-    status = yield from bps.complete(motor)
-    yield from bps.trigger_and_read(dets + [motor])
+    yield from bps.kickoff(flyable, group=grp, wait=True)
+    status = yield from bps.complete(flyable)
     while not status.done:
-        yield from bps.trigger_and_read(dets + [motor])
+        yield from trigger_and_read(dets)
         yield from bps.checkpoint()
