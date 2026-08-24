@@ -1367,7 +1367,7 @@ wheels = [
 
 [[package]]
 name = "dls-dodal"
-version = "2.6.1"
+version = "2.6.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -1391,9 +1391,9 @@ dependencies = [
     { name = "scanspec" },
     { name = "zocalo" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/44/49/4c39f3e6b91f31c35245585f618d697f9cc1f5efc40b3ee5cfd47381bda2/dls_dodal-2.6.1.tar.gz", hash = "sha256:921658314291b5701267ab5f526cdb750e1c268288152ebcd36bf643800d34de", size = 1754777, upload-time = "2026-08-19T13:16:21.569Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/30/fe/59b97996ae9033ffb0725b6ab7bdf1fb84a97deff946bd2fb09ebedb30c0/dls_dodal-2.6.2.tar.gz", hash = "sha256:6750f50d2d64117b66ad2e2f7963372e35a47cf71c4d3d488e9f6d245d66e673", size = 1754681, upload-time = "2026-08-24T12:45:14.259Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/d9/7668f9f58cab84260d3cfbe0c4e8e594bdef2b87e136857f4aead54f91ea/dls_dodal-2.6.1-py3-none-any.whl", hash = "sha256:b1cd5ddfba13520840a33cf7c4c58ee6bc290da819d4eec56861ed9d75c51c87", size = 462124, upload-time = "2026-08-19T13:16:20.116Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/f0/3b85ba59bf33f29e2e1fb40b04b5931d81348e8332629ec5a32fd8252bc3/dls_dodal-2.6.2-py3-none-any.whl", hash = "sha256:1293455a220a9c8c7db73fb1cb5d5d54824a239da43a13a0ed27ad9bb9367879", size = 462214, upload-time = "2026-08-24T12:45:12.651Z" },
 ]
 
 [[package]]
@@ -5699,7 +5699,7 @@ dev = [
 requires-dist = [
     { name = "blueapi" },
     { name = "bluesky" },
-    { name = "dls-dodal", specifier = "==2.6.1" },
+    { name = "dls-dodal", specifier = "==2.6.2" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },

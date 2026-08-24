@@ -142,8 +142,6 @@ async def test_soft_fly_energy_scan_success(
     fake_detector: Readable,
     run_engine_documents: dict[str, list[dict]],
 ) -> None:
-
-    print(await mock_energy.read())
     run_engine(
         soft_fly_energy_scan([fake_detector], mock_energy, 700, 800, 0.2, 1e-3),
         capture_emitted=run_engine_documents,
@@ -152,8 +150,6 @@ async def test_soft_fly_energy_scan_success(
     assert_emitted(run_engine_documents, start=1, descriptor=1, event=ANY, stop=1)
     # Number of event depend how fast motor is moving, it has to be more than 1
     assert len(run_engine_documents["event"]) > 1
-    for event in run_engine_documents["event"]:
-        print(event["data"])
     # check the starting point
     assert run_engine_documents["event"][0]["data"] == {
         "fake_detector-value": ANY,
