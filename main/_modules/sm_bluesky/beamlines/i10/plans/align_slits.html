@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.beamlines.i10.plans.align_slits &#8212; sm-bluesky 1.1.1.dev40+ga784d64bb documentation</title>
+    <title>sm_bluesky.beamlines.i10.plans.align_slits &#8212; sm-bluesky 1.1.1.dev41+gf9d46c897 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
-<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+  <link href="../../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
-<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../../../_static/documentation_options.js?v=16ca4562"></script>
+    <script src="../../../../../_static/documentation_options.js?v=083230c6"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -48,7 +48,7 @@
     <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/beamlines/i10/plans/align_slits';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -479,11 +479,11 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOGGER</span>
 
-<span class="sd">&quot;&quot;&quot;I10 has fix/solid slit on a motor, this store the rough motor opening</span>
-<span class="sd"> position against slit size in um&quot;&quot;&quot;</span>
+<span class="sd">"""I10 has fix/solid slit on a motor, this store the rough motor opening</span>
+<span class="sd"> position against slit size in um"""</span>
 
-<span class="n">DSD</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;5000&quot;</span><span class="p">:</span> <span class="mf">14.3</span><span class="p">,</span> <span class="s2">&quot;1000&quot;</span><span class="p">:</span> <span class="mf">19.3</span><span class="p">,</span> <span class="s2">&quot;500&quot;</span><span class="p">:</span> <span class="mf">26.5</span><span class="p">,</span> <span class="s2">&quot;100&quot;</span><span class="p">:</span> <span class="mf">29.3</span><span class="p">,</span> <span class="s2">&quot;50&quot;</span><span class="p">:</span> <span class="mf">34.3</span><span class="p">}</span>
-<span class="n">DSU</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;5000&quot;</span><span class="p">:</span> <span class="mf">16.7</span><span class="p">,</span> <span class="s2">&quot;1000&quot;</span><span class="p">:</span> <span class="mf">21.7</span><span class="p">,</span> <span class="s2">&quot;500&quot;</span><span class="p">:</span> <span class="mf">25.674</span><span class="p">,</span> <span class="s2">&quot;100&quot;</span><span class="p">:</span> <span class="mf">31.7</span><span class="p">,</span> <span class="s2">&quot;50&quot;</span><span class="p">:</span> <span class="mf">36.7</span><span class="p">}</span>
+<span class="n">DSD</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"5000"</span><span class="p">:</span> <span class="mf">14.3</span><span class="p">,</span> <span class="s2">"1000"</span><span class="p">:</span> <span class="mf">19.3</span><span class="p">,</span> <span class="s2">"500"</span><span class="p">:</span> <span class="mf">26.5</span><span class="p">,</span> <span class="s2">"100"</span><span class="p">:</span> <span class="mf">29.3</span><span class="p">,</span> <span class="s2">"50"</span><span class="p">:</span> <span class="mf">34.3</span><span class="p">}</span>
+<span class="n">DSU</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"5000"</span><span class="p">:</span> <span class="mf">16.7</span><span class="p">,</span> <span class="s2">"1000"</span><span class="p">:</span> <span class="mf">21.7</span><span class="p">,</span> <span class="s2">"500"</span><span class="p">:</span> <span class="mf">25.674</span><span class="p">,</span> <span class="s2">"100"</span><span class="p">:</span> <span class="mf">31.7</span><span class="p">,</span> <span class="s2">"50"</span><span class="p">:</span> <span class="mf">36.7</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="move_dsu">
@@ -494,10 +494,10 @@
     <span class="n">use_motor_position</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"det_slits"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Move up stream detector slit either by it size in slit motor table or by motor</span>
-<span class="sd">    position.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Move up stream detector slit either by it size in slit motor table or by motor</span>
+<span class="sd">    position."""</span>
     <span class="k">yield from</span> <span class="n">move_motor_with_look_up</span><span class="p">(</span>
         <span class="n">slit</span><span class="o">=</span><span class="n">det_slits</span><span class="o">.</span><span class="n">upstream</span><span class="p">,</span>
         <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
@@ -517,10 +517,10 @@
     <span class="n">use_motor_position</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"det_slits"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Move down stream detector slit either by it size in slit motor table or by motor</span>
-<span class="sd">    position.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Move down stream detector slit either by it size in slit motor table or by motor</span>
+<span class="sd">    position."""</span>
     <span class="k">yield from</span> <span class="n">move_motor_with_look_up</span><span class="p">(</span>
         <span class="n">slit</span><span class="o">=</span><span class="n">det_slits</span><span class="o">.</span><span class="n">downstream</span><span class="p">,</span>
         <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
@@ -536,10 +536,10 @@
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.align_dsu">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">align_dsu</span><span class="p">(</span>
     <span class="n">size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
-    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"rasor_femto_pa_scaler_det"</span><span class="p">),</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"det_slits"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Align the up stream detector slit&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Align the up stream detector slit"""</span>
     <span class="k">yield from</span> <span class="n">align_slit_with_look_up</span><span class="p">(</span>
         <span class="n">motor</span><span class="o">=</span><span class="n">det_slits</span><span class="o">.</span><span class="n">upstream</span><span class="p">,</span>
         <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
@@ -554,10 +554,10 @@
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.align_dsd">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">align_dsd</span><span class="p">(</span>
     <span class="n">size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
-    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"rasor_femto_pa_scaler_det"</span><span class="p">),</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"det_slits"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Align the down stream detector slit&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Align the down stream detector slit"""</span>
     <span class="k">yield from</span> <span class="n">align_slit_with_look_up</span><span class="p">(</span>
         <span class="n">motor</span><span class="o">=</span><span class="n">det_slits</span><span class="o">.</span><span class="n">downstream</span><span class="p">,</span>
         <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
@@ -571,22 +571,22 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">align_pa_slit</span><span class="p">(</span>
     <span class="n">dsd_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">dsu_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
-    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;det_slits&quot;</span><span class="p">),</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"rasor_femto_pa_scaler_det"</span><span class="p">),</span>
+    <span class="n">det_slits</span><span class="p">:</span> <span class="n">DetSlits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"det_slits"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Align both detector slits&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Align both detector slits"""</span>
     <span class="k">yield from</span> <span class="n">move_dsd</span><span class="p">(</span><span class="mi">5000</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">det_slits</span><span class="o">=</span><span class="n">det_slits</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">align_dsu</span><span class="p">(</span><span class="n">dsu_size</span><span class="p">,</span> <span class="n">det</span><span class="p">,</span> <span class="n">det_slits</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">align_dsd</span><span class="p">(</span><span class="n">dsd_size</span><span class="p">,</span> <span class="n">det</span><span class="p">,</span> <span class="n">det_slits</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">align_s5s6</span><span class="p">(</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
-    <span class="n">slits</span><span class="p">:</span> <span class="n">I10Slits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;slits&quot;</span><span class="p">),</span>
-    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
-    <span class="n">sample_stage</span><span class="p">:</span> <span class="n">XYZStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;sample_stage&quot;</span><span class="p">),</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"rasor_femto_pa_scaler_det"</span><span class="p">),</span>
+    <span class="n">slits</span><span class="p">:</span> <span class="n">I10Slits</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"slits"</span><span class="p">),</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"diffractometer"</span><span class="p">),</span>
+    <span class="n">sample_stage</span><span class="p">:</span> <span class="n">XYZStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"sample_stage"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Plan to align the s5s6 slits with the straight through beam</span>
 <span class="sd">    and RASOR detector, it define where all the motor should be and call</span>
 <span class="sd">    align slits</span>
@@ -601,7 +601,7 @@
 <span class="sd">        Diffractometer to move out of beam.</span>
 <span class="sd">    sample_stage (optional): XYZStage:</span>
 <span class="sd">        sample stage to move out of beam.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">yield from</span> <span class="n">move_to_direct_beam_position</span><span class="p">(</span><span class="n">diffractometer</span><span class="p">,</span> <span class="n">sample_stage</span><span class="p">)</span>
 
     <span class="k">yield from</span> <span class="n">align_slit</span><span class="p">(</span>
@@ -618,7 +618,7 @@
         <span class="n">y_range</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">y_cen</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Aligning s6&quot;</span><span class="p">)</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Aligning s6"</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">align_slit</span><span class="p">(</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
         <span class="n">slit</span><span class="o">=</span><span class="n">slits</span><span class="o">.</span><span class="n">s6</span><span class="p">,</span>
@@ -650,7 +650,7 @@
     <span class="n">y_cen</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">centre_type</span><span class="p">:</span> <span class="n">StatPosition</span> <span class="o">=</span> <span class="n">StatPosition</span><span class="o">.</span><span class="n">COM</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Plan to align a pair of standard x-y slits,</span>
 <span class="sd">    it does a pair of slits scan and go to the centre of mass by default.</span>
 
@@ -684,18 +684,18 @@
 <span class="sd">    centre_type: StatPosition = StatPosition.COM</span>
 <span class="sd">        Where to move the slits, it goes to centre of mass by default.</span>
 <span class="sd">        see StatPosition for other options.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">group_wait</span> <span class="o">=</span> <span class="s2">&quot;slits group&quot;</span>
+<span class="sd">    """</span>
+    <span class="n">group_wait</span> <span class="o">=</span> <span class="s2">"slits group"</span>
     <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">slit</span><span class="o">.</span><span class="n">x_gap</span><span class="p">,</span> <span class="n">x_scan_size</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">slit</span><span class="o">.</span><span class="n">y_gap</span><span class="p">,</span> <span class="n">y_open_size</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
-    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Moving to starting position for </span><span class="si">{</span><span class="n">slit</span><span class="o">.</span><span class="n">x_centre</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> alignment.&quot;</span><span class="p">)</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Moving to starting position for </span><span class="si">{</span><span class="n">slit</span><span class="o">.</span><span class="n">x_centre</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> alignment."</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">mv</span><span class="p">(</span><span class="n">slit</span><span class="o">.</span><span class="n">y_centre</span><span class="p">,</span> <span class="n">y_cen</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
     <span class="n">start_pos</span><span class="p">,</span> <span class="n">end_pos</span><span class="p">,</span> <span class="n">num</span> <span class="o">=</span> <span class="n">cal_range_num</span><span class="p">(</span><span class="n">x_cen</span><span class="p">,</span> <span class="n">x_range</span><span class="p">,</span> <span class="n">x_scan_size</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">step_scan_and_move_fit</span><span class="p">(</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
         <span class="n">motor</span><span class="o">=</span><span class="n">slit</span><span class="o">.</span><span class="n">x_centre</span><span class="p">,</span>
-        <span class="n">detname_suffix</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="n">detname_suffix</span><span class="o">=</span><span class="s2">"value"</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="n">start_pos</span><span class="p">,</span>
         <span class="n">end</span><span class="o">=</span><span class="n">end_pos</span><span class="p">,</span>
         <span class="n">fitted_loc</span><span class="o">=</span><span class="n">centre_type</span><span class="p">,</span>
@@ -704,13 +704,13 @@
 
     <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">slit</span><span class="o">.</span><span class="n">y_gap</span><span class="p">,</span> <span class="n">y_scan_size</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">slit</span><span class="o">.</span><span class="n">x_gap</span><span class="p">,</span> <span class="n">x_open_size</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
-    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Moving to starting position for </span><span class="si">{</span><span class="n">slit</span><span class="o">.</span><span class="n">y_centre</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> alignment.&quot;</span><span class="p">)</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Moving to starting position for </span><span class="si">{</span><span class="n">slit</span><span class="o">.</span><span class="n">y_centre</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> alignment."</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">wait</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
     <span class="n">start_pos</span><span class="p">,</span> <span class="n">end_pos</span><span class="p">,</span> <span class="n">num</span> <span class="o">=</span> <span class="n">cal_range_num</span><span class="p">(</span><span class="n">y_cen</span><span class="p">,</span> <span class="n">y_range</span><span class="p">,</span> <span class="n">y_scan_size</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">step_scan_and_move_fit</span><span class="p">(</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
         <span class="n">motor</span><span class="o">=</span><span class="n">slit</span><span class="o">.</span><span class="n">y_centre</span><span class="p">,</span>
-        <span class="n">detname_suffix</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="n">detname_suffix</span><span class="o">=</span><span class="s2">"value"</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="n">start_pos</span><span class="p">,</span>
         <span class="n">end</span><span class="o">=</span><span class="n">end_pos</span><span class="p">,</span>
         <span class="n">fitted_loc</span><span class="o">=</span><span class="n">centre_type</span><span class="p">,</span>
@@ -722,11 +722,11 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">move_to_direct_beam_position</span><span class="p">(</span>
-    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
-    <span class="n">sample_stage</span><span class="p">:</span> <span class="n">XYZStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;sample_stage&quot;</span><span class="p">),</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"diffractometer"</span><span class="p">),</span>
+    <span class="n">sample_stage</span><span class="p">:</span> <span class="n">XYZStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"sample_stage"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove everything in the way of the beam&quot;&quot;&quot;</span>
-    <span class="n">group_wait</span> <span class="o">=</span> <span class="s2">&quot;diff group A&quot;</span>
+<span class="w">    </span><span class="sd">"""Remove everything in the way of the beam"""</span>
+    <span class="n">group_wait</span> <span class="o">=</span> <span class="s2">"diff group A"</span>
     <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">diffractometer</span><span class="o">.</span><span class="n">tth</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">diffractometer</span><span class="o">.</span><span class="n">th</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_wait</span><span class="p">)</span>
@@ -760,8 +760,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
-<script defer src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -773,7 +773,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
 </p></div>
       
     </div>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.beamlines.i10.plans.centre_direct_beam &#8212; sm-bluesky 1.1.1.dev40+ga784d64bb documentation</title>
+    <title>sm_bluesky.beamlines.i10.plans.centre_direct_beam &#8212; sm-bluesky 1.1.1.dev41+gf9d46c897 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
-<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+  <link href="../../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
-<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../../../_static/documentation_options.js?v=16ca4562"></script>
+    <script src="../../../../../_static/documentation_options.js?v=083230c6"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -48,7 +48,7 @@
     <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/beamlines/i10/plans/centre_direct_beam';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -477,14 +477,14 @@
 <div class="viewcode-block" id="centre_tth">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.centre_tth">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">centre_tth</span><span class="p">(</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"rasor_femto_pa_scaler_det"</span><span class="p">),</span>
     <span class="n">det_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET_NAME_EXTENSION</span><span class="p">,</span>
     <span class="n">start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span>
-    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"diffractometer"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Centre two theta using Rasor dector.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Centre two theta using Rasor dector."""</span>
 
     <span class="k">yield from</span> <span class="n">step_scan_and_move_fit</span><span class="p">(</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
@@ -501,14 +501,14 @@
 <div class="viewcode-block" id="centre_alpha">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.centre_alpha">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">centre_alpha</span><span class="p">(</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"rasor_femto_pa_scaler_det"</span><span class="p">),</span>
     <span class="n">det_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET_NAME_EXTENSION</span><span class="p">,</span>
     <span class="n">start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.8</span><span class="p">,</span>
     <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
     <span class="n">num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span>
-    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"diffractometer"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Centre rasor alpha using Rasor dector.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Centre rasor alpha using Rasor dector."""</span>
     <span class="k">yield from</span> <span class="n">step_scan_and_move_fit</span><span class="p">(</span>
         <span class="n">det</span><span class="o">=</span><span class="n">det</span><span class="p">,</span>
         <span class="n">motor</span><span class="o">=</span><span class="n">diffractometer</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span>
@@ -524,11 +524,11 @@
 <div class="viewcode-block" id="centre_det_angles">
 <a class="viewcode-back" href="../../../../../_api/sm_bluesky.beamlines.i10.plans.html#sm_bluesky.beamlines.i10.plans.centre_det_angles">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">centre_det_angles</span><span class="p">(</span>
-    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;rasor_femto_pa_scaler_det&quot;</span><span class="p">),</span>
+    <span class="n">det</span><span class="p">:</span> <span class="n">StandardReadable</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"rasor_femto_pa_scaler_det"</span><span class="p">),</span>
     <span class="n">det_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">RASOR_DEFAULT_DET_NAME_EXTENSION</span><span class="p">,</span>
-    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;diffractometer&quot;</span><span class="p">),</span>
+    <span class="n">diffractometer</span><span class="p">:</span> <span class="n">Diffractometer</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"diffractometer"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Centre both two theta and alpha angle on Rasor&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Centre both two theta and alpha angle on Rasor"""</span>
     <span class="k">yield from</span> <span class="n">centre_tth</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">det_name</span><span class="p">,</span> <span class="n">diffractometer</span><span class="o">=</span><span class="n">diffractometer</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">centre_alpha</span><span class="p">(</span><span class="n">det</span><span class="p">,</span> <span class="n">det_name</span><span class="p">,</span> <span class="n">diffractometer</span><span class="o">=</span><span class="n">diffractometer</span><span class="p">)</span></div>
 
@@ -539,12 +539,12 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">move_pin_origin</span><span class="p">(</span>
     <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">group</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">sample_stage</span><span class="p">:</span> <span class="n">XYZStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">&quot;sample_stage&quot;</span><span class="p">),</span>
+    <span class="n">sample_stage</span><span class="p">:</span> <span class="n">XYZStage</span> <span class="o">=</span> <span class="n">inject</span><span class="p">(</span><span class="s2">"sample_stage"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Move the point to the centre of rotation.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Move the point to the centre of rotation."""</span>
 
     <span class="k">if</span> <span class="n">wait</span> <span class="ow">and</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">group</span> <span class="o">=</span> <span class="s2">&quot;move_pin_origin&quot;</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="s2">"move_pin_origin"</span>
     <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
     <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">abs_set</span><span class="p">(</span><span class="n">sample_stage</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
@@ -580,8 +580,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
-<script defer src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -593,7 +593,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
 </p></div>
       
     </div>

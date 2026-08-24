@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans.fast_scan &#8212; sm-bluesky 1.1.1.dev40+ga784d64bb documentation</title>
+    <title>sm_bluesky.common.plans.fast_scan &#8212; sm-bluesky 1.1.1.dev41+gf9d46c897 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
-<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+  <link href="../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
-<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../../_static/documentation_options.js?v=16ca4562"></script>
+    <script src="../../../../_static/documentation_options.js?v=083230c6"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -48,7 +48,7 @@
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/common/plans/fast_scan';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -496,7 +496,7 @@
     <span class="n">motor_speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Perform a fast scan along one axis.</span>
 
 <span class="sd">    Parameters</span>
@@ -511,13 +511,13 @@
 <span class="sd">        The ending position of the motor.</span>
 <span class="sd">    motor_speed : Optional[float], optional</span>
 <span class="sd">        The speed of the motor during the scan. If None,</span>
-<span class="sd">        the motor&#39;s current speed is used.</span>
+<span class="sd">        the motor's current speed is used.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    MsgGenerator</span>
 <span class="sd">        A Bluesky generator for the scan.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">if</span> <span class="n">md</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">md</span> <span class="o">=</span> <span class="p">{}</span>
@@ -558,13 +558,13 @@
     <span class="n">snake_axes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Same as fast_scan_1d with an extra axis to step through forming a grid.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    detectors : list</span>
-<span class="sd">        list of &#39;readable&#39; objects</span>
+<span class="sd">        list of 'readable' objects</span>
 <span class="sd">    step_motor :</span>
 <span class="sd">        Motor (moveable, readable)</span>
 <span class="sd">    step_start :</span>
@@ -587,11 +587,11 @@
 <span class="sd">    md:</span>
 <span class="sd">        place holder for meta data for future.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">md</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">md</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">md</span> <span class="o">=</span> <span class="n">add_extra_names_to_meta</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="s2">&quot;detectors&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">det</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">det</span> <span class="ow">in</span> <span class="n">dets</span><span class="p">])</span>
-    <span class="n">md</span> <span class="o">=</span> <span class="n">add_extra_names_to_meta</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="s2">&quot;motors&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">scan_motor</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">step_motor</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="n">add_extra_names_to_meta</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="s2">"detectors"</span><span class="p">,</span> <span class="p">[</span><span class="n">det</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">det</span> <span class="ow">in</span> <span class="n">dets</span><span class="p">])</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="n">add_extra_names_to_meta</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="s2">"motors"</span><span class="p">,</span> <span class="p">[</span><span class="n">scan_motor</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">step_motor</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
 
     <span class="nd">@bpp</span><span class="o">.</span><span class="n">stage_decorator</span><span class="p">(</span><span class="n">dets</span><span class="p">)</span>
     <span class="nd">@bpp</span><span class="o">.</span><span class="n">run_decorator</span><span class="p">(</span><span class="n">md</span><span class="o">=</span><span class="n">md</span><span class="p">)</span>
@@ -655,7 +655,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">clean_up</span><span class="p">():</span>
-    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Clean up&quot;</span><span class="p">)</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Clean up"</span><span class="p">)</span>
     <span class="c1"># possibly use to move back to starting position.</span>
     <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">null</span><span class="p">()</span>
 
@@ -668,7 +668,7 @@
     <span class="n">end</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">motor_speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The logic for one axis fast scan, used in fast_scan_1d and fast_scan_grid</span>
 
 <span class="sd">    In this scan:</span>
@@ -687,7 +687,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    detectors : list</span>
-<span class="sd">        list of &#39;readable&#39; objects</span>
+<span class="sd">        list of 'readable' objects</span>
 <span class="sd">    motor : Motor (moveable, readable)</span>
 
 <span class="sd">    start: float</span>
@@ -697,7 +697,7 @@
 
 <span class="sd">    motor_speed: Optional[float] = None,</span>
 <span class="sd">        The speed of the motor during scan</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="c1"># read the current speed and store it</span>
     <span class="n">old_speed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Motor</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">cache_speed</span><span class="p">([</span><span class="n">motor</span><span class="p">])</span>
@@ -713,11 +713,11 @@
             <span class="n">motor_speed</span> <span class="o">=</span> <span class="n">old_speed</span><span class="p">[</span><span class="n">motor</span><span class="p">]</span>
 
         <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Starting 1d fly scan with </span><span class="si">{</span><span class="n">motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">:&quot;</span>
-            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; start position = </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">, end position = </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Starting 1d fly scan with </span><span class="si">{</span><span class="n">motor</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">:"</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">" start position = </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">, end position = </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
 
-        <span class="n">grp</span> <span class="o">=</span> <span class="n">short_uid</span><span class="p">(</span><span class="s2">&quot;prepare&quot;</span><span class="p">)</span>
+        <span class="n">grp</span> <span class="o">=</span> <span class="n">short_uid</span><span class="p">(</span><span class="s2">"prepare"</span><span class="p">)</span>
         <span class="n">fly_info</span> <span class="o">=</span> <span class="n">FlyMotorInfo</span><span class="p">(</span>
             <span class="n">start_position</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
             <span class="n">end_position</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
@@ -799,8 +799,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
-<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -812,7 +812,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
 </p></div>
       
     </div>
