@@ -72,10 +72,10 @@ async def mock_id(
 ) -> Apple2:
     async with init_devices(mock=True):
         mock_id = Apple2(id_gap=mock_id_gap, id_phase=mock_phase_axes)
-    set_mock_value(mock_id.gap().acceleration_time, 0.2)
-    set_mock_value(mock_id.gap().velocity, 2)
-    set_mock_value(mock_id.gap().max_velocity, 200)
-    set_mock_value(mock_id.gap().min_velocity, 0.0)
+    set_mock_value(mock_id.gap_ref().acceleration_time, 0.2)
+    set_mock_value(mock_id.gap_ref().velocity, 2)
+    set_mock_value(mock_id.gap_ref().max_velocity, 200)
+    set_mock_value(mock_id.gap_ref().min_velocity, 0.0)
     return mock_id
 
 
@@ -142,7 +142,6 @@ async def test_soft_fly_energy_scan_success(
     fake_detector: Readable,
     run_engine_documents: dict[str, list[dict]],
 ) -> None:
-
     run_engine(
         soft_fly_energy_scan([fake_detector], mock_energy, 700, 800, 0.2, 1e-3),
         capture_emitted=run_engine_documents,
@@ -168,8 +167,8 @@ async def test_soft_fly_energy_scan_success(
     assert (
         await mock_energy.id_energy()
         .id_controller()
-        .apple2()
-        .gap()
+        .apple2_ref()
+        .gap_ref()
         .velocity.get_value()
         == 2.0
     )
