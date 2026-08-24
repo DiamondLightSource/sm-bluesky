@@ -1,0 +1,22 @@
+``sm_bluesky.electron_analyser.plan_stubs``
+===========================================
+
+.. automodule:: sm_bluesky.electron_analyser.plan_stubs
+    :members:
+
+    
+    
+    .. rubric:: Submodules
+
+    .. autosummary::
+        :toctree:
+        :template: custom-module-template.rst
+        :recursive:
+    
+        analyser_per_step
+    
+    
+
+    
+    
+    
