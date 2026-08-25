@@ -1494,8 +1494,8 @@ wheels = [
 
 [[package]]
 name = "dls-dodal"
-version = "2.6.2"
-source = { registry = "https://pypi.org/simple" }
+version = "2.6.3.dev8+g25e0fbf2e"
+source = { git = "https://github.com/DiamondLightSource/dodal.git?rev=enhance_MockSuperConductingMagnetController#25e0fbf2e2845d3a06898a813b2d6387321ea89c" }
 dependencies = [
     { name = "aiofiles" },
     { name = "aiohttp" },
@@ -1518,10 +1518,6 @@ dependencies = [
     { name = "requests" },
     { name = "scanspec" },
     { name = "zocalo" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/30/fe/59b97996ae9033ffb0725b6ab7bdf1fb84a97deff946bd2fb09ebedb30c0/dls_dodal-2.6.2.tar.gz", hash = "sha256:6750f50d2d64117b66ad2e2f7963372e35a47cf71c4d3d488e9f6d245d66e673", size = 1754681, upload-time = "2026-08-24T12:45:14.259Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d4/f0/3b85ba59bf33f29e2e1fb40b04b5931d81348e8332629ec5a32fd8252bc3/dls_dodal-2.6.2-py3-none-any.whl", hash = "sha256:1293455a220a9c8c7db73fb1cb5d5d54824a239da43a13a0ed27ad9bb9367879", size = 462214, upload-time = "2026-08-24T12:45:12.651Z" },
 ]
 
 [[package]]
@@ -6006,7 +6002,7 @@ dev = [
 requires-dist = [
     { name = "blueapi" },
     { name = "bluesky" },
-    { name = "dls-dodal", specifier = "==2.6.2" },
+    { name = "dls-dodal", git = "https://github.com/DiamondLightSource/dodal.git?rev=enhance_MockSuperConductingMagnetController" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },
