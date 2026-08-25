@@ -11,7 +11,6 @@ from dodal.devices.scaler_card import ScalerCard
 from sm_bluesky.common.plan_stubs.detection import fly_kickoff_complete
 
 
-@plan
 def _raw_fastfieldscan(
     magnet_axis: MagnetAxis,
     mag_fly_info: FlyMagnetInfo,
@@ -19,7 +18,7 @@ def _raw_fastfieldscan(
     integration_time: float,
     detectors: Sequence[Readable],
     md: CustomPlanMetadata,
-    trigger_and_read: bps.TakeReading | None,
+    trigger_and_read: bps.TakeReading | None = None,
 ) -> MsgGenerator:
     """Execute the common setup and fly-scan sequence for a magnetic field scan.
 
@@ -39,6 +38,16 @@ def _raw_fastfieldscan(
         trigger_and_read: Optional plan used instead of the standard
             trigger-and-read operation during the fly.
     """
+    plan_args = {
+        "magnet_axis": magnet_axis.name,
+        "start_field": mag_fly_info.start_position,
+        "end_field": mag_fly_info.end_position,
+        "field_ramp_rate": mag_fly_info.ramp_rate,
+        "scaler_card": scaler_card.name,
+        "integration_time": integration_time,
+        "detectors": [det.name for det in detectors],
+    }
+    md.update(plan_args=plan_args)
 
     @bpp.stage_decorator(detectors)
     @bpp.run_decorator(md=md)
@@ -58,7 +67,7 @@ def fastfieldscan(
     field_ramp_rate: float,
     integration_time: float,
     detectors: list[Readable],
-    md: CustomPlanMetadata | None,
+    md: CustomPlanMetadata | None = None,
     scaler_card: ScalerCard = inject("scaler2_mag"),
 ) -> MsgGenerator:
     """Perform a fast fly scan of a superconducting magnet axis.
@@ -84,6 +93,7 @@ def fastfieldscan(
         Bluesky messages implementing the fast field fly scan.
     """
     md = md or {}
+    md.update({"plan_name": "fastfieldscan"})
     fly_info = FlyMagnetInfo(
         start_position=start_field, end_position=stop_field, ramp_rate=field_ramp_rate
     )
@@ -105,10 +115,10 @@ def fastfieldscan_with_energy(
     stop_field: float,
     field_ramp_rate: float,
     integration_time: float,
-    energies: tuple[float, float],
     beam_energy: Movable[float],
+    energies: tuple[float, float],
     detectors: list[Readable],
-    md: CustomPlanMetadata | None,
+    md: CustomPlanMetadata | None = None,
     scaler_card: ScalerCard = inject("scaler2_mag"),
 ) -> MsgGenerator:
     """Perform a fast magnetic field scan while alternating beam energy.
@@ -139,6 +149,15 @@ def fastfieldscan_with_energy(
         beam energies.
     """
     md = md or {}
+    md.update(
+        {
+            "plan_name": "fastfieldscan_with_energy",
+            "plan_args": {
+                "beam_energy": beam_energy.name,  # type: ignore
+                "energies": energies,
+            },
+        }
+    )
     fly_info = FlyMagnetInfo(
         start_position=start_field, end_position=stop_field, ramp_rate=field_ramp_rate
     )
