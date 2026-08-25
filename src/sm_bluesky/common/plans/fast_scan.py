@@ -255,7 +255,7 @@ def _fast_scan_1d(
             time_for_move=abs(start - end) / motor_speed,
         )
         yield from bps.prepare(motor, fly_info, group=grp, wait=True)
-        yield from fly_kickoff_complete(motor, dets)
+        yield from fly_kickoff_complete(motor, dets + [motor])
 
     yield from finalize_wrapper(
         plan=inner_fast_scan_1d(dets, motor, start, end, motor_speed),
@@ -295,7 +295,7 @@ def soft_fly_energy_scan(
         dets: list[Readable],
     ) -> MsgGenerator:
         yield from bps.prepare(energy_device, fly_info, wait=True)
-        yield from fly_kickoff_complete(energy_device, dets)
+        yield from fly_kickoff_complete(energy_device, dets + [energy_device])
 
     yield from finalize_wrapper(
         plan=inn_fly_energy_scan(energy_device, fly_info, dets),
