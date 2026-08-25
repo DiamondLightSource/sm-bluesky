@@ -53,7 +53,7 @@ def _raw_fastfieldscan(
     @bpp.run_decorator(md=md)
     def _inner():
         yield from bps.prepare(magnet_axis, mag_fly_info, wait=True)
-        yield from bps.mv(scaler_card, integration_time, wait=True)
+        yield from bps.mv(scaler_card, integration_time)
         yield from fly_kickoff_complete(magnet_axis, detectors, trigger_and_read)
 
     yield from _inner()
@@ -166,7 +166,7 @@ def fastfieldscan_with_energy(
         detectors: Sequence[Readable],
     ) -> MsgGenerator:
         for energy in energies:
-            yield from bps.mv(beam_energy, energy, wait=True)
+            yield from bps.mv(beam_energy, energy)
             yield from bps.trigger_and_read(detectors)
 
     yield from _raw_fastfieldscan(
