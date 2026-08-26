@@ -11,6 +11,23 @@ from dodal.devices.scaler_card import ScalerCard
 from sm_bluesky.common.plan_stubs.detection import fly_kickoff_complete
 
 
+def _unique_objs(objs: Sequence) -> list:
+    """Return unique objects while preserving their original order.
+
+    Useful when combining user-provided objects with additional required
+    objects where duplicates should be removed without making the resulting
+    order non-deterministic.
+
+    Args:
+        objs: Sequence of hashable objects.
+
+    Returns:
+        A list containing each object at most once, in the order of its
+        first occurrence.
+    """
+    return list(dict.fromkeys(objs))
+
+
 def _raw_fastfieldscan(
     magnet_axis: MagnetAxis,
     mag_fly_info: FlyMagnetInfo,
@@ -102,7 +119,7 @@ def fastfieldscan(
         fly_info,
         scaler_card,
         integration_time,
-        list(set(detectors) | {magnet_axis, scaler_card}),
+        _unique_objs([magnet_axis, scaler_card, *detectors]),
         md,
         trigger_and_read=None,
     )
@@ -174,7 +191,7 @@ def fastfieldscan_with_energy(
         fly_info,
         scaler_card,
         integration_time,
-        list(set(detectors) | {magnet_axis, scaler_card}),
+        _unique_objs([magnet_axis, scaler_card, beam_energy, *detectors]),
         md,
         trigger_and_read=_cycle_energies_trigger_read,
     )

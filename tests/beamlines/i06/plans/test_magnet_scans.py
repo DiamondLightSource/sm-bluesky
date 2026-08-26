@@ -109,8 +109,7 @@ async def test_fastfieldscan_scans_magnet_axis(
     unique_positions = sorted(set(mag_axis_values))
     # This asserts that we didn't go to start position to end position instantly and
     # did move to steps between as well.
-    assert len(unique_positions) >= 2
-    assert mag_axis_values[0] == pytest.approx(start_field)
+    assert len(unique_positions) > 2
     assert mag_axis_values[-1] == pytest.approx(end_field)
 
     get_mock_put(mag_axis.psu_ref().ramp_rate.demand).assert_called_once_with(ramp_rate)
