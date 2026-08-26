@@ -73,7 +73,7 @@ def energy() -> Movable[float]:
         pytest.param("z", MagnetMode.UNIAXIAL_Z, id="z"),
     ],
 )
-async def test_fastfieldscan(
+async def test_fastfieldscan_scans_magnet_axis(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     scmc: SuperConductingMagnetController,
@@ -117,3 +117,56 @@ async def test_fastfieldscan(
     get_mock_put(scaler_controller.integration_time).assert_called_once_with(
         integration_time
     )
+
+
+@pytest.mark.parametrize(
+    "custom_md",
+    [
+        pytest.param(None, id="default-metadata"),
+        pytest.param(
+            {"sample_id": "test-sample", "purpose": "magnet-scan"},
+            id="custom-metadata",
+        ),
+    ],
+)
+async def test_fastfieldscan_metadata(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    scmc: SuperConductingMagnetController,
+    scaler_mag: ScalerCard,
+    custom_md: dict[str, str] | None,
+) -> None:
+    run_engine(bps.mv(scmc.mode, MagnetMode.UNIAXIAL_X))
+
+    start_field = 0.0
+    end_field = 1.0
+    integration_time = 1.0
+    ramp_rate = 2.0
+
+    run_engine(
+        fastfieldscan(
+            scmc.cart.x,
+            start_field=start_field,
+            stop_field=end_field,
+            field_ramp_rate=ramp_rate,
+            integration_time=integration_time,
+            detectors=[],
+            scaler_card=scaler_mag,
+            md=custom_md,
+        )
+    )
+    md = run_engine_documents["start"][0]
+    assert md["plan_args"] == {
+        "magnet_axis": scmc.cart.x.name,
+        "start_field": start_field,
+        "end_field": end_field,
+        "field_ramp_rate": ramp_rate,
+        "scaler_card": scaler_mag.name,
+        "integration_time": integration_time,
+        "detectors": [scmc.cart.x.name, scaler_mag.name],
+    }
+    assert md["plan_name"] == "fastfieldscan"
+
+    if custom_md is not None:
+        for key, value in custom_md.items():
+            assert md[key] == value
