@@ -44,6 +44,7 @@ def fly_kickoff_complete(
     grp = short_uid("kickoff")
     yield from bps.kickoff(flyable, group=grp, wait=True)
     status = yield from bps.complete(flyable)
+    yield from trigger_and_read(dets)
     while not status.done:
         yield from trigger_and_read(dets)
         yield from bps.checkpoint()

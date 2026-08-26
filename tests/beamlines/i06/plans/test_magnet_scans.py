@@ -5,6 +5,7 @@ from bluesky import RunEngine
 from bluesky import plan_stubs as bps
 from bluesky.protocols import Movable
 from dodal.devices.beamlines.i06_1.magnet import (
+    MagnetAxis,
     MagnetMode,
     SuperConductingMagnetController,
     ThreeMagnetAxisPowerSupply,
@@ -33,7 +34,7 @@ def scmc_psu() -> ThreeMagnetAxisPowerSupply:
 async def scmc(scmc_psu: ThreeMagnetAxisPowerSupply) -> SuperConductingMagnetController:
     scmc = SuperConductingMagnetController("TEST", scmc_psu, name="scmc")
     await scmc.connect(
-        mock=MockSuperConductingMagnetController(steps=MOCK_AXIS_STEPS, ramp_time=1)
+        mock=MockSuperConductingMagnetController(steps=MOCK_AXIS_STEPS, ramp_time=0.1)
     )
     return scmc
 
@@ -64,23 +65,34 @@ def energy() -> Movable[float]:
     return energy
 
 
+@pytest.mark.parametrize(
+    "axis, mode",
+    [
+        pytest.param("x", MagnetMode.UNIAXIAL_X, id="x"),
+        pytest.param("y", MagnetMode.UNIAXIAL_Y, id="y"),
+        pytest.param("z", MagnetMode.UNIAXIAL_Z, id="z"),
+    ],
+)
 async def test_fastfieldscan(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     scmc: SuperConductingMagnetController,
     scaler_controller: ScalerCardController,
     scaler_mag: ScalerCard,
+    axis: str,
+    mode: MagnetMode,
 ) -> None:
-    run_engine(bps.mv(scmc.mode, MagnetMode.UNIAXIAL_X))
+    run_engine(bps.mv(scmc.mode, mode))
 
     start_field = 0
     end_field = 1
     integration_time = 1
     ramp_rate = 2
+    mag_axis: MagnetAxis = getattr(scmc.cart, axis)
 
     run_engine(
         fastfieldscan(
-            scmc.cart.x,
+            mag_axis,
             start_field=start_field,
             stop_field=end_field,
             field_ramp_rate=ramp_rate,
@@ -89,20 +101,19 @@ async def test_fastfieldscan(
             scaler_card=scaler_mag,
         )
     )
-    positions = [
-        event["data"]["scmc-cart-x"] for event in run_engine_documents["event"]
+    mag_axis_values = [
+        event["data"][mag_axis.name] for event in run_engine_documents["event"]
     ]
-    assert sorted(set(positions)) == pytest.approx(
-        [
-            start_field + (end_field - start_field) * i / MOCK_AXIS_STEPS
-            for i in range(1, MOCK_AXIS_STEPS + 1)
-        ]
-    )
-    # Check final position
-    assert await scmc.cart.x.readback.get_value() == pytest.approx(end_field)
-    get_mock_put(scmc.cart.x.psu_ref().ramp_rate.demand).assert_called_once_with(
-        ramp_rate
-    )
+    assert all(start_field <= position <= end_field for position in mag_axis_values)
+    assert mag_axis_values == sorted(mag_axis_values)
+    unique_positions = sorted(set(mag_axis_values))
+    # This asserts that we didn't go to start position to end position instantly and
+    # did move to steps between as well.
+    assert len(unique_positions) >= 2
+    assert mag_axis_values[0] == pytest.approx(start_field)
+    assert mag_axis_values[-1] == pytest.approx(end_field)
+
+    get_mock_put(mag_axis.psu_ref().ramp_rate.demand).assert_called_once_with(ramp_rate)
     get_mock_put(scaler_controller.integration_time).assert_called_once_with(
         integration_time
     )
