@@ -64,7 +64,7 @@ def _raw_fastfieldscan(
         "integration_time": integration_time,
         "detectors": [det.name for det in detectors],
     }
-    md.update(plan_args=plan_args)
+    md.setdefault("plan_args", {}).update(plan_args)
 
     @bpp.stage_decorator(detectors)
     @bpp.run_decorator(md=md)
@@ -83,7 +83,7 @@ def fastfieldscan(
     stop_field: float,
     field_ramp_rate: float,
     integration_time: float,
-    detectors: list[Readable],
+    detectors: Sequence[Readable],
     md: CustomPlanMetadata | None = None,
     scaler_card: ScalerCard = inject("scaler2_mag"),
 ) -> MsgGenerator:
@@ -134,7 +134,7 @@ def fastfieldscan_with_energy(
     integration_time: float,
     beam_energy: Movable[float],
     energies: tuple[float, float],
-    detectors: list[Readable],
+    detectors: Sequence[Readable],
     md: CustomPlanMetadata | None = None,
     scaler_card: ScalerCard = inject("scaler2_mag"),
 ) -> MsgGenerator:
@@ -178,13 +178,17 @@ def fastfieldscan_with_energy(
     fly_info = FlyMagnetInfo(
         start_position=start_field, end_position=stop_field, ramp_rate=field_ramp_rate
     )
+    # Do long move to set the beam energy to starting position first before scan begins.
+    yield from bps.mv(beam_energy, energies[0])
 
     def _cycle_energies_trigger_read(
         detectors: Sequence[Readable],
     ) -> MsgGenerator:
         for energy in energies:
-            yield from bps.mv(beam_energy, energy)
+            status = yield from bps.abs_set(beam_energy, energy, wait=False)
             yield from bps.trigger_and_read(detectors)
+            while not status.done:
+                yield from bps.trigger_and_read(detectors)
 
     yield from _raw_fastfieldscan(
         magnet_axis,
