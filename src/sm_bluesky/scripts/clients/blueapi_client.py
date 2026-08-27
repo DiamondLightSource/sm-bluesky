@@ -3,6 +3,7 @@ Start this script by running:
 $ python -i src/sm_bluesky/scripts/clients/blueapi_client.py
 """
 
+from datetime import datetime
 from os import environ
 
 from blueapi.client import BlueapiClient
@@ -34,8 +35,12 @@ if __name__ == "__main__":
                 print("Run started")
             case DataEvent(name="stop", doc={"exit_status": status}):
                 print("Run complete: ", status)
-            case DataEvent(name="event", doc={"seq_num": point, "data": data}):
-                print(f"    Point {point}: {data}")
+            case DataEvent(
+                name="event", doc={"seq_num": point, "data": data, "time": time}
+            ):
+                time = datetime.fromtimestamp(time).strftime("%Y-%m-%d %H:%M:%S")
+                values = ", ".join(f"{name}={value}" for name, value in data.items())
+                print(f"{time} - Point {point}: {values}")
 
     feedback_id = bc.add_callback(_feedback)
     print("Installed feedback.")
