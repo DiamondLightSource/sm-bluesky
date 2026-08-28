@@ -15,7 +15,13 @@ from dodal.devices.beamlines.i06_1.magnet.superconducting_magnet import (
     MockSuperConductingMagnetController,
 )
 from dodal.devices.scaler_card import ScalerCard, ScalerCardController
-from ophyd_async.core import Device, DeviceVector, get_mock_put, init_devices
+from ophyd_async.core import (
+    Device,
+    DeviceVector,
+    get_mock_put,
+    init_devices,
+    soft_signal_rw,
+)
 from ophyd_async.epics.core import epics_signal_r
 from ophyd_async.sim import SimMotor
 
@@ -99,8 +105,10 @@ def scaler_mag(scaler_controller: ScalerCardController) -> ScalerCard:
 
 @pytest.fixture
 def beam_energy() -> Movable[float]:
+    # Ideally would use SimMotor, but is currently bugged
+    # https://github.com/bluesky/ophyd-async/pull/1407
     with init_devices(mock=True):
-        beam_energy = SimMotor(instant=True, initial_value=600)
+        beam_energy = soft_signal_rw(float)
     return beam_energy
 
 
