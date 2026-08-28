@@ -258,6 +258,7 @@ def assert_energy_oscillations(
     energies: tuple[float, float],
     beam_energies: list[float],
 ) -> None:
+    print(energies)
     min_energy = min(energies)
     max_energy = max(energies)
     # Never leave the requested range.
