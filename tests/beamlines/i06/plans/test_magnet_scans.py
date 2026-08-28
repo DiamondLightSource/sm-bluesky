@@ -20,7 +20,6 @@ from ophyd_async.core import (
     DeviceVector,
     get_mock_put,
     init_devices,
-    soft_signal_rw,
 )
 from ophyd_async.epics.core import epics_signal_r
 from ophyd_async.sim import SimMotor
@@ -79,7 +78,7 @@ async def scmc_instant(
 async def scmc(scmc_psu: ThreeMagnetAxisPowerSupply) -> SuperConductingMagnetController:
     scmc = SuperConductingMagnetController("TEST", scmc_psu, name="scmc")
     await scmc.connect(
-        mock=MockSuperConductingMagnetController(steps=MOCK_AXIS_STEPS, ramp_time=2)
+        mock=MockSuperConductingMagnetController(steps=MOCK_AXIS_STEPS, ramp_time=0.5)
     )
     return scmc
 
@@ -105,10 +104,8 @@ def scaler_mag(scaler_controller: ScalerCardController) -> ScalerCard:
 
 @pytest.fixture
 def beam_energy() -> Movable[float]:
-    # Ideally would use SimMotor, but is currently bugged
-    # https://github.com/bluesky/ophyd-async/pull/1407
     with init_devices(mock=True):
-        beam_energy = soft_signal_rw(float)
+        beam_energy = SimMotor(initial_value=599.9, instant=True)
     return beam_energy
 
 

@@ -4209,8 +4209,8 @@ wheels = [
 
 [[package]]
 name = "ophyd-async"
-version = "0.21.1"
-source = { registry = "https://pypi.org/simple" }
+version = "0.21.2.dev12+g10ad79754"
+source = { git = "https://github.com/bluesky/ophyd-async.git?rev=main#10ad7975451659554a1d0cad36284b171c403491" }
 dependencies = [
     { name = "bluesky" },
     { name = "colorlog" },
@@ -4223,10 +4223,6 @@ dependencies = [
     { name = "scanspec" },
     { name = "stamina" },
     { name = "velocity-profile" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/f0/91b6071faf34e87769e2522ddfabdd9fd592cd8fd12cabf4926408cab70b/ophyd_async-0.21.1.tar.gz", hash = "sha256:d0f2b9c72a444797484071b5f61b7ab0ae307d0779ca750daf2237c6ba5965ea", size = 668752, upload-time = "2026-08-04T08:53:00.232Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/fd/aad3337b0d14352589af31719112d25f0f27958547c81ed0dc01301a1b3a/ophyd_async-0.21.1-py3-none-any.whl", hash = "sha256:a94ad8d02a3b03d9cb023d1e988dfc2dbb1ea9a22d6cbea25bbcd9575a8fe1ee", size = 258851, upload-time = "2026-08-04T08:52:58.863Z" },
 ]
 
 [package.optional-dependencies]
@@ -6003,7 +5999,7 @@ requires-dist = [
     { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal", git = "https://github.com/DiamondLightSource/dodal.git?rev=enhance_MockSuperConductingMagnetController" },
-    { name = "ophyd-async", extras = ["sim"] },
+    { name = "ophyd-async", extras = ["sim"], git = "https://github.com/bluesky/ophyd-async.git?rev=main" },
     { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },
 ]
