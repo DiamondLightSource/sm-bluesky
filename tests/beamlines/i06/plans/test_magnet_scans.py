@@ -73,7 +73,7 @@ async def scmc_instant(
 async def scmc(scmc_psu: ThreeMagnetAxisPowerSupply) -> SuperConductingMagnetController:
     scmc = SuperConductingMagnetController("TEST", scmc_psu, name="scmc")
     await scmc.connect(
-        mock=MockSuperConductingMagnetController(steps=MOCK_AXIS_STEPS, ramp_time=1)
+        mock=MockSuperConductingMagnetController(steps=MOCK_AXIS_STEPS, ramp_time=2)
     )
     return scmc
 
