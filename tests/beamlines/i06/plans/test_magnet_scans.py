@@ -100,7 +100,7 @@ def scaler_mag(scaler_controller: ScalerCardController) -> ScalerCard:
 @pytest.fixture
 def beam_energy() -> Movable[float]:
     with init_devices(mock=True):
-        beam_energy = SimMotor(instant=False, initial_value=600)
+        beam_energy = SimMotor(instant=True, initial_value=600)
     return beam_energy
 
 
