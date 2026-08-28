@@ -185,10 +185,8 @@ def fastfieldscan_with_energy(
         detectors: Sequence[Readable],
     ) -> MsgGenerator:
         for energy in energies:
-            status = yield from bps.abs_set(beam_energy, energy, wait=False)
+            yield from bps.mv(beam_energy, energy)
             yield from bps.trigger_and_read(detectors)
-            while not status.done:
-                yield from bps.trigger_and_read(detectors)
 
     yield from _raw_fastfieldscan(
         magnet_axis,

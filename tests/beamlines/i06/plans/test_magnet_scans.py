@@ -21,7 +21,8 @@ from ophyd_async.sim import SimMotor
 
 from sm_bluesky.beamlines.i06_1.plans import fastfieldscan, fastfieldscan_with_energy
 
-MOCK_AXIS_STEPS = 10
+MOCK_AXIS_STEPS = 20
+EXTRA_METADATA = {"sample_id": "test-sample", "purpose": "magnet-scan"}
 
 
 def assert_custom_metadata(custom_md: Mapping[str, Any] | None, md: Mapping[str, Any]):
@@ -60,10 +61,19 @@ def scmc_psu() -> ThreeMagnetAxisPowerSupply:
 
 
 @pytest.fixture
+async def scmc_instant(
+    scmc_psu: ThreeMagnetAxisPowerSupply,
+) -> SuperConductingMagnetController:
+    scmc = SuperConductingMagnetController("TEST", scmc_psu, name="scmc")
+    await scmc.connect(mock=MockSuperConductingMagnetController(steps=0))
+    return scmc
+
+
+@pytest.fixture
 async def scmc(scmc_psu: ThreeMagnetAxisPowerSupply) -> SuperConductingMagnetController:
     scmc = SuperConductingMagnetController("TEST", scmc_psu, name="scmc")
     await scmc.connect(
-        mock=MockSuperConductingMagnetController(steps=MOCK_AXIS_STEPS, ramp_time=0.5)
+        mock=MockSuperConductingMagnetController(steps=MOCK_AXIS_STEPS, ramp_time=1)
     )
     return scmc
 
@@ -95,12 +105,7 @@ def beam_energy() -> Movable[float]:
 
 
 @pytest.mark.parametrize(
-    "axis, mode",
-    [
-        pytest.param("x", MagnetMode.UNIAXIAL_X, id="x"),
-        pytest.param("y", MagnetMode.UNIAXIAL_Y, id="y"),
-        pytest.param("z", MagnetMode.UNIAXIAL_Z, id="z"),
-    ],
+    "mode", [MagnetMode.UNIAXIAL_X, MagnetMode.UNIAXIAL_Y, MagnetMode.UNIAXIAL_Z]
 )
 async def test_fastfieldscan_scans_magnet_axis(
     run_engine: RunEngine,
@@ -108,16 +113,15 @@ async def test_fastfieldscan_scans_magnet_axis(
     scmc: SuperConductingMagnetController,
     scaler_controller: ScalerCardController,
     scaler_mag: ScalerCard,
-    axis: str,
     mode: MagnetMode,
 ) -> None:
     run_engine(bps.mv(scmc.mode, mode))
 
-    start_field = 0
-    end_field = 1
-    integration_time = 1
-    ramp_rate = 2
-    mag_axis: MagnetAxis = getattr(scmc.cart, axis)
+    mag_axis: MagnetAxis = getattr(scmc.cart, mode.axis_alias)
+    start_field = 0.0
+    end_field = 1.0
+    integration_time = 1.0
+    ramp_rate = 2.0
 
     run_engine(
         fastfieldscan(
@@ -151,19 +155,17 @@ async def test_fastfieldscan_scans_magnet_axis(
     "custom_md",
     [
         pytest.param(None, id="default-metadata"),
-        pytest.param(
-            {"sample_id": "test-sample", "purpose": "magnet-scan"},
-            id="custom-metadata",
-        ),
+        pytest.param(EXTRA_METADATA, id="custom-metadata"),
     ],
 )
 async def test_fastfieldscan_metadata(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    scmc: SuperConductingMagnetController,
+    scmc_instant: SuperConductingMagnetController,
     scaler_mag: ScalerCard,
     custom_md: dict[str, str] | None,
 ) -> None:
+    scmc = scmc_instant
     run_engine(bps.mv(scmc.mode, MagnetMode.UNIAXIAL_X))
 
     start_field = 0.0
@@ -199,23 +201,108 @@ async def test_fastfieldscan_metadata(
 
 
 @pytest.mark.parametrize(
-    "custom_md",
-    [
-        pytest.param(None, id="default-metadata"),
-        pytest.param(
-            {"sample_id": "test-sample", "purpose": "magnet-scan"},
-            id="custom-metadata",
-        ),
-    ],
+    "mode", [MagnetMode.UNIAXIAL_X, MagnetMode.UNIAXIAL_Y, MagnetMode.UNIAXIAL_Z]
 )
-async def test_fastfieldscan_with_energy_metadata(
+async def test_fastfieldscan_with_energy(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     scmc: SuperConductingMagnetController,
     scaler_mag: ScalerCard,
     beam_energy: SimMotor,
+    mode: MagnetMode,
+) -> None:
+    run_engine(bps.mv(scmc.mode, mode))
+
+    start_field = 0.0
+    end_field = 1.0
+    integration_time = 1.0
+    ramp_rate = 2.0
+    energies = (600, 600.05)
+    mag_axis: MagnetAxis = getattr(scmc.cart, mode.axis_alias)
+
+    run_engine(
+        fastfieldscan_with_energy(
+            mag_axis,
+            start_field=start_field,
+            stop_field=end_field,
+            field_ramp_rate=ramp_rate,
+            integration_time=integration_time,
+            beam_energy=beam_energy,
+            energies=energies,
+            detectors=[],
+            scaler_card=scaler_mag,
+        )
+    )
+    data = [event["data"] for event in run_engine_documents["event"]]
+    magnet_positions = [event[mag_axis.name] for event in data]
+    beam_energies = [event["beam_energy"] for event in data]
+
+    # The magnet should start moving from 0 towards 1, rather than jumping
+    # straight to the final position.
+    assert magnet_positions[0] > start_field
+    assert magnet_positions[-1] == pytest.approx(end_field)
+    # There must be intermediate magnet positions.
+    assert any(start_field < position < end_field for position in magnet_positions)
+    # The magnet position must never leave the requested range.
+    assert all(start_field <= position <= end_field for position in magnet_positions)
+
+    assert_energy_oscillations(energies, beam_energies)
+    # Scaler channels are included in every measurement.
+    assert all(
+        "scaler_mag-channel-1" in event and "scaler_mag-channel-2" in event
+        for event in data
+    )
+
+
+def assert_energy_oscillations(
+    energies: tuple[float, float],
+    beam_energies: list[float],
+) -> None:
+    min_energy = min(energies)
+    max_energy = max(energies)
+    # Never leave the requested range.
+    assert all(min_energy <= energy <= max_energy for energy in beam_energies)
+    # Must reach both requested energies.
+    assert min(beam_energies) == pytest.approx(min_energy)
+    assert max(beam_energies) == pytest.approx(max_energy)
+    # Determine the direction of each actual movement.
+    directions = []
+    for previous, current in zip(beam_energies, beam_energies[1:], strict=False):
+        if current > previous:
+            directions.append("up")
+        elif current < previous:
+            directions.append("down")
+
+    # Collapse consecutive movements in the same direction.
+    direction_changes = [
+        direction
+        for i, direction in enumerate(directions)
+        if i == 0 or direction != directions[i - 1]
+    ]
+    # We should move up/down/up/down (or down/up/down/up).
+    assert len(direction_changes) >= 2
+    assert all(
+        direction_changes[i] != direction_changes[i - 1]
+        for i in range(1, len(direction_changes))
+    )
+
+
+@pytest.mark.parametrize(
+    "custom_md",
+    [
+        pytest.param(None, id="default-metadata"),
+        pytest.param(EXTRA_METADATA, id="custom-metadata"),
+    ],
+)
+async def test_fastfieldscan_with_energy_metadata(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    scmc_instant: SuperConductingMagnetController,
+    scaler_mag: ScalerCard,
+    beam_energy: SimMotor,
     custom_md: dict[str, str] | None,
 ) -> None:
+    scmc = scmc_instant
     run_engine(bps.mv(scmc.mode, MagnetMode.UNIAXIAL_X))
 
     start_field = 0.0
@@ -253,93 +340,3 @@ async def test_fastfieldscan_with_energy_metadata(
     assert md["plan_name"] == "fastfieldscan_with_energy"
 
     assert_custom_metadata(custom_md, md)
-
-
-async def test_fastfieldscan_with_energy(
-    run_engine: RunEngine,
-    run_engine_documents: Mapping[str, list[dict]],
-    scmc: SuperConductingMagnetController,
-    scaler_mag: ScalerCard,
-    beam_energy: SimMotor,
-) -> None:
-    run_engine(bps.mv(scmc.mode, MagnetMode.UNIAXIAL_X))
-
-    start_field = 0.0
-    end_field = 1.0
-    integration_time = 1.0
-    ramp_rate = 2.0
-    energies = (600, 600.05)
-
-    run_engine(
-        fastfieldscan_with_energy(
-            scmc.cart.x,
-            start_field=start_field,
-            stop_field=end_field,
-            field_ramp_rate=ramp_rate,
-            integration_time=integration_time,
-            beam_energy=beam_energy,
-            energies=energies,
-            detectors=[],
-            scaler_card=scaler_mag,
-        )
-    )
-    data = [event["data"] for event in run_engine_documents["event"]]
-
-    magnet_positions = [event["scmc-cart-x"] for event in data]
-    beam_energies = [event["beam_energy"] for event in data]
-
-    # The magnet should start moving from 0 towards 1, rather than jumping
-    # straight to the final position.
-    assert magnet_positions[0] > start_field
-    assert magnet_positions[-1] == pytest.approx(end_field)
-
-    # There must be intermediate magnet positions.
-    assert any(start_field < position < end_field for position in magnet_positions)
-
-    # The magnet position must never leave the requested range.
-    assert all(start_field <= position <= end_field for position in magnet_positions)
-
-    assert_energy_oscillations(energies, beam_energies)
-
-    # Scaler channels are included in every measurement.
-    assert all(
-        "scaler_mag-channel-1" in event and "scaler_mag-channel-2" in event
-        for event in data
-    )
-
-
-def assert_energy_oscillations(
-    energies: tuple[float, ...],
-    beam_energies: list[float],
-) -> None:
-    min_energy = min(energies)
-    max_energy = max(energies)
-
-    # Never leave the requested range.
-    assert all(min_energy <= energy <= max_energy for energy in beam_energies)
-
-    # Must reach both requested energies.
-    assert min(beam_energies) == pytest.approx(min_energy)
-    assert max(beam_energies) == pytest.approx(max_energy)
-
-    # Determine the direction of each actual movement.
-    directions = []
-    for previous, current in zip(beam_energies, beam_energies[1:], strict=False):
-        if current > previous:
-            directions.append("up")
-        elif current < previous:
-            directions.append("down")
-
-    # Collapse consecutive movements in the same direction.
-    direction_changes = [
-        direction
-        for i, direction in enumerate(directions)
-        if i == 0 or direction != directions[i - 1]
-    ]
-
-    # We should move up/down/up/down (or down/up/down/up).
-    assert len(direction_changes) >= 2
-    assert all(
-        direction_changes[i] != direction_changes[i - 1]
-        for i in range(1, len(direction_changes))
-    )
