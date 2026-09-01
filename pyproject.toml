@@ -20,7 +20,7 @@ dependencies = [
     #
     "bluesky",
     "dls-dodal@git+https://github.com/DiamondLightSource/dodal.git@enhance_MockSuperConductingMagnetController",
-    "ophyd-async[sim]@git+https://github.com/bluesky/ophyd-async.git@main",
+    "ophyd-async[sim]",
     "scanspec",
     "blueapi",
 ]
