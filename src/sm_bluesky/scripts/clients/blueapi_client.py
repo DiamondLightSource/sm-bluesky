@@ -23,10 +23,13 @@ stomp:
     enabled: true
     url: tcp://localhost:61613/
 
-2. In one termianl, start a mock server.
+2. Start stomp (note, not compatible running with GDA in dummy mode at the same time.)
+$ activemq-for-dummy
+
+3. In one termianl, start a mock server.
 $ uv run blueapi -c /path/config.yaml
 
-3. In another terminal, start the client script and point to same config
+4. In another terminal, start the client script and point to same config
 $ python -i src/sm_bluesky/scripts/clients/blueapi_client.py --config /path/config.yaml
 """
 
