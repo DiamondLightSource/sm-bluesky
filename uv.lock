@@ -5972,6 +5972,10 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+blueapi-client = [
+    { name = "ipython" },
+    { name = "matplotlib" },
+]
 server = [
     { name = "pyserial" },
 ]
@@ -6007,11 +6011,13 @@ requires-dist = [
     { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal", specifier = "==2.6.2" },
+    { name = "ipython", marker = "extra == 'blueapi-client'" },
+    { name = "matplotlib", marker = "extra == 'blueapi-client'" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },
 ]
-provides-extras = ["server"]
+provides-extras = ["server", "blueapi-client"]
 
 [package.metadata.requires-dev]
 dev = [

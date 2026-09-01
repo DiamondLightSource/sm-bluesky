@@ -32,6 +32,7 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 server = ["pyserial"]
+blueapi_client = ["matplotlib", "ipython"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",
