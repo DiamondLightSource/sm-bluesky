@@ -32,7 +32,7 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 server = ["pyserial"]
-blueapi_client = ["matplotlib", "ipython"]
+testing = ["jupyter", "ipython", "matplotlib", "numpy", "pyepics"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",
@@ -52,13 +52,6 @@ dev = [
     "pytest-asyncio",
     # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
     "chardet==7.6.0",
-
-    #usefull stuff for testing
-    "jupyter",
-    "ipython",
-    "matplotlib",
-    "numpy",
-    "pyepics",
 ]
 
 [project.scripts]

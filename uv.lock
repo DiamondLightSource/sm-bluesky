@@ -5972,27 +5972,25 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-blueapi-client = [
-    { name = "ipython" },
-    { name = "matplotlib" },
-]
 server = [
     { name = "pyserial" },
+]
+testing = [
+    { name = "ipython" },
+    { name = "jupyter" },
+    { name = "matplotlib" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pyepics" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "chardet" },
     { name = "copier" },
-    { name = "ipython" },
-    { name = "jupyter" },
-    { name = "matplotlib" },
     { name = "myst-parser" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pre-commit" },
     { name = "pydata-sphinx-theme" },
-    { name = "pyepics" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -6011,26 +6009,24 @@ requires-dist = [
     { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal", specifier = "==2.6.2" },
-    { name = "ipython", marker = "extra == 'blueapi-client'" },
-    { name = "matplotlib", marker = "extra == 'blueapi-client'" },
+    { name = "ipython", marker = "extra == 'testing'" },
+    { name = "jupyter", marker = "extra == 'testing'" },
+    { name = "matplotlib", marker = "extra == 'testing'" },
+    { name = "numpy", marker = "extra == 'testing'" },
     { name = "ophyd-async", extras = ["sim"] },
+    { name = "pyepics", marker = "extra == 'testing'" },
     { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },
 ]
-provides-extras = ["server", "blueapi-client"]
+provides-extras = ["server", "testing"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "chardet", specifier = "==7.6.0" },
     { name = "copier" },
-    { name = "ipython" },
-    { name = "jupyter" },
-    { name = "matplotlib" },
     { name = "myst-parser" },
-    { name = "numpy" },
     { name = "pre-commit" },
     { name = "pydata-sphinx-theme", specifier = ">=0.12" },
-    { name = "pyepics" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
