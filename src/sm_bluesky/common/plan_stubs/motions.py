@@ -1,13 +1,13 @@
 import uuid
 from collections.abc import Hashable
-from typing import Any, Protocol
+from typing import Any
 
 import bluesky.plan_stubs as bps
 from bluesky.plan_stubs import abs_set
-from bluesky.protocols import HasName, Movable
+from bluesky.protocols import Movable
 from bluesky.utils import MsgGenerator, plan
 from dodal.devices.slits import Slits
-from ophyd_async.core import SignalRW
+from ophyd_async.core import Device, SignalRW
 from ophyd_async.epics.motor import Motor
 from pydantic import RootModel
 
@@ -20,7 +20,7 @@ class MotorTable(RootModel):
     root: dict[str, float]
 
 
-class HighLowLimitsDevice(HasName, Protocol):
+class HighLowLimitsDevice(Device):
     low_limit_travel: SignalRW[float]
     high_limit_travel: SignalRW[float]
 
