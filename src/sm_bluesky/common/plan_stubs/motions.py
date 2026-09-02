@@ -7,7 +7,7 @@ from bluesky.plan_stubs import abs_set
 from bluesky.protocols import Movable
 from bluesky.utils import MsgGenerator, plan
 from dodal.devices.slits import Slits
-from ophyd_async.core import Device, SignalRW
+from ophyd_async.core import SignalRW, StandardReadable
 from ophyd_async.epics.motor import Motor
 from pydantic import RootModel
 
@@ -20,7 +20,7 @@ class MotorTable(RootModel):
     root: dict[str, float]
 
 
-class HighLowLimitsDevice(Device):
+class HighLowLimitsDevice(StandardReadable):
     low_limit_travel: SignalRW[float]
     high_limit_travel: SignalRW[float]
 
@@ -103,7 +103,7 @@ def set_slit_size(
 
 @plan
 def check_within_limit(
-    values: list[float], device: HighLowLimitsDevice
+    values: list[float], device: HighLowLimitsDevice | Motor
 ) -> MsgGenerator[None]:
     """Check if the given values are within the limits of the device.
     Parameters
