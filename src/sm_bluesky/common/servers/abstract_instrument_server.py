@@ -1,10 +1,34 @@
+import re
 import socket
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from contextlib import contextmanager
 from time import time
+from typing import Any, TypeVar, cast
 
 from sm_bluesky.log import LOGGER, logging
+
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def register_command(name: bytes) -> Callable[[F], F]:
+    """
+    Decorator to register a subclass method as an instrument command.
+    """
+    if not isinstance(name, bytes):
+        raise TypeError("Command name must be bytes.")
+
+    if not name:
+        raise ValueError("Command name cannot be empty.")
+
+    if re.search(rb"\s", name):
+        raise ValueError("Command names must not contain whitespace.")
+
+    def decorator(func: F) -> F:
+        cast(Any, func).command_name = name
+        return func
+
+    return decorator
 
 
 class AbstractInstrumentServer(ABC):
@@ -28,10 +52,31 @@ class AbstractInstrumentServer(ABC):
         self._command_registry: dict[bytes, Callable] = {
             b"connect_hardware": self.connect_hardware,
             b"disconnect_hardware": self.disconnect_hardware,
-            b"ping": self._send_ack,
-            b"shutdown": self.stop,
-            b"command_list": self._send_command_list,
         }
+
+        self._discover_registered_commands()
+
+    def _discover_registered_commands(self) -> None:
+        for attr_name in dir(self):
+            if attr_name.startswith("__"):
+                continue
+
+            attr = getattr(self, attr_name)
+
+            if callable(attr) and hasattr(attr, "command_name"):
+                # register_command will tag the function with command_name
+                cmd_bytes = attr.command_name  # type: ignore
+
+                if cmd_bytes in self._command_registry:
+                    raise ValueError(
+                        f"Overwriting command '{cmd_bytes.decode()}' "
+                        f"with method '{attr_name}'"
+                    )
+
+                self._command_registry[cmd_bytes] = attr
+                LOGGER.debug(
+                    f"Registered command '{cmd_bytes.decode()}' -> {attr_name}"
+                )
 
     def start(self) -> None:
         """Initializes the server, connects hardware, and enters the listening loop."""
@@ -85,7 +130,8 @@ class AbstractInstrumentServer(ABC):
         finally:
             self._current_deadline = None
 
-    def stop(self) -> None:
+    @register_command(b"shutdown")
+    def shutdown(self, *args: Any) -> None:
         """Stops the server, closes sockets, and disconnects hardware."""
         self._disconnect_client()
         if hasattr(self, "_server_socket"):
@@ -118,7 +164,7 @@ class AbstractInstrumentServer(ABC):
                 while b"\n" in buffer:
                     line, buffer = buffer.split(b"\n", 1)
                     if line:
-                        self._dispatch_command(line.strip())
+                        self._dispatch_command(line)
 
             except (OSError, ConnectionResetError):
                 LOGGER.error("Client connection lost unexpectedly")
@@ -126,18 +172,16 @@ class AbstractInstrumentServer(ABC):
 
     def _dispatch_command(self, line: bytes) -> None:
         """Parses raw input into command/argument pairs and executes the handler."""
-        if b"\t" in line:
-            cmd, arg = line.split(b"\t", 1)
-        else:
-            cmd, arg = line, b""
-
+        striped_line = line.strip()
+        parts = [part for part in striped_line.split(b"\t") if part]
+        if not parts:
+            return
+        cmd = parts[0]
+        args = parts[1:]
         try:
-            self._handle_command(cmd, arg)
+            self._handle_command(cmd, args)
         except Exception as e:
             self._error_helper(message="Handler Error", error=e)
-
-    def _send_ack(self) -> None:
-        self._send_response()
 
     def _send_error(self, error_message: str) -> None:
         if self._conn:
@@ -147,7 +191,7 @@ class AbstractInstrumentServer(ABC):
         if self._conn:
             self._conn.sendall(b"1\t" + response + b"\n")
 
-    def _handle_command(self, cmd: bytes, args: bytes) -> None:
+    def _handle_command(self, cmd: bytes, args_list: list[bytes]) -> None:
         """Executes logic for a specific instrument command."""
         handler = self._command_registry.get(cmd)
         if not handler:
@@ -159,8 +203,7 @@ class AbstractInstrumentServer(ABC):
         else:
             try:
                 with self._timeout_context(seconds=self._timeout_seconds):
-                    arg_list = args.split(b"\t") if args else []
-                    handler(*arg_list)
+                    handler(*args_list)
 
             except TimeoutError as te:
                 self._error_helper(
@@ -188,7 +231,12 @@ class AbstractInstrumentServer(ABC):
             if time() > self._current_deadline:
                 raise TimeoutError(f"{context} exceeded {self._timeout_seconds}s limit")
 
-    def _send_command_list(self, *args) -> None:
+    @register_command(b"ping")
+    def _send_ack(self, *args: Any) -> None:
+        self._send_response()
+
+    @register_command(b"command_list")
+    def _send_command_list(self, *args: Any) -> None:
         """Returns a tab-separated list of all available commands to the client."""
         available_commands = list(self._command_registry.keys())
         payload = b"\t".join(available_commands)
