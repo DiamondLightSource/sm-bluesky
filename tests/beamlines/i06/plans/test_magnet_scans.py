@@ -15,12 +15,7 @@ from dodal.devices.beamlines.i06_1.magnet.superconducting_magnet import (
     MockSuperConductingMagnetController,
 )
 from dodal.devices.scaler_card import ScalerCard, ScalerCardController
-from ophyd_async.core import (
-    Device,
-    DeviceVector,
-    get_mock_put,
-    init_devices,
-)
+from ophyd_async.core import Device, DeviceVector, get_mock_put, init_devices
 from ophyd_async.epics.core import epics_signal_r
 from ophyd_async.sim import SimMotor
 
