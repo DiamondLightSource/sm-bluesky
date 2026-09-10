@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plan_stubs.motions &#8212; sm-bluesky 1.1.2.dev5+gd106b1bdc documentation</title>
+    <title>sm_bluesky.common.plan_stubs.motions &#8212; sm-bluesky 1.1.2.dev6+g97537a52a documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../../../_static/documentation_options.js?v=39ffbf46"></script>
+    <script src="../../../../_static/documentation_options.js?v=aa1590fd"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -461,14 +461,14 @@
   <h1>Source code for sm_bluesky.common.plan_stubs.motions</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Protocol</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bps</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.plan_stubs</span><span class="w"> </span><span class="kn">import</span> <span class="n">abs_set</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">HasName</span><span class="p">,</span> <span class="n">Movable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">Movable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span><span class="p">,</span> <span class="n">plan</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dodal.devices.slits</span><span class="w"> </span><span class="kn">import</span> <span class="n">Slits</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignalRW</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignalRW</span><span class="p">,</span> <span class="n">StandardReadable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.motor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Motor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RootModel</span>
 
@@ -484,7 +484,7 @@
 
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">HighLowLimitsDevice</span><span class="p">(</span><span class="n">HasName</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HighLowLimitsDevice</span><span class="p">(</span><span class="n">StandardReadable</span><span class="p">):</span>
     <span class="n">low_limit_travel</span><span class="p">:</span> <span class="n">SignalRW</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
     <span class="n">high_limit_travel</span><span class="p">:</span> <span class="n">SignalRW</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
 
@@ -575,7 +575,7 @@
 <a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plan_stubs.html#sm_bluesky.common.plan_stubs.check_within_limit">[docs]</a>
 <span class="nd">@plan</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_within_limit</span><span class="p">(</span>
-    <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">device</span><span class="p">:</span> <span class="n">HighLowLimitsDevice</span>
+    <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">device</span><span class="p">:</span> <span class="n">HighLowLimitsDevice</span> <span class="o">|</span> <span class="n">Motor</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Check if the given values are within the limits of the device.</span>
 <span class="sd">    Parameters</span>
