@@ -64,6 +64,8 @@ def scmc_psu() -> ThreeMagnetAxisPowerSupply:
 async def scmc_instant(
     scmc_psu: ThreeMagnetAxisPowerSupply,
 ) -> SuperConductingMagnetController:
+    """SuperConductingMagnetController which moves from point A to B instantly. This is
+    used to speed up tests and where flying the magnet axes is not necessary."""
     scmc = SuperConductingMagnetController("TEST", scmc_psu, name="scmc")
     await scmc.connect(mock=MockSuperConductingMagnetController(steps=0))
     return scmc
