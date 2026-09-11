@@ -1,0 +1,25 @@
+``sm_bluesky.electron_analyser.plan_stubs.analyser_per_step``
+=============================================================
+        
+        
+        
+
+.. automodule:: sm_bluesky.electron_analyser.plan_stubs.analyser_per_step
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        close_shutter
+        make_analyser_per_shot
+        make_analyser_per_step
+    
+    
