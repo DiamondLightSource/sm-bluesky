@@ -8,7 +8,7 @@ from dodal.common.coordination import inject
 from dodal.devices.beamlines.i06_1.magnet import FlyMagnetInfo, MagnetAxis
 from dodal.devices.scaler_card import ScalerCard
 
-from sm_bluesky.common.helper.utils import unique_objs
+from sm_bluesky.common.helper.utils import deep_update, unique_objs
 from sm_bluesky.common.plan_stubs.detection import fly_kickoff_complete
 
 
@@ -39,20 +39,21 @@ def _raw_fastfieldscan(
         trigger_and_read: Optional plan used instead of the standard
             trigger-and-read operation during the fly.
     """
-    md = md or {}
-    plan_args = {
-        "magnet_axis": magnet_axis.name,
-        "start_field": mag_fly_info.start_position,
-        "end_field": mag_fly_info.end_position,
-        "field_ramp_rate": mag_fly_info.ramp_rate,
-        "scaler_card": scaler_card.name,
-        "integration_time": integration_time,
-        "detectors": [det.name for det in detectors],
+    _md = {
+        "plan_args": {
+            "magnet_axis": magnet_axis.name,
+            "start_field": mag_fly_info.start_position,
+            "end_field": mag_fly_info.end_position,
+            "field_ramp_rate": mag_fly_info.ramp_rate,
+            "scaler_card": scaler_card.name,
+            "integration_time": integration_time,
+            "detectors": [det.name for det in detectors],
+        }
     }
-    md.setdefault("plan_args", {}).update(plan_args)
+    deep_update(_md, md or {})
 
     @bpp.stage_decorator(detectors)
-    @bpp.run_decorator(md=md)
+    @bpp.run_decorator(md=_md)
     def _inner():
         yield from bps.prepare(magnet_axis, mag_fly_info, wait=True)
         if integration_time is not None:
@@ -96,8 +97,8 @@ def fastfieldscan(
     Yields:
         Bluesky messages implementing the fast field fly scan.
     """
-    md = md or {}
-    md.update({"plan_name": "fastfieldscan"})
+    _md = {"plan_name": "fastfieldscan"}
+    _md.update(md or {})
     fly_info = FlyMagnetInfo(
         start_position=start_field, end_position=stop_field, ramp_rate=field_ramp_rate
     )
@@ -107,7 +108,7 @@ def fastfieldscan(
         unique_objs([magnet_axis, scaler_card, *detectors]),
         scaler_card,
         integration_time,
-        md,
+        _md,
         trigger_and_read=None,
     )
 
@@ -153,16 +154,15 @@ def fastfieldscan_with_energy(
         Bluesky messages implementing the fast field fly scan with alternating
         beam energies.
     """
-    md = md or {}
-    md.update(
-        {
-            "plan_name": "fastfieldscan_with_energy",
-            "plan_args": {
-                "beam_energy": beam_energy.name,  # type: ignore
-                "energies": energies,
-            },
-        }
-    )
+    _md = {
+        "plan_name": "fastfieldscan_with_energy",
+        "plan_args": {
+            "beam_energy": beam_energy.name,  # type: ignore
+            "energies": energies,
+        },
+    }
+    _md.update(md or {})
+
     fly_info = FlyMagnetInfo(
         start_position=start_field, end_position=stop_field, ramp_rate=field_ramp_rate
     )
@@ -182,6 +182,6 @@ def fastfieldscan_with_energy(
         unique_objs([magnet_axis, scaler_card, beam_energy, *detectors]),
         scaler_card,
         integration_time,
-        md,
+        _md,
         trigger_and_read=_cycle_energies_trigger_read,
     )

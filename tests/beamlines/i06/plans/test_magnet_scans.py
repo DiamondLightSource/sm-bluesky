@@ -1,4 +1,4 @@
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
@@ -15,7 +15,7 @@ from dodal.devices.beamlines.i06_1.magnet.superconducting_magnet import (
     MockSuperConductingMagnetController,
 )
 from dodal.devices.scaler_card import ScalerCard, ScalerCardController
-from ophyd_async.core import Device, DeviceVector, get_mock_put, init_devices
+from ophyd_async.core import DeviceVector, get_mock_put, init_devices
 from ophyd_async.epics.core import epics_signal_r
 from ophyd_async.sim import SimMotor
 
@@ -30,27 +30,6 @@ def assert_custom_metadata(custom_md: Mapping[str, Any] | None, md: Mapping[str,
         return
     for key, value in custom_md.items():
         assert md[key] == value
-
-
-def assert_base_fastfieldscan_metadata(
-    axis: MagnetAxis,
-    start_field: float,
-    end_field: float,
-    field_ramp_rate: float,
-    scaler_card: ScalerCard,
-    integration_time: float,
-    detectors: Sequence[Device],
-    metadata: Mapping[str, Any],
-):
-    assert metadata["plan_args"] == {
-        "magnet_axis": axis.name,
-        "start_field": start_field,
-        "end_field": end_field,
-        "field_ramp_rate": field_ramp_rate,
-        "scaler_card": scaler_card.name,
-        "integration_time": integration_time,
-        "detectors": [axis.name, scaler_card.name, *[det.name for det in detectors]],
-    }
 
 
 @pytest.fixture
@@ -262,7 +241,6 @@ def assert_energy_oscillations(
     energies: tuple[float, float],
     beam_energies: list[float],
 ) -> None:
-    print(energies)
     min_energy = min(energies)
     max_energy = max(energies)
     # Never leave the requested range.
