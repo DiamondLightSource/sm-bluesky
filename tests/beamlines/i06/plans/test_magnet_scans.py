@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 from bluesky import RunEngine
@@ -15,9 +16,9 @@ from dodal.devices.beamlines.i06_1.magnet.superconducting_magnet import (
     MockSuperConductingMagnetController,
 )
 from dodal.devices.scaler_card import ScalerCard, ScalerCardController
-from ophyd_async.core import DeviceVector, get_mock_put, init_devices
+from ophyd_async.core import DeviceVector, get_mock_put, init_devices, set_mock_attr
 from ophyd_async.epics.core import epics_signal_r
-from ophyd_async.sim import SimMotor
+from ophyd_async.sim import SimMotor, SimPointDetector
 
 from sm_bluesky.beamlines.i06_1.plans import fastfieldscan, fastfieldscan_with_energy
 
@@ -30,6 +31,13 @@ def assert_custom_metadata(custom_md: Mapping[str, Any] | None, md: Mapping[str,
         return
     for key, value in custom_md.items():
         assert md[key] == value
+
+
+@pytest.fixture
+def extra_detector() -> SimPointDetector:
+    with init_devices(mock=True):
+        extra_detector = SimPointDetector(None)
+    return extra_detector
 
 
 @pytest.fixture
@@ -134,6 +142,36 @@ async def test_fastfieldscan_scans_magnet_axis(
     )
 
 
+async def test_fastfieldscan_with_extra_detector(
+    run_engine: RunEngine,
+    scmc_instant: SuperConductingMagnetController,
+    scaler_mag: ScalerCard,
+    extra_detector: SimPointDetector,
+):
+    run_engine(bps.mv(scmc_instant.mode, MagnetMode.UNIAXIAL_X))
+
+    original_trigger = extra_detector.trigger
+    mock_trigger = Mock(wraps=original_trigger)
+    set_mock_attr(extra_detector, "trigger", mock_trigger)
+    original_read = extra_detector.read
+    mock_read = Mock(wraps=original_read)
+    set_mock_attr(extra_detector, "read", mock_read)
+
+    run_engine(
+        fastfieldscan(
+            scmc_instant.cart.x,
+            start_field=0.0,
+            stop_field=1.0,
+            field_ramp_rate=2.0,
+            detectors=[extra_detector],
+            integration_time=1.0,
+            scaler_card=scaler_mag,
+        )
+    )
+    mock_trigger.assert_called()
+    mock_read.assert_called()
+
+
 @pytest.mark.parametrize(
     "custom_md",
     [
@@ -235,6 +273,38 @@ async def test_fastfieldscan_with_energy(
         "scaler_mag-channel-1" in event and "scaler_mag-channel-2" in event
         for event in data
     )
+
+
+async def test_fastfieldscan_with_energy_with_extra_detector(
+    run_engine: RunEngine,
+    scmc_instant: SuperConductingMagnetController,
+    scaler_mag: ScalerCard,
+    extra_detector: SimPointDetector,
+    beam_energy: SimMotor,
+):
+    run_engine(bps.mv(scmc_instant.mode, MagnetMode.UNIAXIAL_X))
+
+    original_trigger = extra_detector.trigger
+    mock_trigger = Mock(wraps=original_trigger)
+    set_mock_attr(extra_detector, "trigger", mock_trigger)
+    original_read = extra_detector.read
+    mock_read = Mock(wraps=original_read)
+    set_mock_attr(extra_detector, "read", mock_read)
+
+    run_engine(
+        fastfieldscan_with_energy(
+            scmc_instant.cart.x,
+            start_field=0.0,
+            stop_field=0.5,
+            field_ramp_rate=1.5,
+            beam_energy=beam_energy,
+            energies=(400, 403),
+            detectors=[extra_detector],
+            scaler_card=scaler_mag,
+        )
+    )
+    mock_trigger.assert_called()
+    mock_read.assert_called()
 
 
 def assert_energy_oscillations(
