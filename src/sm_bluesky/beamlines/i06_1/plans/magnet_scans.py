@@ -19,7 +19,7 @@ def _raw_fastfieldscan(
     scaler_card: ScalerCard,
     integration_time: float | None = None,
     md: CustomPlanMetadata | None = None,
-    trigger_and_read: bps.TakeReading | None = None,
+    take_reading: bps.TakeReading | None = None,
 ) -> MsgGenerator:
     """Execute the common setup and fly-scan sequence for a magnetic field scan.
 
@@ -36,7 +36,7 @@ def _raw_fastfieldscan(
         integration_time: Scaler integration time in seconds.
         detectors: Devices to stage and read during the scan.
         md: Metadata to attach to the Bluesky run.
-        trigger_and_read: Optional plan used instead of the standard
+        take_reading: Optional plan used instead of the standard
             trigger-and-read operation during the fly.
     """
     _md = {
@@ -58,7 +58,7 @@ def _raw_fastfieldscan(
         yield from bps.prepare(magnet_axis, mag_fly_info, wait=True)
         if integration_time is not None:
             yield from bps.mv(scaler_card, integration_time)
-        yield from fly_kickoff_complete(magnet_axis, detectors, trigger_and_read)
+        yield from fly_kickoff_complete(magnet_axis, detectors, take_reading)
 
     yield from _inner()
 
@@ -109,7 +109,7 @@ def fastfieldscan(
         scaler_card,
         integration_time,
         _md,
-        trigger_and_read=None,
+        take_reading=None,
     )
 
 
@@ -183,5 +183,5 @@ def fastfieldscan_with_energy(
         scaler_card,
         integration_time,
         _md,
-        trigger_and_read=_cycle_energies_trigger_read,
+        take_reading=_cycle_energies_trigger_read,
     )
