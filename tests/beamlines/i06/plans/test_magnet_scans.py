@@ -133,8 +133,8 @@ async def test_fastfieldscan_scans_magnet_axis(
             start_field=start_field,
             stop_field=end_field,
             field_ramp_rate=ramp_rate,
-            integration_time=integration_time,
             detectors=[],
+            integration_time=integration_time,
             scaler_card=scaler_mag,
         )
     )
@@ -183,8 +183,8 @@ async def test_fastfieldscan_metadata(
             start_field=start_field,
             stop_field=end_field,
             field_ramp_rate=ramp_rate,
-            integration_time=integration_time,
             detectors=[],
+            integration_time=integration_time,
             scaler_card=scaler_mag,
             md=custom_md,
         )
@@ -230,9 +230,9 @@ async def test_fastfieldscan_with_energy(
             start_field=start_field,
             stop_field=end_field,
             field_ramp_rate=ramp_rate,
-            integration_time=integration_time,
             beam_energy=beam_energy,
             energies=energies,
+            integration_time=integration_time,
             detectors=[],
             scaler_card=scaler_mag,
         )
@@ -322,10 +322,10 @@ async def test_fastfieldscan_with_energy_metadata(
             start_field=start_field,
             stop_field=end_field,
             field_ramp_rate=ramp_rate,
-            integration_time=integration_time,
             beam_energy=beam_energy,
             energies=energies,
             detectors=[],
+            integration_time=integration_time,
             scaler_card=scaler_mag,
             md=custom_md,
         )

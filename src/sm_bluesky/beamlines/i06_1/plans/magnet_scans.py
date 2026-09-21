@@ -8,33 +8,17 @@ from dodal.common.coordination import inject
 from dodal.devices.beamlines.i06_1.magnet import FlyMagnetInfo, MagnetAxis
 from dodal.devices.scaler_card import ScalerCard
 
+from sm_bluesky.common.helper.utils import unique_objs
 from sm_bluesky.common.plan_stubs.detection import fly_kickoff_complete
-
-
-def _unique_objs(objs: Sequence) -> list:
-    """Return unique objects while preserving their original order.
-
-    Useful when combining user-provided objects with additional required
-    objects where duplicates should be removed without making the resulting
-    order non-deterministic.
-
-    Args:
-        objs: Sequence of hashable objects.
-
-    Returns:
-        A list containing each object at most once, in the order of its
-        first occurrence.
-    """
-    return list(dict.fromkeys(objs))
 
 
 def _raw_fastfieldscan(
     magnet_axis: MagnetAxis,
     mag_fly_info: FlyMagnetInfo,
-    scaler_card: ScalerCard,
-    integration_time: float,
     detectors: Sequence[Readable],
-    md: CustomPlanMetadata,
+    scaler_card: ScalerCard,
+    integration_time: float | None = None,
+    md: CustomPlanMetadata | None = None,
     trigger_and_read: bps.TakeReading | None = None,
 ) -> MsgGenerator:
     """Execute the common setup and fly-scan sequence for a magnetic field scan.
@@ -55,6 +39,7 @@ def _raw_fastfieldscan(
         trigger_and_read: Optional plan used instead of the standard
             trigger-and-read operation during the fly.
     """
+    md = md or {}
     plan_args = {
         "magnet_axis": magnet_axis.name,
         "start_field": mag_fly_info.start_position,
@@ -70,7 +55,8 @@ def _raw_fastfieldscan(
     @bpp.run_decorator(md=md)
     def _inner():
         yield from bps.prepare(magnet_axis, mag_fly_info, wait=True)
-        yield from bps.mv(scaler_card, integration_time)
+        if integration_time is not None:
+            yield from bps.mv(scaler_card, integration_time)
         yield from fly_kickoff_complete(magnet_axis, detectors, trigger_and_read)
 
     yield from _inner()
@@ -82,10 +68,10 @@ def fastfieldscan(
     start_field: float,
     stop_field: float,
     field_ramp_rate: float,
-    integration_time: float,
     detectors: Sequence[Readable],
-    md: CustomPlanMetadata | None = None,
+    integration_time: float | None = None,
     scaler_card: ScalerCard = inject("scaler2_mag"),
+    md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
     """Perform a fast fly scan of a superconducting magnet axis.
 
@@ -101,10 +87,11 @@ def fastfieldscan(
         start_field: Starting magnetic field.
         stop_field: Final magnetic field.
         field_ramp_rate: Rate at which the magnetic field is ramped.
-        integration_time: Scaler integration time in seconds.
         detectors: Additional detectors to stage and read during the scan.
-        md: Optional metadata to attach to the Bluesky run.
+        integration_time: Optional scaler integration time in seconds. If not provided,
+            it will use what is already in EPICS.
         scaler_card: Scaler card used for data acquisition.
+        md: Optional metadata to attach to the Bluesky run.
 
     Yields:
         Bluesky messages implementing the fast field fly scan.
@@ -117,9 +104,9 @@ def fastfieldscan(
     yield from _raw_fastfieldscan(
         magnet_axis,
         fly_info,
+        unique_objs([magnet_axis, scaler_card, *detectors]),
         scaler_card,
         integration_time,
-        _unique_objs([magnet_axis, scaler_card, *detectors]),
         md,
         trigger_and_read=None,
     )
@@ -131,12 +118,12 @@ def fastfieldscan_with_energy(
     start_field: float,
     stop_field: float,
     field_ramp_rate: float,
-    integration_time: float,
     beam_energy: Movable[float],
     energies: tuple[float, float],
     detectors: Sequence[Readable],
-    md: CustomPlanMetadata | None = None,
+    integration_time: float | None = None,
     scaler_card: ScalerCard = inject("scaler2_mag"),
+    md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
     """Perform a fast magnetic field scan while alternating beam energy.
 
@@ -153,13 +140,14 @@ def fastfieldscan_with_energy(
         start_field: Starting magnetic field.
         stop_field: Final magnetic field.
         field_ramp_rate: Rate at which the magnetic field is ramped.
-        integration_time: Scaler integration time in seconds.
         energies: Two beam energies to cycle between for each magnetic field
             acquisition.
         beam_energy: Device controlling the beam energy.
         detectors: Additional detectors to stage and read during the scan.
-        md: Optional metadata to attach to the Bluesky run.
+        integration_time: Optional scaler integration time in seconds. If not provided,
+            it will use what is already in EPICS.
         scaler_card: Scaler card used for data acquisition.
+        md: Optional metadata to attach to the Bluesky run.
 
     Yields:
         Bluesky messages implementing the fast field fly scan with alternating
@@ -191,9 +179,9 @@ def fastfieldscan_with_energy(
     yield from _raw_fastfieldscan(
         magnet_axis,
         fly_info,
+        unique_objs([magnet_axis, scaler_card, beam_energy, *detectors]),
         scaler_card,
         integration_time,
-        _unique_objs([magnet_axis, scaler_card, beam_energy, *detectors]),
         md,
         trigger_and_read=_cycle_energies_trigger_read,
     )
