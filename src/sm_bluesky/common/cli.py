@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from collections.abc import Sequence
+from pathlib import Path
 
 from sm_bluesky import __version__
 
@@ -77,7 +78,47 @@ def main(args: Sequence[str] | None = None) -> None:
     send_parser.add_argument(
         "--timeout", type=float, default=2.0, help="Socket timeout"
     )
-
+    # ----------------- client command --------------------------------------------
+    client_parser = subparsers.add_parser(
+        "client",
+        help="Launch an interactive IPython BlueAPI client session",
+        epilog=(
+            "Example usages:\n"
+            "  sm-bluesky client -s cm44186-1\n"
+            "  sm-bluesky client --config /path/config.yaml -s cm44186-1\n"
+            "  sm-bluesky client -s cm44186-1 -p dcm_energy det1\n"
+        ),
+    )
+    client_parser.add_argument(
+        "-b",
+        "--beamline",
+        type=str,
+        default=None,
+        help="Target beamline name (e.g., iXX). Overrides $BEAMLINE if provided.",
+    )
+    client_parser.add_argument(
+        "-c",
+        "--config",
+        type=Path,
+        default=None,
+        help="Path to BlueAPI YAML config file (overrides beamline setting).",
+    )
+    client_parser.add_argument(
+        "-s",
+        "--session",
+        dest="instrument_session",
+        type=str,
+        default=None,
+        help="Pre-assign the active instrument session (e.g. cm44186-1).",
+    )
+    client_parser.add_argument(
+        "-p",
+        "--live-plot",
+        nargs=2,
+        metavar=("X_AXIS", "Y_AXIS"),
+        help="Configure real-time plotting for two incoming axes (e.g. -p motor det).",
+    )
+    # ----------------- parsing & routing -----------------------------------------
     parsed_args = parser.parse_args(args)
 
     if parsed_args.command == "start":
@@ -104,7 +145,7 @@ def main(args: Sequence[str] | None = None) -> None:
         else:
             start_parser.print_help()
     elif parsed_args.command == "send":
-        from sm_bluesky.common.client import InstrumentClient
+        from sm_bluesky.common.clients import InstrumentClient
 
         print(
             f"Sending command:{parsed_args.payload} to {parsed_args.host}:"
@@ -127,5 +168,25 @@ def main(args: Sequence[str] | None = None) -> None:
             print(f"✅ SUCCESS: {result}" if result else "✅ SUCCESS")
         except Exception as err:
             print(f"\u274c FAILED: {err}")
+    elif parsed_args.command == "client":
+        from sm_bluesky.common.clients import (
+            BlueAPISession,
+            load_config,
+        )
+
+        if not parsed_args.beamline and not parsed_args.config:
+            client_parser.print_help()
+            return
+
+        app_config = load_config(
+            config_path=parsed_args.config,
+            beamline=parsed_args.beamline,
+        )
+
+        session = BlueAPISession(
+            config=app_config,
+            instrument_session=parsed_args.instrument_session,
+        )
+        session.start_shell()
     else:
         parser.print_help()
