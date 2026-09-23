@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from inspect import iscoroutinefunction
@@ -9,12 +8,10 @@ import numpy as np
 import pytest
 from bluesky import RunEngine
 from bluesky import plan_stubs as bps
+from bluesky.plans import PerStepND
 from bluesky.protocols import Movable, Readable, Triggerable
-from dodal.devices.electron_analyser.base import (
-    BaseSequence,
-    ElectronAnalyserDetector,
-    GenericElectronAnalyserDetector,
-)
+from dodal.devices.electron_analyser.base import BaseSequence, ElectronAnalyserDetector
+from dodal.devices.fast_shutter import GenericFastShutter
 from ophyd_async.sim import SimMotor
 
 from sm_bluesky.electron_analyser.plan_stubs import analyser_per_step as aps
@@ -29,7 +26,7 @@ def other_detectors(
 
 @pytest.fixture
 def all_detectors(
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
     other_detectors: Sequence[Readable],
 ) -> Sequence[Readable]:
     return [sim_analyser] + list(other_detectors)
@@ -48,18 +45,13 @@ def pos_cache() -> dict[Movable, Any]:
     return defaultdict(lambda: 0)
 
 
-def run_engine_setup_decorator(
-    func,
-    sim_analyser: GenericElectronAnalyserDetector,
-    sequence: BaseSequence,
-):
-    def wrapper(all_detectors, step, pos_cache):
-        yield from bps.prepare(sim_analyser.sequence, sequence)
+def run_engine_setup_decorator(func: PerStepND) -> Callable:
+    def wrapper(all_detectors, step, pos_cache, take_reading=None):
         yield from bps.open_run()
         yield from bps.stage_all(*all_detectors)
-        # yield from bps.prepare(sim_analyser, TriggerInfo())
+
         try:
-            yield from func(all_detectors, step, pos_cache)
+            yield from func(all_detectors, step, pos_cache, take_reading)
         finally:
             yield from bps.unstage_all(*all_detectors)
             yield from bps.close_run()
@@ -69,13 +61,17 @@ def run_engine_setup_decorator(
 
 @pytest.fixture
 def analyser_nd_step(
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
 ) -> Callable:
     return run_engine_setup_decorator(
-        aps.analyser_nd_step,
-        sim_analyser,
-        sequence,
+        aps.make_analyser_per_step(
+            sim_analyser,
+            sequence,
+            [],
+            close_shutter_per_region=False,
+            shutter=None,
+        )
     )
 
 
@@ -83,7 +79,7 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     run_engine: RunEngine,
     analyser_nd_step: Callable,
     all_detectors: Sequence[Readable],
-    sim_analyser: GenericElectronAnalyserDetector,
+    sim_analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
     step: dict[Movable, Any],
     pos_cache: dict[Movable, Any],
@@ -95,7 +91,7 @@ def test_analyser_nd_step_func_has_expected_driver_set_calls(
     expected_driver_set_calls = [
         call(region) for region in sequence.get_enabled_regions()
     ]
-    run_engine(analyser_nd_step(all_detectors, step, pos_cache))
+    run_engine(analyser_nd_step(all_detectors, step, pos_cache, None))
 
     # Check that region_logic method was called with the number of regions.
     assert region_logic.setup_with_region.call_args_list == expected_driver_set_calls
@@ -182,38 +178,114 @@ async def test_analyser_nd_step_func_moves_motors_correctly(
     motors = list(step.keys())
 
     run_engine(analyser_nd_step(all_detectors, step, pos_cache))
-
     # Check motors moved to correct position
     for m in motors:
         assert await m.user_readback.get_value() == step[m]
 
 
-async def test_analyser_nd_step_raises_error_with_no_analyser(
-    run_engine: RunEngine,
-    analyser_nd_step: Callable,
-    step: dict[SimMotor, Any],
-    pos_cache: dict[SimMotor, Any],
-):
+@pytest.mark.parametrize(
+    "callable", [aps.make_analyser_per_step, aps.make_analyser_per_shot]
+)
+def test_make_analyser_per_step_requires_shutter_when_closing_per_region(
+    sim_analyser: ElectronAnalyserDetector,
+    sequence: BaseSequence,
+    all_detectors: Sequence[Readable],
+    callable: Callable,
+) -> None:
     with pytest.raises(
-        RuntimeError,
-        match=re.escape(
-            f"Cannot find object from {[]} with type {ElectronAnalyserDetector}"
-        ),
+        ValueError,
+        match="close_shutter_per_region=True requires a shutter to be provided.",
     ):
-        run_engine(analyser_nd_step([], step, pos_cache))
+        callable(
+            sim_analyser,
+            sequence,
+            all_detectors,
+            close_shutter_per_region=True,
+            shutter=None,
+        )
 
 
-async def test_analyser_nd_step_raises_error_when_analyser_not_prepared_with_sequence(
+@pytest.mark.parametrize(
+    "callable", [aps.make_analyser_per_step, aps.make_analyser_per_shot]
+)
+def test_make_analyser_per_step_requires_enabled_regions(
+    sim_analyser: ElectronAnalyserDetector,
+    all_detectors: Sequence[Readable],
+    callable: Callable,
+) -> None:
+    with pytest.raises(ValueError, match="Sequence has zero enabled regions."):
+        callable(
+            sim_analyser,
+            BaseSequence(),
+            all_detectors,
+            close_shutter_per_region=False,
+            shutter=None,
+        )
+
+
+@pytest.mark.parametrize(
+    "close_shutter_per_region, expected_shutter_calls",
+    [
+        (True, [call(True), call(False)]),
+        (False, [call(True)]),
+    ],
+)
+def test_analyser_nd_step_operates_shutter_correctly(
     run_engine: RunEngine,
-    sim_analyser: GenericElectronAnalyserDetector,
-    step: dict[SimMotor, Any],
-    pos_cache: dict[SimMotor, Any],
+    sim_analyser: ElectronAnalyserDetector,
+    sequence: BaseSequence,
+    all_detectors: Sequence[Readable],
+    step: dict[Movable, Any],
+    pos_cache: dict[Movable, Any],
+    shutter: GenericFastShutter,
+    close_shutter_per_region: bool,
+    expected_shutter_calls: list,
+) -> None:
+    analyser_nd_step = run_engine_setup_decorator(
+        aps.make_analyser_per_step(
+            sim_analyser,
+            sequence,
+            [],
+            close_shutter_per_region=close_shutter_per_region,
+            shutter=shutter,
+        )
+    )
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
+
+    run_engine(analyser_nd_step(all_detectors, step, pos_cache, None))
+    n_regions = len(sequence.get_enabled_regions())
+    assert shutter.open.set.call_args_list == expected_shutter_calls * n_regions
+
+
+def test_optional_close_shutter_plan(
+    run_engine: RunEngine, shutter: GenericFastShutter
 ):
+    original_set = shutter.open.set
+    shutter.open.set = MagicMock(wraps=original_set)
+    run_engine(aps.close_shutter(shutter))
+    shutter.open.set.assert_called_once_with(False)
+
+    # Test providing no shutter doesn't do anything.
+    run_engine(aps.close_shutter())
+    shutter.open.set.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "callable", [aps.make_analyser_per_step, aps.make_analyser_per_shot]
+)
+def test_make_analyserscan_plan_duplicate_analyser(
+    sim_analyser: ElectronAnalyserDetector, sequence: BaseSequence, callable: Callable
+) -> None:
     with pytest.raises(
-        RuntimeError,
-        match=re.escape(
-            f"Electron analyser {sim_analyser.name}.sequence is None. It must be "
-            "configured using prepare plan stub."
-        ),
+        ValueError,
+        match=f"{sim_analyser.name} is provided as analyser argument and also in the "
+        "detectors list argument. Please remove it from detector list.",
     ):
-        run_engine(aps.analyser_nd_step([sim_analyser], step, pos_cache))  # type: ignore
+        callable(
+            sim_analyser,
+            sequence,
+            detectors=[sim_analyser],
+            close_shutter_per_region=False,
+            shutter=None,
+        )

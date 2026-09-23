@@ -1,4 +1,5 @@
-from collections.abc import Hashable, Iterator
+import uuid
+from collections.abc import Hashable
 from typing import Any, Protocol
 
 import bluesky.plan_stubs as bps
@@ -32,7 +33,7 @@ def move_motor_with_look_up(
     use_motor_position: bool = False,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator:
+) -> MsgGenerator[None]:
     """Perform a step scan with the range and starting motor position
       given/calculated by using a look up table(dictionary).
       Move to the peak position after the scan and update the lookup table.
@@ -71,7 +72,7 @@ def set_slit_size(
     y_size: float | None = None,
     wait: bool = True,
     group: Hashable | None = None,
-) -> MsgGenerator:
+) -> MsgGenerator[None]:
     """Set opening of x-y slit.
 
     Parameters
@@ -101,7 +102,9 @@ def set_slit_size(
 
 
 @plan
-def check_within_limit(values: list[float], device: HighLowLimitsDevice):
+def check_within_limit(
+    values: list[float], device: HighLowLimitsDevice
+) -> MsgGenerator[None]:
     """Check if the given values are within the limits of the device.
     Parameters
     ----------
@@ -126,7 +129,8 @@ def check_within_limit(values: list[float], device: HighLowLimitsDevice):
             )
 
 
-def get_motor_positions(*arg: Motor) -> Iterator[tuple[str, float]]:
+@plan
+def get_motor_positions(*arg: Motor) -> MsgGenerator:
     """
     Get the motor positions of the given motors and store them in a list.
 
@@ -143,16 +147,17 @@ def get_motor_positions(*arg: Motor) -> Iterator[tuple[str, float]]:
     motor_position = []
     for motor in arg:
         motor_position.append(motor)
-        position = yield from bps.rd(motor)  # type: ignore
+        position = yield from bps.rd(motor)
         motor_position.append(position)
 
     LOGGER.info(f"Stored motor, position  = {motor_position}.")
     return motor_position
 
 
+@plan
 def get_velocity_and_step_size(
     scan_motor: Motor, ideal_velocity: float, ideal_step_size: float
-) -> Iterator[Any]:
+) -> MsgGenerator[Any]:
     """
     Adjust the step size if the required velocity is higher than the max value.
 
@@ -179,3 +184,51 @@ def get_velocity_and_step_size(
         ideal_velocity = round(max_velocity, 3)
 
     return ideal_velocity, ideal_step_size
+
+
+@plan
+def cache_speed(
+    motor_and_speeds: list[Motor],
+) -> MsgGenerator[dict[Motor, float]]:
+    """Cache the current velocity of each motor.
+
+    Parameters
+    ----------
+    motor_and_speeds : list[Motor]
+        List of motor devices whose velocity should be cached.
+
+    Returns
+    -------
+    dict[Motor, float]
+        Mapping of each motor to its current velocity.
+    """
+    speeds = {}
+    for axis in motor_and_speeds:
+        speed = yield from bps.rd(axis.velocity)
+        speeds[axis] = speed
+    return speeds
+
+
+@plan
+def restore_speed(
+    motor_and_speeds: dict[Motor, float],
+    group: str | None = None,
+    wait_for_all: bool = True,
+) -> MsgGenerator:
+    """Restore cached velocities for motors.
+
+    Parameters
+    ----------
+    motor_and_speeds : dict[Motor, float]
+        Mapping of motor devices to the velocity values to restore.
+    group : str | None, optional
+        Optional Bluesky group identifier used during the restore moves.
+        If omitted, a unique reset group name is generated.
+    wait_for_all : bool, optional
+        If True, wait for all velocity restore operations to complete.
+    """
+    reset_group = f"reset-{group if group else str(uuid.uuid4())[:6]}"
+    for device, speed in motor_and_speeds.items():
+        yield from bps.abs_set(device.velocity, speed, group=reset_group)
+    if wait_for_all:
+        yield from bps.wait(reset_group)

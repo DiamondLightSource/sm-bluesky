@@ -10,6 +10,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 description = "Bluesky code for Diamond's surface and magnetic materials beamline."
 dependencies = [
@@ -18,7 +19,7 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal",
+    "dls-dodal==2.6.2",
     "ophyd-async[sim]",
     "scanspec",
     "blueapi",
@@ -31,6 +32,7 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 server = ["pyserial"]
+testing = ["jupyter", "ipython", "matplotlib", "numpy", "pyepics"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",
@@ -49,14 +51,7 @@ dev = [
     "types-mock",
     "pytest-asyncio",
     # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
-    "chardet==7.4.3",
-
-    #usefull stuff for testing
-    "jupyter",
-    "ipython",
-    "matplotlib",
-    "numpy",
-    "pyepics",
+    "chardet==7.6.0",
 ]
 
 [project.scripts]
