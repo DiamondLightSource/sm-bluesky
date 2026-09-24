@@ -52,9 +52,9 @@ class BlueAPISession:
         self._bc = value
 
     def start_shell(self) -> None:
+        """Start an interactive IPython shell with the BlueAPI client available."""
         from IPython import embed
 
-        """Start an interactive IPython shell with the BlueAPI client available."""
         embed(
             header="\nBlueAPI client ready.\n"
             'The client is available as "bc".\n'
@@ -68,10 +68,7 @@ class BlueAPISession:
         )
 
     def print_inventory(self) -> BlueapiClient:
-        """Create and initialise the BlueAPI client."""
-
-        self._install_callbacks()
-
+        """Print available plans and devices."""
         click.echo("\nPlans available:")
         for plan in self.bc.plans:
             click.echo(f"  {plan.name}")

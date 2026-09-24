@@ -36,6 +36,7 @@ testing = ["jupyter", "ipython", "matplotlib", "numpy", "pyepics"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",
+    "sm_bluesky[testing]",
     "copier",
     "myst-parser",
     "pre-commit",
