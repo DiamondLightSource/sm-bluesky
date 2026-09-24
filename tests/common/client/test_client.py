@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from sm_bluesky.common.client import InstrumentClient
+from sm_bluesky.common.clients import InstrumentClient
 
 
 @pytest.fixture

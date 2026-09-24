@@ -1,12 +1,11 @@
-import subprocess
-import sys
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from click.testing import CliRunner
 
 from sm_bluesky import __version__
-from sm_bluesky.common.cli import main
+from sm_bluesky.common.cli import cli
 
 
 @pytest.fixture
@@ -17,7 +16,7 @@ def mock_sh_generator() -> Generator[MagicMock, None, None]:
 
 @pytest.fixture
 def mock_instrument_client() -> Generator[MagicMock, None, None]:
-    with patch("sm_bluesky.common.client.InstrumentClient") as mock_client:
+    with patch("sm_bluesky.common.clients.InstrumentClient") as mock_client:
         yield mock_client
 
 
@@ -25,9 +24,11 @@ def test_cli_shanghai_tech_start_default_arguments(
     mock_sh_generator: MagicMock,
 ) -> None:
     mock_instance = mock_sh_generator.return_value
+    runner = CliRunner()
 
-    main(["start", "sh_pulse_generator"])
+    result = runner.invoke(cli, ["start", "sh_pulse_generator"])
 
+    assert result.exit_code == 0
     mock_sh_generator.assert_called_once_with(
         host="0.0.0.0",
         port=7891,
@@ -41,7 +42,9 @@ def test_cli_shanghai_tech_start_default_arguments(
 
 
 def test_cli_shanghai_tech_start_custom_flags(mock_sh_generator: MagicMock) -> None:
-    main(
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
         [
             "start",
             "sh_pulse_generator",
@@ -58,9 +61,10 @@ def test_cli_shanghai_tech_start_custom_flags(mock_sh_generator: MagicMock) -> N
             "2.5",
             "--max-pulse-delay",
             "2048",
-        ]
+        ],
     )
 
+    assert result.exit_code == 0
     mock_sh_generator.assert_called_once_with(
         host="127.0.0.1",
         port=8080,
@@ -75,91 +79,147 @@ def test_cli_shanghai_tech_start_custom_flags(mock_sh_generator: MagicMock) -> N
 def test_cli_handles_keyboard_interrupt(mock_sh_generator: MagicMock) -> None:
     mock_instance = mock_sh_generator.return_value
     mock_instance.start.side_effect = KeyboardInterrupt()
-    main(["start", "sh_pulse_generator"])
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["start", "sh_pulse_generator"])
+
+    assert result.exit_code == 0
     mock_instance.shutdown.assert_called_once()
 
 
 @pytest.mark.parametrize(
-    "command, expected_output, look_in_stderr",
+    "command, expected_output, exit_code",
     [
-        ([], "sm-bluesky CLI", False),
+        ([], "sm-bluesky CLI", 2),
         (
             ["junk"],
-            "invalid choice: 'junk'",
-            True,
+            "No such command 'junk'",
+            2,
         ),
         (
             ["start", "junk"],
-            "invalid choice: 'junk'",
-            True,
+            "No such command 'junk'",
+            2,
         ),
         (
             ["start"],
-            "usage: ",
-            False,
+            "Usage: ",
+            2,
         ),
     ],
 )
 def test_cli_shows_help_on_invalid_command(
     command: list[str],
     expected_output: str,
-    look_in_stderr: bool,
-    capsys: pytest.CaptureFixture[str],
+    exit_code: int,
 ) -> None:
-    if look_in_stderr:
-        with pytest.raises(SystemExit) as exc_info:
-            main(command)
-        assert exc_info.value.code == 2
-    else:
-        main(command)
+    runner = CliRunner()
+    result = runner.invoke(cli, command)
 
-    captured = capsys.readouterr()
-    output = captured.err if look_in_stderr else captured.out
-
-    assert expected_output in output
+    assert result.exit_code == exit_code
+    assert expected_output in result.output
 
 
 def test_cli_version():
-    cmd = [sys.executable, "-m", "sm_bluesky", "--version"]
-    assert subprocess.check_output(cmd).decode().strip() == __version__
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--version"])
+    assert result.exit_code == 0
+    assert __version__ in result.output
 
 
 def test_cli_send_command_success(
-    mock_instrument_client: MagicMock, capsys: pytest.CaptureFixture[str]
+    mock_instrument_client: MagicMock,
 ) -> None:
     mock_instance = mock_instrument_client.return_value
     mock_instance.send_payload.return_value = "512"
 
-    main(["send", "SET_DELAY 512", "--host", "0.0.0.0", "--port", "8888"])
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["send", "SET_DELAY 512", "--host", "0.0.0.0", "--port", "8888"]
+    )
 
+    assert result.exit_code == 0
     mock_instrument_client.assert_called_once_with(
         host="0.0.0.0", port=8888, timeout=2.0
     )
     mock_instance.send_payload.assert_called_once_with("SET_DELAY", "512")
 
-    captured = capsys.readouterr()
-    assert "Sending command:SET_DELAY 512" in captured.out
-    assert "SUCCESS: 512" in captured.out
+    assert "Sending command:SET_DELAY 512" in result.output
+    assert "SUCCESS: 512" in result.output
 
 
 def test_cli_send_command_failure(
-    mock_instrument_client: MagicMock, capsys: pytest.CaptureFixture[str]
+    mock_instrument_client: MagicMock,
 ) -> None:
     mock_instance = mock_instrument_client.return_value
     mock_instance.send_payload.side_effect = ConnectionError("Help help")
 
-    main(["send", "do not matter"])
+    runner = CliRunner()
+    result = runner.invoke(cli, ["send", "do not matter"])
 
-    captured = capsys.readouterr()
-    assert "FAILED: Help help" in captured.out
+    assert result.exit_code == 0
+    assert "FAILED: Help help" in result.output
 
 
 def test_cli_send_empty_payload(
-    mock_instrument_client: MagicMock, capsys: pytest.CaptureFixture[str]
+    mock_instrument_client: MagicMock,
 ) -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["send", "   "])
 
-    main(["send", "   "])
-
-    captured = capsys.readouterr()
-    assert "FAILED: Payload cannot be empty" in captured.out
+    assert result.exit_code == 0
+    assert "FAILED: Payload cannot be empty" in result.output
     mock_instrument_client.assert_not_called()
+
+
+def test_cli_client_missing_args() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["client"])
+
+    assert result.exit_code == 0
+    assert (
+        "Error: Please provide either a beamline name (-b) or a config file (-c)."
+        in result.output
+    )
+
+
+@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.load_config")
+def test_cli_client_with_beamline(
+    mock_load_config: MagicMock, mock_blueapi_session: MagicMock
+) -> None:
+    runner = CliRunner()
+    mock_instance = mock_blueapi_session.return_value
+    mock_config = mock_load_config.return_value
+
+    result = runner.invoke(cli, ["client", "-b", "i10", "-s", "my-session"])
+
+    assert result.exit_code == 0
+    mock_load_config.assert_called_once_with(config_path=None, beamline="i10")
+    mock_blueapi_session.assert_called_once_with(
+        config=mock_config, instrument_session="my-session"
+    )
+    mock_instance.start_shell.assert_called_once()
+
+
+@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.load_config")
+def test_cli_client_with_config(
+    mock_load_config: MagicMock, mock_blueapi_session: MagicMock
+) -> None:
+    runner = CliRunner()
+    mock_instance = mock_blueapi_session.return_value
+    mock_config = mock_load_config.return_value
+
+    result = runner.invoke(cli, ["client", "-c", "/path/to/config.yaml"])
+
+    assert result.exit_code == 0
+    mock_load_config.assert_called_once()
+
+    assert str(mock_load_config.call_args[1]["config_path"]) == "/path/to/config.yaml"
+    assert mock_load_config.call_args[1]["beamline"] is None
+
+    mock_blueapi_session.assert_called_once_with(
+        config=mock_config, instrument_session=None
+    )
+    mock_instance.start_shell.assert_called_once()

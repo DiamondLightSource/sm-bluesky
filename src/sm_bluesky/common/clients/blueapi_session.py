@@ -28,17 +28,18 @@ class BlueAPISession:
         self.bc = BlueapiClient.from_config(self.config)
         self.bc.login()
 
+        self._install_callbacks()
+        self.print_inventory()
+
         if instrument_session:
             self.bc.instrument_session = instrument_session
             click.echo(f"Active instrument session: {instrument_session}")
         else:
-            click.echo(
+            click.secho(
                 "\n[Notice] No instrument session set. Set `bc.instrument_session ="
-                " '<session_id>'` before dispatching plans."
+                " '<session_id>'` before dispatching plans.",
+                fg="red",
             )
-
-        self._install_callbacks()
-        self.print_inventory()
 
     @property
     def bc(self) -> BlueapiClient:
@@ -78,11 +79,6 @@ class BlueAPISession:
         click.echo("\nDevices available:")
         for device in self.bc.devices:
             click.echo(f"  {device.name}")
-
-        click.echo(
-            "\nPlease remember to configure the correct "
-            "`bc.instrument_session` before running a plan."
-        )
         return self.bc
 
     def _install_callbacks(self) -> None:
