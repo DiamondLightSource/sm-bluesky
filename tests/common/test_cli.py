@@ -227,6 +227,15 @@ def test_cli_client_with_config(
     mock_instance.start_shell.assert_called_once()
 
 
+def test_install_completion_unsupported_shell():
+    from sm_bluesky.common.cli import install_completion
+
+    runner = CliRunner()
+    with patch.dict(os.environ, {"SHELL": "fish"}):
+        result = runner.invoke(install_completion)
+        assert "Unsupported shell" in result.output
+
+
 def test_main_no_args():
     from sm_bluesky.common.cli import main
 
@@ -241,15 +250,6 @@ def test_main_with_args():
     with patch("sm_bluesky.common.cli.cli") as mock_cli:
         main(["--help"])
         mock_cli.assert_called_once_with(["--help"])
-
-
-def test_install_completion_unsupported_shell():
-    from sm_bluesky.common.cli import install_completion
-
-    runner = CliRunner()
-    with patch.dict(os.environ, {"SHELL": "fish"}):
-        result = runner.invoke(install_completion)
-        assert "Unsupported shell" in result.output
 
 
 def test_install_completion_zsh_already_installed():

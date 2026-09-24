@@ -57,7 +57,7 @@ dev = [
 ]
 
 [project.scripts]
-sm-bluesky = "sm_bluesky.__main__:main"
+sm-bluesky = "sm_bluesky.common.cli:cli"
 
 [project.urls]
 GitHub = "https://github.com/DiamondLightSource/sm-bluesky"
