@@ -23,6 +23,7 @@ dependencies = [
     "ophyd-async[sim]",
     "scanspec",
     "blueapi",
+    "ipython",
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
@@ -32,7 +33,7 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 server = ["pyserial"]
-testing = ["jupyter", "ipython", "matplotlib", "numpy", "pyepics"]
+testing = ["jupyter", "matplotlib", "numpy", "pyepics"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",

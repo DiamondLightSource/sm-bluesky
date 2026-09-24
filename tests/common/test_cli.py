@@ -1,4 +1,6 @@
+import os
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -223,3 +225,70 @@ def test_cli_client_with_config(
         config=mock_config, instrument_session=None
     )
     mock_instance.start_shell.assert_called_once()
+
+
+def test_main_no_args():
+    from sm_bluesky.common.cli import main
+
+    with patch("sm_bluesky.common.cli.cli") as mock_cli:
+        main()
+        mock_cli.assert_called_once_with()
+
+
+def test_main_with_args():
+    from sm_bluesky.common.cli import main
+
+    with patch("sm_bluesky.common.cli.cli") as mock_cli:
+        main(["--help"])
+        mock_cli.assert_called_once_with(["--help"])
+
+
+def test_install_completion_unsupported_shell():
+    from sm_bluesky.common.cli import install_completion
+
+    runner = CliRunner()
+    with patch.dict(os.environ, {"SHELL": "fish"}):
+        result = runner.invoke(install_completion)
+        assert "Unsupported shell" in result.output
+
+
+def test_install_completion_zsh_already_installed():
+    from sm_bluesky.common.cli import install_completion
+
+    runner = CliRunner()
+    with (
+        patch.dict(os.environ, {"SHELL": "/bin/zsh"}),
+        patch("pathlib.Path.exists", return_value=True),
+        patch(
+            "pathlib.Path.read_text",
+            return_value='eval "$(_SM_BLUESKY_COMPLETE=zsh_source sm-bluesky)"',
+        ),
+    ):
+        result = runner.invoke(install_completion)
+        assert "already installed" in result.output
+
+
+def test_install_completion_bash_success(tmp_path: Path):
+    from sm_bluesky.common.cli import install_completion
+
+    runner = CliRunner()
+    bashrc = tmp_path / ".bashrc"
+    bashrc.write_text("some content")
+
+    with (
+        patch.dict(os.environ, {"SHELL": "/bin/bash"}),
+        patch("pathlib.Path.home", return_value=tmp_path),
+    ):
+        result = runner.invoke(install_completion)
+        assert "Tab completion installed" in result.output
+        content = bashrc.read_text()
+        assert 'eval "$(_SM_BLUESKY_COMPLETE=bash_source sm-bluesky)"' in content
+
+
+def test_cli_group_callback():
+    from sm_bluesky.common.cli import cli, start
+
+    assert cli.callback is not None
+    cli.callback()
+    assert start.callback is not None
+    start.callback()

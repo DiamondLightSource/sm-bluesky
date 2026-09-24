@@ -6309,6 +6309,7 @@ dependencies = [
     { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal" },
+    { name = "ipython" },
     { name = "ophyd-async", extra = ["sim"] },
     { name = "scanspec" },
 ]
@@ -6318,7 +6319,6 @@ server = [
     { name = "pyserial" },
 ]
 testing = [
-    { name = "ipython" },
     { name = "jupyter" },
     { name = "matplotlib" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -6351,7 +6351,7 @@ requires-dist = [
     { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal", specifier = "==3.0.1" },
-    { name = "ipython", marker = "extra == 'testing'" },
+    { name = "ipython" },
     { name = "jupyter", marker = "extra == 'testing'" },
     { name = "matplotlib", marker = "extra == 'testing'" },
     { name = "numpy", marker = "extra == 'testing'" },
