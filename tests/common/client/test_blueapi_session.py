@@ -128,3 +128,34 @@ def test_callbacks_handling(mock_echo: MagicMock, mock_client_class: MagicMock) 
     mock_echo.assert_any_call(
         "1970-01-01 00:00:02 - Run complete (scan_id=scan1, uid: uid1): success"
     )
+
+
+def test_bc_property_not_initialized() -> None:
+    session = BlueAPISession.__new__(BlueAPISession)
+    session._bc = None
+    with pytest.raises(RuntimeError, match="BlueAPI client is not initialized."):
+        _ = session.bc
+
+
+@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+@patch("sm_bluesky.common.clients.blueapi_session.click.echo")
+def test_callback_event_without_scan_id(
+    mock_echo: MagicMock, mock_client_class: MagicMock
+) -> None:
+    config = ApplicationConfig()
+    session = BlueAPISession(config=config)
+
+    mock_client = mock_client_class.from_config.return_value
+    callback = mock_client.add_callback.call_args[0][0]
+    session.current_scan_id = None
+
+    event = DataEvent(
+        name="event",
+        doc={"seq_num": 1, "data": {"motor1": 10.5}, "time": 1},
+        task_id="task1",
+    )
+    callback(event)
+
+    assert "1970-01-01 00:00:01 - Point 1: motor1=10.5" not in [
+        call.args[0] for call in mock_echo.call_args_list
+    ]
