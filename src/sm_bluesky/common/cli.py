@@ -102,6 +102,35 @@ def start_sh_pulse_generator(
         server.shutdown()
 
 
+@start.command(
+    name="blueapi",
+    help="Start a BlueAPI server using a configuration file",
+)
+@click.option(
+    "-c",
+    "--config",
+    type=Path,
+    required=True,
+    help="Path to BlueAPI YAML config file.",
+)
+def start_blueapi(config: Path):
+    """Start a BlueAPI server."""
+    import subprocess
+    import sys
+
+    print(f"🚀 Starting BlueAPI server with config: {config}")
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "blueapi", "--config", str(config), "serve"],
+            check=True,
+        )
+    except KeyboardInterrupt:
+        print("\nStopping BlueAPI server ...")
+    except subprocess.CalledProcessError as e:
+        print(f"\n❌ BlueAPI server exited with error code {e.returncode}")
+        sys.exit(e.returncode)
+
+
 @cli.command()
 @click.argument("payload", type=str)
 @click.option("--host", type=str, default="127.0.0.1", help="Target server IP")

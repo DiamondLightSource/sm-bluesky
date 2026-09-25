@@ -1,16 +1,17 @@
 ---
-stomp:
-  host: "localhost"
-  port: 61613
-  auth:
-    username: "guest"
-    password: "guest"
-
+api:
+  url: http://0.0.0.0:8000
 env:
+  metadata:
+    instrument: iXX
   sources:
-    - kind: deviceFunctions
-      module: "dodal.beamlines.p99"
+    - kind: deviceManager
+      module: dodal.beamlines.i09
+      mock: True
     - kind: planFunctions
-      module: "p99_bluesky.plans"
-  events:
-    broadcast_status_events: True
+      module: dodal.plans
+    - kind: planFunctions
+      module: dodal.plan_stubs.wrapped
+stomp:
+  enabled: False
+  url: tcp://localhost:61613/

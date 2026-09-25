@@ -89,6 +89,45 @@ def test_cli_handles_keyboard_interrupt(mock_sh_generator: MagicMock) -> None:
     mock_instance.shutdown.assert_called_once()
 
 
+@patch("subprocess.run")
+def test_start_blueapi_success(mock_subprocess_run: MagicMock) -> None:
+    import sys
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["start", "blueapi", "-c", "my_config.yaml"])
+
+    assert result.exit_code == 0
+    mock_subprocess_run.assert_called_once_with(
+        [sys.executable, "-m", "blueapi", "-c", "my_config.yaml", "serve"],
+        check=True,
+    )
+    assert "🚀 Starting BlueAPI server with config: my_config.yaml" in result.output
+
+
+@patch("subprocess.run")
+def test_start_blueapi_keyboard_interrupt(mock_subprocess_run: MagicMock) -> None:
+    mock_subprocess_run.side_effect = KeyboardInterrupt()
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["start", "blueapi", "-c", "my_config.yaml"])
+
+    assert result.exit_code == 0
+    assert "Stopping BlueAPI server ..." in result.output
+
+
+@patch("subprocess.run")
+def test_start_blueapi_called_process_error(mock_subprocess_run: MagicMock) -> None:
+    import subprocess
+
+    mock_subprocess_run.side_effect = subprocess.CalledProcessError(1, ["cmd"])
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["start", "blueapi", "-c", "my_config.yaml"])
+
+    assert result.exit_code == 1
+    assert "❌ BlueAPI server exited with error code 1" in result.output
+
+
 @pytest.mark.parametrize(
     "command, expected_output, exit_code",
     [
