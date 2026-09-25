@@ -6324,7 +6324,7 @@ dev = [
 requires-dist = [
     { name = "blueapi" },
     { name = "bluesky" },
-    { name = "dls-dodal" },
+    { name = "dls-dodal", specifier = "==3.0.2" },
     { name = "ipython" },
     { name = "jupyter", marker = "extra == 'testing'" },
     { name = "matplotlib", marker = "extra == 'testing'" },
