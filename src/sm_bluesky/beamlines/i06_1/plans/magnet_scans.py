@@ -41,13 +41,13 @@ def _raw_fastfieldscan(
     """
     _md = {
         "plan_args": {
-            "magnet_axis": magnet_axis.name,
+            "magnet_axis": str(magnet_axis),
             "start_field": mag_fly_info.start_position,
             "end_field": mag_fly_info.end_position,
             "field_ramp_rate": mag_fly_info.ramp_rate,
-            "scaler_card": scaler_card.name,
+            "scaler_card": str(scaler_card),
             "integration_time": integration_time,
-            "detectors": [det.name for det in detectors],
+            "detectors": [str(det) for det in detectors],
         }
     }
     deep_update(_md, md or {})
@@ -157,7 +157,7 @@ def fastfieldscan_with_energy(
     _md = {
         "plan_name": "fastfieldscan_with_energy",
         "plan_args": {
-            "beam_energy": beam_energy.name,  # type: ignore
+            "beam_energy": str(beam_energy),
             "energies": energies,
         },
     }

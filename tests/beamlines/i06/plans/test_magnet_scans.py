@@ -208,13 +208,16 @@ async def test_fastfieldscan_metadata(
     )
     md = run_engine_documents["start"][0]
     assert md["plan_args"] == {
-        "magnet_axis": scmc.cart.x.name,
+        "magnet_axis": f'MagnetAxis(name="{scmc.cart.x.name}")',
         "start_field": start_field,
         "end_field": end_field,
         "field_ramp_rate": ramp_rate,
-        "scaler_card": scaler_mag.name,
+        "scaler_card": f'ScalerCard(name="{scaler_mag.name}")',
         "integration_time": integration_time,
-        "detectors": [scmc.cart.x.name, scaler_mag.name],
+        "detectors": [
+            f'MagnetAxis(name="{scmc.cart.x.name}")',
+            f'ScalerCard(name="{scaler_mag.name}")',
+        ],
     }
     assert md["plan_name"] == "fastfieldscan"
 
@@ -380,14 +383,18 @@ async def test_fastfieldscan_with_energy_metadata(
     )
     md = run_engine_documents["start"][0]
     assert md["plan_args"] == {
-        "magnet_axis": scmc.cart.x.name,
+        "magnet_axis": f'MagnetAxis(name="{scmc.cart.x.name}")',
         "start_field": start_field,
         "end_field": end_field,
         "field_ramp_rate": ramp_rate,
-        "scaler_card": scaler_mag.name,
+        "scaler_card": f'ScalerCard(name="{scaler_mag.name}")',
         "integration_time": integration_time,
-        "detectors": [scmc.cart.x.name, scaler_mag.name, beam_energy.name],
-        "beam_energy": beam_energy.name,
+        "detectors": [
+            f'MagnetAxis(name="{scmc.cart.x.name}")',
+            f'ScalerCard(name="{scaler_mag.name}")',
+            f'SimMotor(name="{beam_energy.name}")',
+        ],
+        "beam_energy": f'SimMotor(name="{beam_energy.name}")',
         "energies": energies,
     }
     assert md["plan_name"] == "fastfieldscan_with_energy"

@@ -6,7 +6,6 @@ from bluesky.preprocessors import finalize_wrapper
 from bluesky.protocols import Readable
 from bluesky.utils import MsgGenerator, plan, short_uid
 from dodal.devices.insertion_device import BeamEnergy
-from dodal.plan_stubs.data_session import attach_data_session_metadata_decorator
 from numpy import linspace
 from ophyd_async.core import FlyMotorInfo
 from ophyd_async.epics.motor import Motor
@@ -22,7 +21,6 @@ from sm_bluesky.log import LOGGER
 
 
 @plan
-@attach_data_session_metadata_decorator()
 def fast_scan_1d(
     dets: list[Readable],
     motor: Motor,
@@ -76,7 +74,6 @@ def fast_scan_1d(
 
 
 @plan
-@attach_data_session_metadata_decorator()
 def fast_scan_grid(
     dets: list[Readable],
     step_motor: Motor,
@@ -264,7 +261,6 @@ def _fast_scan_1d(
 
 
 @plan
-@attach_data_session_metadata_decorator()
 def soft_fly_energy_scan(
     dets: list[Readable],
     energy_device: BeamEnergy,
