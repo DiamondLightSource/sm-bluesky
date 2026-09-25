@@ -12,9 +12,12 @@ To run blueAPI locally, you must first start a message broker (RabbitMQ/STOMP) t
 
     Once RabbitMQ is running, you can start the BlueAPI server and connect your client.
 
-1. In a terminal, start the BlueAPI server using your configuration file:
+Step 1: Start the BlueAPI Server
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code::
+In a terminal, start the BlueAPI server using your configuration file:
+
+.. code-block:: bash
 
     sm-bluesky start blueapi --config ./src/yaml_config/blueapi_config.yaml
 
@@ -22,28 +25,43 @@ This will start BlueAPI with your specified configuration. To modify the configu
 
 .. literalinclude:: ../../src/yaml_config/blueapi_config.yaml
 
-2. Connect to your running server via the interactive client:
+Step 2: Connect to your running server
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To connect to a local BlueAPI instance, you can pass your configuration file:
+To connect to a local BlueAPI instance via the interactive client, you can pass your configuration file:
 
-.. code::
+.. code-block:: bash
 
     sm-bluesky client --config ./src/yaml_config/blueapi_config.yaml -s my_session
 
 .. tip::
+
     **Remote Option:** If you are connecting to a remote beamline server, you can use the ``-b`` / ``--beamline`` flag instead to connect automatically without a local config file:
 
-    .. code::
+    .. code-block:: bash
 
         sm-bluesky client -b p99 -s cm44186-1
 
-.. tip::
+Step 3: Run a Plan
+^^^^^^^^^^^^^^^^^^
+
+Once the interactive IPython shell opens, your active session is bound to the ``session`` variable. You can trigger hardware plans directly using the python client:
+
+.. code-block:: python
+
+    # Run a simple count plan on the DCM device
+     pl.count(dev.dcm)
+
+Advanced Configurations
+-----------------------
+
+.. admonition:: Customizing Devices & Plans
 
     To add custom devices and plans, specify their module paths within the configuration file's ``env.sources`` section:
 
     For devices (example device path: ``sm_bluesky.beamlines.p99``):
 
-    .. code::
+    .. code-block:: yaml
 
         env:
             sources:
@@ -52,7 +70,7 @@ To connect to a local BlueAPI instance, you can pass your configuration file:
 
     For plans (example plans path: ``sm_bluesky.beamlines.p99.plans``):
 
-    .. code::
+    .. code-block:: yaml
 
         env:
             sources:
@@ -66,3 +84,5 @@ To connect to a local BlueAPI instance, you can pass your configuration file:
     .. literalinclude:: ../../src/sm_bluesky/common/plans/grid_scan.py
         :start-at: def grid_fast_scan
         :end-at: -> MsgGenerator:
+
+For a full list of available commands and flags, check out the :doc:`CLI Reference <../how-to/5_cli_documentation>`.
