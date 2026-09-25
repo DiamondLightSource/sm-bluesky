@@ -109,7 +109,7 @@ def start_sh_pulse_generator(
 @click.option(
     "-c",
     "--config",
-    type=Path,
+    type=click.Path(path_type=Path),
     required=True,
     help="Path to BlueAPI YAML config file.",
 )
@@ -175,7 +175,7 @@ def send(payload: str, host: str = "127.0.0.1", port: int = 7891, timeout: float
 @click.option(
     "-c",
     "--config",
-    type=Path,
+    type=click.Path(path_type=Path),
     default=None,
     help="Path to BlueAPI YAML config file.",
 )

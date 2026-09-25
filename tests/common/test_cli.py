@@ -98,7 +98,7 @@ def test_start_blueapi_success(mock_subprocess_run: MagicMock) -> None:
 
     assert result.exit_code == 0
     mock_subprocess_run.assert_called_once_with(
-        [sys.executable, "-m", "blueapi", "-c", "my_config.yaml", "serve"],
+        [sys.executable, "-m", "blueapi", "--config", "my_config.yaml", "serve"],
         check=True,
     )
     assert "🚀 Starting BlueAPI server with config: my_config.yaml" in result.output
