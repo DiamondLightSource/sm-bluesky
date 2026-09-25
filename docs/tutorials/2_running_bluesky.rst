@@ -6,7 +6,7 @@ This document outlines how to run Bluesky locally for rapid testing and developm
 Local BlueAPI with sm-bluesky
 -----------------------------
 
-To run blueAPI locally, you must first start a message broker (RabbitMQ/STOMP) to handle live event streaming. Please follow the instructions at `Start RabbitMQ <https://diamondlightsource.github.io/blueapi/main/tutorials/run-bus.html>`__ to set up your message bus.
+To run blueAPI locally, you must first start a message broker (RabbitMQ/STOMP) to handle live event streaming (This will soon not be necessary). Please follow the instructions at `Start RabbitMQ <https://diamondlightsource.github.io/blueapi/main/tutorials/run-bus.html>`__ to set up your message bus.
 
 .. important::
 
