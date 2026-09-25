@@ -6283,6 +6283,7 @@ dependencies = [
     { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal" },
+    { name = "ipython" },
     { name = "ophyd-async", extra = ["sim"] },
     { name = "scanspec" },
 ]
@@ -6291,26 +6292,27 @@ dependencies = [
 server = [
     { name = "pyserial" },
 ]
+testing = [
+    { name = "jupyter" },
+    { name = "matplotlib" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pyepics" },
+]
 
 [package.dev-dependencies]
 dev = [
     { name = "chardet" },
     { name = "copier" },
-    { name = "ipython" },
-    { name = "jupyter" },
-    { name = "matplotlib" },
     { name = "myst-parser" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pre-commit" },
     { name = "pydata-sphinx-theme" },
-    { name = "pyepics" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
-    { name = "sm-bluesky", extra = ["server"] },
+    { name = "sm-bluesky", extra = ["server", "testing"] },
     { name = "sphinx-autobuild" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
@@ -6323,30 +6325,31 @@ requires-dist = [
     { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal", specifier = "==3.0.2" },
+    { name = "ipython" },
+    { name = "jupyter", marker = "extra == 'testing'" },
+    { name = "matplotlib", marker = "extra == 'testing'" },
+    { name = "numpy", marker = "extra == 'testing'" },
     { name = "ophyd-async", extras = ["sim"] },
+    { name = "pyepics", marker = "extra == 'testing'" },
     { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },
 ]
-provides-extras = ["server"]
+provides-extras = ["server", "testing"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "chardet", specifier = "==7.6.0" },
     { name = "copier" },
-    { name = "ipython" },
-    { name = "jupyter" },
-    { name = "matplotlib" },
     { name = "myst-parser" },
-    { name = "numpy" },
     { name = "pre-commit" },
     { name = "pydata-sphinx-theme", specifier = ">=0.12" },
-    { name = "pyepics" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "sm-bluesky", extras = ["server"] },
+    { name = "sm-bluesky", extras = ["testing"] },
     { name = "sphinx-autobuild" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
