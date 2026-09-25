@@ -1,10 +1,10 @@
-# 📟sm-bluesky CLI Reference
+# sm-bluesky CLI Reference
 
 The `sm-bluesky` command-line interface provides tools to launch instrument servers and interact with running instances via quick payloads (commands).
 
 ---
 
-## 🚀 Commands Overview
+## Commands Overview
 
 The interface provides several primary commands:
 * **`start`**: Configures and spins up background services like instrument servers or the BlueAPI server.
