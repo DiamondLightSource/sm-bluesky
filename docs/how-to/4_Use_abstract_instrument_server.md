@@ -34,6 +34,7 @@ Commands must be newline-terminated.
 | `connect_hardware`| None | Re-establishes connection to hardware server. |
 | `disconnect_hardware`| None | Safely disconnects from hardware. |
 | `shutdown` | None | Stops the server and disconnects hardware. |
+| `command_list` | None | Return a list of available commands. |
 
 
 ## Implementation Guide
@@ -47,8 +48,6 @@ from sm_bluesky.servers import AbstractInstrumentServer
 class MyMotorServer(AbstractInstrumentServer):
     def __init__(self, host, port):
         super().__init__(host, port)
-        # Add custom hardware commands to the registry
-        self._command_registry[b"move_abs"] = self._move_absolute
 
     def connect_hardware(self) -> bool:
         # Logic to initialize your physical device
@@ -58,7 +57,8 @@ class MyMotorServer(AbstractInstrumentServer):
     def disconnect_hardware(self) -> None:
         # Logic to safely shut down hardware
         print("Parking Motor...")
-
+        
+    @register_command(b"move_abs")
     def _move_absolute(self, position: bytes):
         # Hardware logic: convert bytes arg to float
         pos_mm = float(position)
