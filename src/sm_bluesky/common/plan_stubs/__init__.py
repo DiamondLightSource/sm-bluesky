@@ -1,4 +1,4 @@
-from .detection import fly_trigger_and_read, set_area_detector_acquire_time
+from .detection import fly_kickoff_complete, set_area_detector_acquire_time
 from .motions import (
     MotorTable,
     cache_speed,
@@ -20,5 +20,5 @@ __all__ = [
     "get_velocity_and_step_size",
     "cache_speed",
     "restore_speed",
-    "fly_trigger_and_read",
+    "fly_kickoff_complete",
 ]
