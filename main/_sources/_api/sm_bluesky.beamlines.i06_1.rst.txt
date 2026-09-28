@@ -1,7 +1,7 @@
-``sm_bluesky.beamlines``
-========================
+``sm_bluesky.beamlines.i06_1``
+==============================
 
-.. automodule:: sm_bluesky.beamlines
+.. automodule:: sm_bluesky.beamlines.i06_1
     :members:
 
     
@@ -13,9 +13,7 @@
         :template: custom-module-template.rst
         :recursive:
     
-        i06_1
-        i10
-        p99
+        plans
     
     
 

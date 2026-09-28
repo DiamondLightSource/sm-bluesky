@@ -34,6 +34,6 @@
         get_velocity_and_step_size
         cache_speed
         restore_speed
-        fly_trigger_and_read
+        fly_kickoff_complete
     
     
