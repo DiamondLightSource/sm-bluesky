@@ -54,8 +54,18 @@ class BlueAPISession:
     def start_shell(self) -> None:
         """Start an interactive IPython shell with the BlueAPI client available."""
         from IPython import embed
+        from traitlets.config import Config
+
+        c = Config()
+        c.InteractiveShellApp.exec_lines = [
+            "try:",
+            "    %matplotlib auto",
+            "except Exception:",
+            "    pass",
+        ]
 
         embed(
+            config=c,
             header="\nBlueAPI client ready.\n"
             'The client is available as "bc".\n'
             "Use exit() or Ctrl-D to leave.\n",
@@ -64,8 +74,91 @@ class BlueAPISession:
                 "pl": self.bc.plans,
                 "dev": self.bc.devices,
                 "scan_data": self.data,
+                "plot": self.plot,
             },
         )
+
+    def plot(
+        self, x: str | None = None, y: str | None = None, scan_id: Any | None = None
+    ) -> None:
+        """Plot x vs y from the scan data."""
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            click.secho(
+                "matplotlib is required for plotting. Install it to use this feature.",
+                fg="red",
+            )
+            return
+
+        target_scan_id = scan_id or self.current_scan_id
+        if target_scan_id is None and self.data:
+            target_scan_id = list(self.data.keys())[-1]
+
+        if target_scan_id is None:
+            click.secho("No scan data available to plot.", fg="red")
+            return
+
+        if target_scan_id not in self.data:
+            click.secho(f"Scan ID {target_scan_id} not found in data.", fg="red")
+            return
+
+        scan_data = self.data[target_scan_id]
+        available_fields = list(scan_data.keys())
+
+        if not available_fields:
+            click.secho(f"No fields available in scan {target_scan_id}.", fg="red")
+            return
+
+        if x is None and y is None:
+            if len(available_fields) >= 2:
+                x_key = available_fields[0]
+                y_key = available_fields[1]
+            else:
+                x_key = None
+                y_key = available_fields[0]
+        elif y is None:
+            y_key = x
+            x_key = None
+        else:
+            x_key = x
+            y_key = y
+
+        if y_key not in scan_data:
+            click.secho(
+                f"Data for '{y_key}' not found in scan {target_scan_id}.", fg="red"
+            )
+            click.echo(f"Available fields: {available_fields}")
+            return
+
+        if x_key is not None and x_key not in scan_data:
+            click.secho(
+                f"Data for '{x_key}' not found in scan {target_scan_id}.", fg="red"
+            )
+            click.echo(f"Available fields: {available_fields}")
+            return
+
+        y_data = scan_data[y_key]
+
+        if x_key is not None:
+            x_data = scan_data[x_key]
+            min_len = min(len(x_data), len(y_data))
+            x_plot = x_data[:min_len]
+            y_plot = y_data[:min_len]
+            xlabel = x_key
+        else:
+            x_plot = list(range(1, len(y_data) + 1))
+            y_plot = y_data
+            xlabel = "Point number"
+
+        plt.figure()
+        plt.plot(x_plot, y_plot, marker="o")
+        plt.xlabel(xlabel)
+        plt.ylabel(y_key)
+        title_x = xlabel if x_key is not None else "point number"
+        plt.title(f"Scan {target_scan_id}: {title_x} vs {y_key}")
+        plt.grid(True)
+        plt.show(block=False)
 
     def print_inventory(self) -> BlueapiClient:
         """Print available plans and devices."""
