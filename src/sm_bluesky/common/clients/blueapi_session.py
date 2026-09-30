@@ -15,6 +15,8 @@ from blueapi.config import (
 )
 from blueapi.core import DataEvent
 
+_ACTIVE_WIDGETS: dict[Any, dict[str, Any]] = {}
+
 
 class BlueAPISession:
     def __init__(
@@ -75,6 +77,7 @@ class BlueAPISession:
                 "dev": self.bc.devices,
                 "scan_data": self.data,
                 "plot": self.plot,
+                "plot_interactive": self.plot_interactive,
             },
         )
 
@@ -158,6 +161,217 @@ class BlueAPISession:
         title_x = xlabel if x_key is not None else "point number"
         plt.title(f"Scan {target_scan_id}: {title_x} vs {y_key}")
         plt.grid(True)
+        plt.show(block=False)
+
+    def plot_interactive(self, scan_id: Any | None = None) -> None:
+        """Open an interactive plot window with clickable controls for multiple scans and axes."""
+        try:
+            import matplotlib.pyplot as plt
+            from matplotlib.widgets import CheckButtons, RadioButtons
+        except ImportError:
+            click.secho(
+                "matplotlib is required for plotting. Install it to use this feature.",
+                fg="red",
+            )
+            return
+
+        if not self.data:
+            click.secho("No scan data available to plot.", fg="red")
+            return
+
+        scans = list(self.data.keys())
+        active_scans = dict.fromkeys(scans, False)
+        if scan_id in active_scans:
+            active_scans[scan_id] = True
+        elif scans:
+            active_scans[scans[-1]] = True
+
+        # Create figure with margin on the right for control panels
+        fig, ax = plt.subplots(figsize=(10, 6))
+        plt.subplots_adjust(left=0.08, right=0.72, top=0.92, bottom=0.1)
+
+        # Container to hold widgets so Python doesn't garbage collect them
+        _ACTIVE_WIDGETS[fig] = {}
+
+        def get_active_fields() -> list[str]:
+            fields = set()
+            for s_id, is_active in active_scans.items():
+                if is_active:
+                    fields.update(self.data[s_id].keys())
+            return sorted(list(fields))
+
+        # Widget Axes areas [left, bottom, width, height]
+        ax_scan = plt.axes((0.76, 0.70, 0.22, 0.22))
+        ax_x = plt.axes((0.76, 0.40, 0.22, 0.25))
+        ax_y = plt.axes((0.76, 0.05, 0.22, 0.30))
+
+        # 1. Scan Selector (Multiple Checkboxes)
+        scan_labels = [str(s) for s in scans]
+        scan_check = CheckButtons(
+            ax_scan,
+            scan_labels,
+            actives=[active_scans[s] for s in scans],
+        )
+        ax_scan.set_title("Scan IDs", fontsize=10, fontweight="bold")
+
+        # 2. X and Y Controls (dynamically built)
+        active_y_states: dict[str, bool] = {}
+
+        def draw_plot() -> None:
+            ax.cla()
+            x_widget = _ACTIVE_WIDGETS[fig].get("radio_x")
+            x_choice = x_widget.value_selected if x_widget else "Point number"
+
+            plotted_any = False
+            for s_id, is_scan_active in active_scans.items():
+                if not is_scan_active:
+                    continue
+
+                s_data = self.data[s_id]
+
+                # Determine X values
+                if x_choice == "Point number" or x_choice not in s_data:
+                    first_key = next(iter(s_data.keys())) if s_data else None
+                    n_pts = len(s_data[first_key]) if first_key else 0
+                    x_vals = list(range(1, n_pts + 1))
+                    x_label = "Point number"
+                else:
+                    x_vals = s_data[x_choice]
+                    x_label = x_choice
+
+                # Plot each checked Y channel
+                for y_field, is_active in active_y_states.items():
+                    if is_active and y_field in s_data:
+                        y_vals = s_data[y_field]
+                        min_len = min(len(x_vals), len(y_vals))
+                        ax.plot(
+                            x_vals[:min_len],
+                            y_vals[:min_len],
+                            marker="o",
+                            label=f"Scan {s_id}: {y_field}",
+                        )
+                        plotted_any = True
+
+            ax.set_xlabel(x_choice if x_widget else "Point number")
+            ax.set_title("Live Mult-Scan Plot")
+            ax.grid(True)
+            if plotted_any:
+                ax.legend(loc="best")
+            fig.canvas.draw_idle()
+
+        def build_xy_controls() -> None:
+            ax_x.cla()
+            ax_y.cla()
+
+            fields = get_active_fields()
+            x_options = ["Point number"] + fields
+
+            # Preserve old X if possible
+            old_x = None
+            if "radio_x" in _ACTIVE_WIDGETS[fig]:
+                old_x = _ACTIVE_WIDGETS[fig]["radio_x"].value_selected
+
+            active_x_idx = 0
+            if old_x in x_options:
+                active_x_idx = x_options.index(old_x)
+
+            radio_x = RadioButtons(ax_x, x_options, active=active_x_idx)
+            ax_x.set_title("X Axis", fontsize=10, fontweight="bold")
+
+            # Reset or preserve Y state
+            new_active_y = {}
+            for i, f in enumerate(fields):
+                if f in active_y_states:
+                    new_active_y[f] = active_y_states[f]
+                else:
+                    # check first channel by default if nothing is selected yet
+                    new_active_y[f] = i == 0 and not any(active_y_states.values())
+            active_y_states.clear()
+            active_y_states.update(new_active_y)
+
+            check_y = CheckButtons(
+                ax_y,
+                fields,
+                actives=[active_y_states[f] for f in fields] if fields else [],
+            )
+            ax_y.set_title("Y Channels", fontsize=10, fontweight="bold")
+
+            def on_x_change(label: str | None) -> None:
+                draw_plot()
+
+            def on_y_toggle(label: str | None) -> None:
+                if label is not None:
+                    active_y_states[label] = not active_y_states.get(label, False)
+                draw_plot()
+
+            radio_x.on_clicked(on_x_change)
+            check_y.on_clicked(on_y_toggle)
+
+            _ACTIVE_WIDGETS[fig]["radio_x"] = radio_x
+            _ACTIVE_WIDGETS[fig]["check_y"] = check_y
+
+        def on_scan_toggle(label: str | None) -> None:
+            if label is None:
+                return
+            for s in scans:
+                if str(s) == label:
+                    active_scans[s] = not active_scans[s]
+                    break
+            build_xy_controls()
+            draw_plot()
+
+        scan_check.on_clicked(on_scan_toggle)
+        _ACTIVE_WIDGETS[fig]["scan_check"] = scan_check
+
+        last_seen_points: dict[Any, int] = {}
+
+        def update_interactive() -> None:
+            if not plt.fignum_exists(fig.number):
+                timer.stop()
+                return
+
+            new_scans = list(self.data.keys())
+            added = False
+            for s in new_scans:
+                if s not in scans:
+                    scans.append(s)
+                    active_scans[s] = True
+                    added = True
+
+            needs_redraw = added
+            for s_id, is_active in active_scans.items():
+                if is_active and s_id in self.data:
+                    s_data = self.data[s_id]
+                    first_key = next(iter(s_data.keys())) if s_data else None
+                    n_pts = len(s_data[first_key]) if first_key else 0
+                    if last_seen_points.get(s_id, 0) != n_pts:
+                        last_seen_points[s_id] = n_pts
+                        needs_redraw = True
+
+            if added:
+                ax_scan.cla()
+                scan_labels = [str(s) for s in scans]
+                new_scan_check = CheckButtons(
+                    ax_scan,
+                    scan_labels,
+                    actives=[active_scans[s] for s in scans],
+                )
+                new_scan_check.on_clicked(on_scan_toggle)
+                _ACTIVE_WIDGETS[fig]["scan_check"] = new_scan_check
+                ax_scan.set_title("Scan IDs", fontsize=10, fontweight="bold")
+                build_xy_controls()
+
+            if needs_redraw:
+                draw_plot()
+
+        timer = fig.canvas.new_timer(interval=1000)
+        timer.add_callback(update_interactive)
+        timer.start()
+        _ACTIVE_WIDGETS[fig]["timer"] = timer
+
+        # Initialize and show
+        build_xy_controls()
+        draw_plot()
         plt.show(block=False)
 
     def print_inventory(self) -> BlueapiClient:
