@@ -186,8 +186,14 @@ def send(payload: str, host: str = "127.0.0.1", port: int = 7891, timeout: float
     default=None,
     help="Pre-assign the active instrument session (e.g. cm44186-1).",
 )
+@click.option(
+    "-d",
+    "--dummy",
+    is_flag=True,
+    help="Automatically set the active instrument session to 'dummy'.",
+)
 def blueapi_client(
-    beamline: str | None, config: Path | None, session: str | None
+    beamline: str | None, config: Path | None, session: str | None, dummy: bool
 ) -> None:
     """Launch an interactive IPython BlueAPI client session."""
     from sm_bluesky.common.clients import (
@@ -205,6 +211,9 @@ def blueapi_client(
         config_path=config,
         beamline=beamline,
     )
+
+    if dummy:
+        session = "dummy"
 
     bs_session = BlueAPISession(
         config=app_config,
