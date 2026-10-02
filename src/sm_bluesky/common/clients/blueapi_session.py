@@ -16,7 +16,7 @@ from blueapi.config import (
 from blueapi.core import DataEvent
 
 
-class BlueAPISession:
+class BlueapiSession:
     def __init__(
         self, config: ApplicationConfig, instrument_session: str | None = None
     ):

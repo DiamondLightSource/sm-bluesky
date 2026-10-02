@@ -5,7 +5,7 @@ import pytest
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
 
-from sm_bluesky.common.clients.blueapi_session import BlueAPISession, load_config
+from sm_bluesky.common.clients.blueapi_session import BlueapiSession, load_config
 
 
 def test_load_config_with_path(tmp_path: Path) -> None:
@@ -46,7 +46,7 @@ def test_blueapi_session_initialization_with_instrument_session(
 
     config = ApplicationConfig()
 
-    BlueAPISession(config=config, instrument_session="my-session")
+    BlueapiSession(config=config, instrument_session="my-session")
 
     mock_client_class.from_config.assert_called_once_with(config)
     mock_client.login.assert_called_once()
@@ -63,7 +63,7 @@ def test_blueapi_session_initialization_without_instrument_session(
 ) -> None:
     config = ApplicationConfig()
 
-    BlueAPISession(config=config)
+    BlueapiSession(config=config)
 
     mock_secho.assert_called_once_with(
         "\n[Notice] No instrument session set."
@@ -76,7 +76,7 @@ def test_blueapi_session_initialization_without_instrument_session(
 @patch("IPython.embed")
 def test_start_shell(mock_embed: MagicMock, mock_client_class: MagicMock) -> None:
     config = ApplicationConfig()
-    session = BlueAPISession(config=config)
+    session = BlueapiSession(config=config)
     session.start_shell()
     mock_embed.assert_called_once()
     kwargs = mock_embed.call_args.kwargs
@@ -91,7 +91,7 @@ def test_start_shell(mock_embed: MagicMock, mock_client_class: MagicMock) -> Non
 @patch("sm_bluesky.common.clients.blueapi_session.click.echo")
 def test_callbacks_handling(mock_echo: MagicMock, mock_client_class: MagicMock) -> None:
     config = ApplicationConfig()
-    session = BlueAPISession(config=config)
+    session = BlueapiSession(config=config)
 
     mock_client = mock_client_class.from_config.return_value
     mock_client.add_callback.assert_called_once()
@@ -136,7 +136,7 @@ def test_callback_event_without_scan_id(
     mock_echo: MagicMock, mock_client_class: MagicMock
 ) -> None:
     config = ApplicationConfig()
-    session = BlueAPISession(config=config)
+    session = BlueapiSession(config=config)
 
     mock_client = mock_client_class.from_config.return_value
     callback = mock_client.add_callback.call_args[0][0]

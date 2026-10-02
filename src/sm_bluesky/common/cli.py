@@ -191,7 +191,7 @@ def blueapi_client(
 ) -> None:
     """Launch an interactive IPython BlueAPI client session."""
     from sm_bluesky.common.clients import (
-        BlueAPISession,
+        BlueapiSession,
         load_config,
     )
 
@@ -206,7 +206,7 @@ def blueapi_client(
         beamline=beamline,
     )
 
-    bs_session = BlueAPISession(
+    bs_session = BlueapiSession(
         config=app_config,
         instrument_session=session,
     )

@@ -224,7 +224,7 @@ def test_cli_client_missing_args() -> None:
     )
 
 
-@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.BlueapiSession")
 @patch("sm_bluesky.common.clients.load_config")
 def test_cli_client_with_beamline(
     mock_load_config: MagicMock, mock_blueapi_session: MagicMock
@@ -243,7 +243,7 @@ def test_cli_client_with_beamline(
     mock_instance.start_shell.assert_called_once()
 
 
-@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.BlueapiSession")
 @patch("sm_bluesky.common.clients.load_config")
 def test_cli_client_with_config(
     mock_load_config: MagicMock, mock_blueapi_session: MagicMock
