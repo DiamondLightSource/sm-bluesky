@@ -32,6 +32,11 @@ def window(sample_data):
 def test_init(window):
     assert "scan1" in window.active_scans
     assert len(window.scans) == 2
+    assert "text_box" in window.widgets
+    assert "unselect_btn" in window.widgets
+    assert "scan_check" in window.widgets
+    assert "radio_x" in window.widgets
+    assert "check_y" in window.widgets
 
 
 def test_get_active_fields(window):
