@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sm_bluesky.common &#8212; sm-bluesky 1.1.3.dev39+g5a89e5aba documentation</title>
+    <title>sm_bluesky.common &#8212; sm-bluesky 1.1.3.dev40+g29ef8ce14 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=f495008b"></script>
+    <script src="../_static/documentation_options.js?v=9d92f48e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,7 +58,7 @@
     <link rel="icon" href="../_static/dls-logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sm_bluesky.common.helper" href="sm_bluesky.common.helper.html" />
+    <link rel="next" title="sm_bluesky.common.cli" href="sm_bluesky.common.cli.html" />
     <link rel="prev" title="sm_bluesky.beamlines.p99.plans" href="sm_bluesky.beamlines.p99.plans.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -439,11 +439,13 @@
 </ul>
 </details></li>
 <li class="toctree-l2 current active has-children"><a aria-current="page" class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common</span></code></a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.cli.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.cli</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.client.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.client</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.helper.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.helper</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.math_functions.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.math_functions</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.plan_stubs.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.plan_stubs</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.plans</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.server.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.server</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.servers.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.servers</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.sim_devices.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.sim_devices</span></code></a></li>
 </ul>
 </details></li>
@@ -527,6 +529,12 @@
 <p class="rubric">Submodules</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="sm_bluesky.common.cli.html#module-sm_bluesky.common.cli" title="sm_bluesky.common.cli"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cli</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="sm_bluesky.common.client.html#module-sm_bluesky.common.client" title="sm_bluesky.common.client"><code class="xref py py-obj docutils literal notranslate"><span class="pre">client</span></code></a></p></td>
+<td><p></p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="sm_bluesky.common.helper.html#module-sm_bluesky.common.helper" title="sm_bluesky.common.helper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper</span></code></a></p></td>
 <td><p></p></td>
 </tr>
@@ -539,7 +547,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="sm_bluesky.common.plans.html#module-sm_bluesky.common.plans" title="sm_bluesky.common.plans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plans</span></code></a></p></td>
 <td><p>Bluesky plans common for S&amp;M beamline.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="sm_bluesky.common.server.html#module-sm_bluesky.common.server" title="sm_bluesky.common.server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">server</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="sm_bluesky.common.servers.html#module-sm_bluesky.common.servers" title="sm_bluesky.common.servers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">servers</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="sm_bluesky.common.sim_devices.html#module-sm_bluesky.common.sim_devices" title="sm_bluesky.common.sim_devices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sim_devices</span></code></a></p></td>
@@ -570,11 +578,11 @@
       </div>
     </a>
     <a class="right-next"
-       href="sm_bluesky.common.helper.html"
+       href="sm_bluesky.common.cli.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.helper</span></code></p>
+        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.cli</span></code></p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

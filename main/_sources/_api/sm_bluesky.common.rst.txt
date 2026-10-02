@@ -13,11 +13,13 @@
         :template: custom-module-template.rst
         :recursive:
     
+        cli
+        client
         helper
         math_functions
         plan_stubs
         plans
-        server
+        servers
         sim_devices
     
     
