@@ -1,19 +1,13 @@
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 import click
 from blueapi.client import BlueapiClient
 from blueapi.client.event_bus import AnyEvent
-from blueapi.config import (
-    ApplicationConfig,
-    ConfigLoader,
-    HttpUrl,
-    RestConfig,
-    StompConfig,
-    TcpUrl,
-)
+from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
+
+from .interactive_plot import InteractivePlotWindow
 
 
 class BlueAPISession:
@@ -42,33 +36,72 @@ class BlueAPISession:
 
     def start_shell(self) -> None:
         """Start an interactive IPython shell with the BlueAPI client available."""
-        from IPython import embed
+        from IPython import start_ipython
+        from traitlets.config import Config
 
-        embed(
-            header="\nBlueAPI client ready.\n"
+        c = Config()
+        c.InteractiveShellApp.exec_lines = [
+            (
+                "try:\n\tget_ipython().run_line_magic('matplotlib', 'auto')"
+                "\n\tplot()\n"
+                "except Exception as e:"
+                "\n\tprint(f'Failed to start interactive plot: {e}')"
+            )
+        ]
+
+        c.TerminalInteractiveShell.banner1 = (
+            "\nBlueAPI client ready.\n"
             'The client is available as "bc".\n'
-            "Use exit() or Ctrl-D to leave.\n",
+            "Use exit() or Ctrl-D to leave.\n"
+        )
+
+        start_ipython(
+            argv=[],
+            config=c,
             user_ns={
                 "bc": self.bc,
                 "pl": self.bc.plans,
+                "show_plan": self.print_plans,
                 "dev": self.bc.devices,
+                "show_devices": self.print_devices,
                 "scan_data": self.data,
+                "plot": self.plot,
             },
         )
 
-    def print_inventory(self) -> BlueapiClient:
-        """Print available plans and devices."""
+    def plot(self, scan_id: Any | None = None) -> None:
+        """Open an interactive plot window for multiple scans and axes."""
+        if hasattr(self, "_active_plot_windows"):
+            self._active_plot_windows = [
+                win
+                for win in self._active_plot_windows
+                if win.plt.fignum_exists(win.fig.number)
+            ]
+        else:
+            self._active_plot_windows = []
+
+        try:
+            window = InteractivePlotWindow(self.data, scan_id)
+            self._active_plot_windows.append(window)
+        except ImportError:
+            pass
+
+    def print_plans(self) -> None:
         click.echo("\nPlans available:")
         for plan in self.bc.plans:
             click.echo(f"  {plan.name}")
 
+    def print_devices(self) -> None:
         click.echo("\nDevices available:")
         for device in self.bc.devices:
             click.echo(f"  {device.name}")
-        return self.bc
+
+    def print_inventory(self) -> None:
+        self.print_plans()
+        self.print_devices()
 
     def _install_callbacks(self) -> None:
-        """Install a callback which displays run progress."""
+        """Install a callback to store the date event locally"""
 
         def feedback(event: AnyEvent) -> None:
 
@@ -122,35 +155,3 @@ class BlueAPISession:
     @staticmethod
     def _format_time(timestamp: int) -> str:
         return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
-
-
-def load_config(
-    config_path: Path | None = None,
-    beamline: str | None = None,
-) -> ApplicationConfig:
-    """Load configuration from file orCLI beamline flag"""
-
-    if config_path is not None:
-        print(f"Loading configuration from file: {config_path}")
-        loader = ConfigLoader(ApplicationConfig)
-        loader.use_values_from_yaml(config_path)
-        return loader.load()
-
-    target_beamline = beamline
-
-    if not target_beamline:
-        raise ValueError(
-            "No beamline specified. Please provide either:\n"
-            "  --beamline / -b <beamline_name>\n"
-            "  --config / -c <path_to_yaml>\n"
-        )
-
-    print(f"Connecting using default config for beamline: {target_beamline}")
-
-    return ApplicationConfig(
-        api=RestConfig(url=HttpUrl(f"https://{target_beamline}-blueapi.diamond.ac.uk")),
-        stomp=StompConfig(
-            enabled=True,
-            url=TcpUrl(f"tcp://{target_beamline}-rabbitmq-daq.diamond.ac.uk:61613"),
-        ),
-    )
