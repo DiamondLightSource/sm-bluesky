@@ -74,13 +74,13 @@ def test_blueapi_session_initialization_without_instrument_session(
 
 
 @patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
-@patch("IPython.embed")
-def test_start_shell(mock_embed: MagicMock, mock_client_class: MagicMock) -> None:
+@patch("IPython.start_ipython")
+def test_start_shell(mock_start: MagicMock, mock_client_class: MagicMock) -> None:
     config = ApplicationConfig()
     session = BlueAPISession(config=config)
     session.start_shell()
-    mock_embed.assert_called_once()
-    kwargs = mock_embed.call_args.kwargs
+    mock_start.assert_called_once()
+    kwargs = mock_start.call_args.kwargs
     assert "bc" in kwargs["user_ns"]
     assert "pl" in kwargs["user_ns"]
     assert "dev" in kwargs["user_ns"]
@@ -160,3 +160,53 @@ def test_callback_event_without_scan_id(
     assert "1970-01-01 00:00:01 - Point 1: motor1=10.5" not in [
         call.args[0] for call in mock_echo.call_args_list
     ]
+
+
+@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+def test_dead_plot_window_removed(mock_client_class: MagicMock) -> None:
+    config = ApplicationConfig()
+    session = BlueAPISession(config=config)
+
+    class FakePlot:
+        class FakeFig:
+            number = 1
+
+        class FakePlt:
+            @staticmethod
+            def fignum_exists(num):
+                return num == 1
+
+        fig = FakeFig()
+        plt = FakePlt()
+
+    class FakeDeadPlot:
+        class FakeFig:
+            number = 2
+
+        class FakePlt:
+            @staticmethod
+            def fignum_exists(num):
+                return False
+
+        fig = FakeFig()
+        plt = FakePlt()
+
+    session._active_plot_windows = [FakePlot(), FakeDeadPlot()]
+
+    with patch(
+        "sm_bluesky.common.clients.blueapi_session.InteractivePlotWindow"
+    ) as mock_win:
+        session.plot("scan1")
+        assert len(session._active_plot_windows) == 2
+        mock_win.assert_called_once()
+
+
+@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+def test_plot_import_error(mock_client_class: MagicMock) -> None:
+    config = ApplicationConfig()
+    session = BlueAPISession(config=config)
+    with patch(
+        "sm_bluesky.common.clients.blueapi_session.InteractivePlotWindow",
+        side_effect=ImportError("mock error"),
+    ):
+        session.plot()
