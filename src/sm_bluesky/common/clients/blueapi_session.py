@@ -53,9 +53,10 @@ class BlueAPISession:
         c = Config()
         c.InteractiveShellApp.exec_lines = [
             (
-                "try:\n    get_ipython().run_line_magic('matplotlib', 'auto')\n"
-                "    plot()\nexcept Exception as e:\n"
-                "    print(f'Failed to start interactive plot: {e}')"
+                "try:\n\tget_ipython().run_line_magic('matplotlib', 'auto')"
+                "\n\tplot()\n"
+                "except Exception as e:"
+                "\n\tprint(f'Failed to start interactive plot: {e}')"
             )
         ]
 
