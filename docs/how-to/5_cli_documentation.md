@@ -1,14 +1,16 @@
-# 📟sm-bluesky CLI Reference
+# sm-bluesky CLI Reference
 
 The `sm-bluesky` command-line interface provides tools to launch instrument servers and interact with running instances via quick payloads (commands).
 
 ---
 
-## 🚀 Commands Overview
+## Commands Overview
 
-The interface is split into two primary modes:
-* **`start`**: Configures and spins up background hardware device server.
-* **`send`**: A lightweight diagnostic utility to send arbitrary string payloads to an active server.
+The interface provides several primary commands:
+* **`start`**: Configures and spins up background services like instrument servers or the BlueAPI server.
+* **`send`**: A lightweight diagnostic utility to send arbitrary string payloads to an active instrument server.
+* **`client`**: Launches an interactive IPython session connected to the BlueAPI server.
+* **`install-completion`**: Automatically installs completion for the CLI.
 
 For extra information use:
 * **`-h`, `--help`**: Displays general or command-specific help menus.
@@ -59,4 +61,37 @@ sm-bluesky send "PAYLOAD" [FLAGS]
 sm-bluesky send "command_list"
 
 # Adjust settings on a remote beamline server
-sm-bluesky send "SET_DELAY 512" --host 192.168.1.50 --port 7891```
+sm-bluesky send "SET_DELAY 512" --host 192.168.1.50 --port 7891
+```
+
+### 3. Starting the BlueAPI Server
+Launches the BlueAPI REST server with your configuration.
+
+```bash
+sm-bluesky start blueapi --config path/to/config.yaml
+```
+| Flag | Type | Default | Description |
+| -----| -----| ------  | -----------|
+| -c, --config | Path | None | Path to BlueAPI YAML config file (Required). |
+
+### 4. Launching the BlueAPI Interactive Client
+Opens an interactive IPython shell connected to your BlueAPI server, allowing you to run plans and interact with devices dynamically.
+
+```bash
+sm-bluesky client [FLAGS]
+```
+| Flag | Type | Default | Description |
+| -----| -----| ------  | -----------|
+| -b, --beamline | str | None | Target beamline name (e.g., iXX). |
+| -c, --config | Path | None | Path to BlueAPI YAML config file. |
+| -s, --session | str | None | Pre-assign the active instrument session (e.g. cm44186-1). |
+
+*(Note: You must provide either `-b` or `-c`)*
+
+```bash
+# Connect using a local config
+sm-bluesky client -c src/yaml_config/blueapi_config.yaml -s cm44186-1
+
+# Connect using a known beamline alias
+sm-bluesky client -b p99
+```
