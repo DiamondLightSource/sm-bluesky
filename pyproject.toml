@@ -23,6 +23,7 @@ dependencies = [
     "ophyd-async[sim]",
     "scanspec",
     "blueapi",
+    "ipython",
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
@@ -32,9 +33,11 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 server = ["pyserial"]
+testing = ["jupyter", "matplotlib", "numpy", "pyepics"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",
+    "sm_bluesky[testing]",
     "copier",
     "myst-parser",
     "pre-commit",
@@ -51,17 +54,10 @@ dev = [
     "pytest-asyncio",
     # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
     "chardet==7.6.0",
-
-    #usefull stuff for testing
-    "jupyter",
-    "ipython",
-    "matplotlib",
-    "numpy",
-    "pyepics",
 ]
 
 [project.scripts]
-sm-bluesky = "sm_bluesky.__main__:main"
+sm-bluesky = "sm_bluesky.common.cli:cli"
 
 [project.urls]
 GitHub = "https://github.com/DiamondLightSource/sm-bluesky"
