@@ -5,7 +5,8 @@ import pytest
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
 
-from sm_bluesky.common.clients.blueapi_session import BlueAPISession, load_config
+from sm_bluesky.common.cli import load_config
+from sm_bluesky.common.clients.blueapi_session import BlueAPISession
 
 
 def test_load_config_with_path(tmp_path: Path) -> None:
