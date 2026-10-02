@@ -20,12 +20,11 @@ class BlueAPISession:
     def __init__(
         self, config: ApplicationConfig, instrument_session: str | None = None
     ):
-        self._bc: BlueapiClient | None = None
         self.config: ApplicationConfig = config
         self.data: dict[str, dict[str, list[Any]]] = {}
         self.current_scan_id: Any | None = None
         click.echo("Connecting to BlueAPI service...")
-        self.bc = BlueapiClient.from_config(self.config)
+        self.bc: BlueapiClient = BlueapiClient.from_config(self.config)
         self.bc.login()
 
         self._install_callbacks()
@@ -40,16 +39,6 @@ class BlueAPISession:
                 " '<session_id>'` before dispatching plans.",
                 fg="red",
             )
-
-    @property
-    def bc(self) -> BlueapiClient:
-        if self._bc is None:
-            raise RuntimeError("BlueAPI client is not initialized.")
-        return self._bc
-
-    @bc.setter
-    def bc(self, value: BlueapiClient) -> None:
-        self._bc = value
 
     def start_shell(self) -> None:
         """Start an interactive IPython shell with the BlueAPI client available."""

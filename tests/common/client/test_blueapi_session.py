@@ -130,13 +130,6 @@ def test_callbacks_handling(mock_echo: MagicMock, mock_client_class: MagicMock) 
     )
 
 
-def test_bc_property_not_initialized() -> None:
-    session = BlueAPISession.__new__(BlueAPISession)
-    session._bc = None
-    with pytest.raises(RuntimeError, match="BlueAPI client is not initialized."):
-        _ = session.bc
-
-
 @patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("sm_bluesky.common.clients.blueapi_session.click.echo")
 def test_callback_event_without_scan_id(
