@@ -14,7 +14,7 @@
         :recursive:
     
         cli
-        client
+        clients
         helper
         math_functions
         plan_stubs

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.cli &#8212; sm-bluesky 1.1.3.dev40+g29ef8ce14 documentation</title>
+    <title>sm_bluesky.common.cli &#8212; sm-bluesky 1.1.3.dev41+g22991c59b documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../../_static/documentation_options.js?v=9d92f48e"></script>
+    <script src="../../../_static/documentation_options.js?v=77b74b6d"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -458,140 +458,222 @@
                 <article class="bd-article">
                   
   <h1>Source code for sm_bluesky.common.cli</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">argparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">click</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"main"</span><span class="p">]</span>
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="n">context_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"help_option_names"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"-h"</span><span class="p">,</span> <span class="s2">"--help"</span><span class="p">]})</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">version_option</span><span class="p">(</span><span class="n">__version__</span><span class="p">,</span> <span class="s2">"-v"</span><span class="p">,</span> <span class="s2">"--version"</span><span class="p">,</span> <span class="n">prog_name</span><span class="o">=</span><span class="s2">"sm-bluesky"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""sm-bluesky CLI"""</span>
+    <span class="k">pass</span>
 
 
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../_api/sm_bluesky.common.cli.html#sm_bluesky.common.cli.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Argument parser for the CLI."""</span>
-    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"sm-bluesky CLI"</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"-v"</span><span class="p">,</span>
-        <span class="s2">"--version"</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">"version"</span><span class="p">,</span>
-        <span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">subparsers</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s2">"command"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Commands"</span><span class="p">)</span>
-
-    <span class="c1"># ----------------- start command ----------------------------------------------</span>
-    <span class="n">start_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
-        <span class="s2">"start"</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">"Start an instrument server"</span><span class="p">,</span>
-        <span class="n">epilog</span><span class="o">=</span><span class="s2">"Example usage:</span><span class="se">\n</span><span class="s2">  sm-bluesky start sh_pulse_generator --usb-port COM4 "</span>
-        <span class="s2">"--host 192.168.1.88 --port 7891 "</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">server_subparsers</span> <span class="o">=</span> <span class="n">start_parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span>
-        <span class="n">dest</span><span class="o">=</span><span class="s2">"server_type"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Server types"</span>
-    <span class="p">)</span>
-
-    <span class="c1"># --- config for shanghaiTech pulse generator ---</span>
-    <span class="n">sh_parser</span> <span class="o">=</span> <span class="n">server_subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
-        <span class="s2">"sh_pulse_generator"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Launch ShanghaiTech pulse Generator Server"</span>
-    <span class="p">)</span>
-    <span class="n">sh_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--host"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"0.0.0.0"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Binding host IP"</span>
-    <span class="p">)</span>
-    <span class="n">sh_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--port"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">7891</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"TCP Port"</span><span class="p">)</span>
-    <span class="n">sh_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--ipv6"</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Enable IPv6 support"</span><span class="p">)</span>
-    <span class="n">sh_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--usb-port"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"COM4"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Serial USB COM port"</span>
-    <span class="p">)</span>
-    <span class="n">sh_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--baud-rate"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">9600</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Serial Baud rate"</span>
-    <span class="p">)</span>
-    <span class="n">sh_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--timeout"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Serial timeout duration"</span>
-    <span class="p">)</span>
-    <span class="n">sh_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--max-pulse-delay"</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">"Max pulse delay configuration"</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="c1"># ----------------- send command ----------------------------------------------</span>
-<span class="w">    </span><span class="sd">"""Quick command line to interact with server """</span>
-    <span class="n">send_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
-        <span class="s2">"send"</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">"Send a single text command to a running server"</span><span class="p">,</span>
-        <span class="n">epilog</span><span class="o">=</span><span class="s1">'Example usage:</span><span class="se">\n</span><span class="s1">  sm-bluesky send "SET_DELAY 512" --host 192.168.1.88'</span>
-        <span class="s2">" --port 8888"</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">send_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"payload"</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s1">'The command and arguments to send (e.g."SET_DELAY 512" or '</span>
-        <span class="s1">'"command_list")'</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">send_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--host"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"127.0.0.1"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Target server IP"</span>
-    <span class="p">)</span>
-    <span class="n">send_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--port"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">7891</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Target server TCP port"</span>
-    <span class="p">)</span>
-    <span class="n">send_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--timeout"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Socket timeout"</span>
-    <span class="p">)</span>
-
-    <span class="n">parsed_args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">"start"</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">server_type</span> <span class="o">==</span> <span class="s2">"sh_pulse_generator"</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.servers</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneratorServerShanghaiTech</span>
-
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"🚀 Initializing ShanghaiTech Generator on </span><span class="si">{</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">usb_port</span><span class="si">}</span><span class="s2">..."</span>
-            <span class="p">)</span>
-            <span class="n">server</span> <span class="o">=</span> <span class="n">GeneratorServerShanghaiTech</span><span class="p">(</span>
-                <span class="n">host</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">host</span><span class="p">,</span>
-                <span class="n">port</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">port</span><span class="p">,</span>
-                <span class="n">ipv6</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">ipv6</span><span class="p">,</span>
-                <span class="n">usb_port</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">usb_port</span><span class="p">,</span>
-                <span class="n">baud_rate</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">baud_rate</span><span class="p">,</span>
-                <span class="n">timeout</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span>
-                <span class="n">max_pulse_delay</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">max_pulse_delay</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-            <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Stopping server ..."</span><span class="p">)</span>
-                <span class="n">server</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">start_parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">"send"</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstrumentClient</span>
-
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Sending command:</span><span class="si">{</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">payload</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:"</span>
-            <span class="o">+</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span>
-        <span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">parts</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Payload cannot be empty"</span><span class="p">)</span>
-
-            <span class="n">command</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">arguments</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="n">client</span> <span class="o">=</span> <span class="n">InstrumentClient</span><span class="p">(</span>
-                <span class="n">host</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">host</span><span class="p">,</span>
-                <span class="n">port</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">port</span><span class="p">,</span>
-                <span class="n">timeout</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span>
-            <span class="p">)</span>
-
-            <span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">send_payload</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">*</span><span class="n">arguments</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✅ SUCCESS: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">result</span> <span class="k">else</span> <span class="s2">"✅ SUCCESS"</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\u274c</span><span class="s2"> FAILED: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cli</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span></div>
+        <span class="n">cli</span><span class="p">()</span></div>
 
+
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Start an instrument server"""</span>
+    <span class="k">pass</span>
+
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">install_completion</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Install tab completion for your shell (bash/zsh)."""</span>
+    <span class="n">shell</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"SHELL"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">"zsh"</span> <span class="ow">in</span> <span class="n">shell</span><span class="p">:</span>
+        <span class="n">profile_path</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">".zshrc"</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="s1">'eval "$(_SM_BLUESKY_COMPLETE=zsh_source sm-bluesky)"'</span>
+    <span class="k">elif</span> <span class="s2">"bash"</span> <span class="ow">in</span> <span class="n">shell</span><span class="p">:</span>
+        <span class="n">profile_path</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">".bashrc"</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="s1">'eval "$(_SM_BLUESKY_COMPLETE=bash_source sm-bluesky)"'</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">"Unsupported shell. Please configure manually."</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">profile_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">profile_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">command</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">"Tab completion is already installed!"</span><span class="p">)</span>
+            <span class="k">return</span>
+    <span class="k">with</span> <span class="n">profile_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"a"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2"># sm-bluesky tab completion</span><span class="se">\n</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✅ Tab completion installed in </span><span class="si">{</span><span class="n">profile_path</span><span class="si">}</span><span class="s2">!"</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">"Please restart your terminal (or open a new tab) to use it."</span><span class="p">)</span>
+
+
+<span class="nd">@start</span><span class="o">.</span><span class="n">command</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"sh_pulse_generator"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Start an sh_pulse_generator instrument server"</span><span class="p">,</span>
+    <span class="n">epilog</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"</span><span class="se">\b\n</span><span class="s2">"</span>
+        <span class="s2">"Example usage:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"</span><span class="se">\t</span><span class="s2">sm-bluesky start sh_pulse_generator --usb-port COM4"</span>
+        <span class="s2">" --host 192.168.1.88 --port 7891"</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--host"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"0.0.0.0"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Binding host IP"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--port"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">7891</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"TCP Port"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--ipv6"</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Enable IPv6 support"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--usb-port"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"COM4"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Serial USB COM port"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--baud-rate"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">9600</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Serial Baud rate"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--timeout"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Serial timeout duration"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--max-pulse-delay"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Max pulse delay configuration"</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">start_sh_pulse_generator</span><span class="p">(</span>
+    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">port</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">ipv6</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">usb_port</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">baud_rate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">max_pulse_delay</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Start ShanghaiTech pulse generator server."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.servers</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneratorServerShanghaiTech</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"🚀 Initializing ShanghaiTech Generator on </span><span class="si">{</span><span class="n">usb_port</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">GeneratorServerShanghaiTech</span><span class="p">(</span>
+        <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span>
+        <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span>
+        <span class="n">ipv6</span><span class="o">=</span><span class="n">ipv6</span><span class="p">,</span>
+        <span class="n">usb_port</span><span class="o">=</span><span class="n">usb_port</span><span class="p">,</span>
+        <span class="n">baud_rate</span><span class="o">=</span><span class="n">baud_rate</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+        <span class="n">max_pulse_delay</span><span class="o">=</span><span class="n">max_pulse_delay</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Stopping server ..."</span><span class="p">)</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+
+<span class="nd">@start</span><span class="o">.</span><span class="n">command</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"blueapi"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Start a BlueAPI server using a configuration file"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"-c"</span><span class="p">,</span>
+    <span class="s2">"--config"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path_type</span><span class="o">=</span><span class="n">Path</span><span class="p">),</span>
+    <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Path to BlueAPI YAML config file."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">start_blueapi</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Start a BlueAPI server."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"🚀 Starting BlueAPI server with config: </span><span class="si">{</span><span class="n">config</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"blueapi"</span><span class="p">,</span> <span class="s2">"--config"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="p">),</span> <span class="s2">"serve"</span><span class="p">],</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Stopping BlueAPI server ..."</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">❌ BlueAPI server exited with error code </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">"payload"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--host"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"127.0.0.1"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Target server IP"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--port"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">7891</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Target server TCP port"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--timeout"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Socket timeout"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"127.0.0.1"</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7891</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.clients</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstrumentClient</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Sending command:</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s2">:"</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Payload cannot be empty"</span><span class="p">)</span>
+
+        <span class="n">command</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">InstrumentClient</span><span class="p">(</span>
+            <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span>
+            <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">send_payload</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">*</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✅ SUCCESS: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">result</span> <span class="k">else</span> <span class="s2">"✅ SUCCESS"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\u274c</span><span class="s2"> FAILED: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"client"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Launch an interactive IPython BlueAPI client session"</span><span class="p">,</span>
+    <span class="n">epilog</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"</span><span class="se">\b\n</span><span class="s2">"</span>
+        <span class="s2">"Example usages:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"  sm-bluesky client -b p99 -s cm44186-1</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"  sm-bluesky client -c /path/config.yaml -s cm44186-1</span><span class="se">\n</span><span class="s2">"</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"-b"</span><span class="p">,</span> <span class="s2">"--beamline"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Target beamline name (e.g., iXX)."</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"-c"</span><span class="p">,</span>
+    <span class="s2">"--config"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path_type</span><span class="o">=</span><span class="n">Path</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Path to BlueAPI YAML config file."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"-s"</span><span class="p">,</span>
+    <span class="s2">"--session"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Pre-assign the active instrument session (e.g. cm44186-1)."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">blueapi_client</span><span class="p">(</span>
+    <span class="n">beamline</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Launch an interactive IPython BlueAPI client session."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.clients</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">BlueapiSession</span><span class="p">,</span>
+        <span class="n">load_config</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">beamline</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span>
+            <span class="s2">"Error: Please provide either a beamline name (-b) or a config file (-c)."</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">app_config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span>
+        <span class="n">config_path</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">beamline</span><span class="o">=</span><span class="n">beamline</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">bs_session</span> <span class="o">=</span> <span class="n">BlueapiSession</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">app_config</span><span class="p">,</span>
+        <span class="n">instrument_session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">bs_session</span><span class="o">.</span><span class="n">start_shell</span><span class="p">()</span>
 </pre></div>
 
                 </article>
