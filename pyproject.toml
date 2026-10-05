@@ -10,6 +10,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 description = "Bluesky code for Diamond's surface and magnetic materials beamline."
 dependencies = [
@@ -18,9 +19,11 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal>=2.2.0",
+    "dls-dodal==3.0.2",
     "ophyd-async[sim]",
     "scanspec",
+    "blueapi",
+    "ipython",
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
@@ -29,10 +32,12 @@ requires-python = ">=3.11"
 
 
 [project.optional-dependencies]
+testing = ["jupyter", "matplotlib", "numpy", "pyepics"]
 server = ["pyserial", "zhinst-core"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",
+    "sm_bluesky[testing]",
     "copier",
     "myst-parser",
     "pre-commit",
@@ -48,19 +53,11 @@ dev = [
     "types-mock",
     "pytest-asyncio",
     # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
-    "chardet==7.4.0.post2",
-
-    #usefull stuff for testing
-    "jupyter",
-    "ipython",
-    "matplotlib",
-    "numpy",
-    "pyepics",
-    "blueapi",
+    "chardet==7.6.0",
 ]
 
 [project.scripts]
-sm-bluesky = "sm_bluesky.__main__:main"
+sm-bluesky = "sm_bluesky.common.cli:cli"
 
 [project.urls]
 GitHub = "https://github.com/DiamondLightSource/sm-bluesky"
@@ -82,7 +79,12 @@ addopts = """
     --tb=native -vv --doctest-modules --doctest-glob="*.rst"
     """
 # https://iscinumpy.gitlab.io/post/bound-version-constraints/#watch-for-warnings
-filterwarnings = "error"
+# Treat most warnings as errors, but ignore the known deprecation
+# about the SelectableGroups dict interface until upstream is fixed.
+filterwarnings = [
+    "error",
+    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning",
+]
 # Doctest python code in docs, python code in src docstrings, test functions in tests
 testpaths = "docs src tests"
 asyncio_mode = "auto"
@@ -95,6 +97,10 @@ data_file = "/tmp/sm_bluesky.coverage"
 [tool.coverage.paths]
 # Tests are run from installed location, map back to the src directory
 source = ["src", "**/site-packages/"]
+
+[tool.coverage.report]
+# Exclude blueapi client startup scripts from code coverage report
+omit = ["*/sm_bluesky/scripts/clients/*"]
 
 [tool.tox]
 skipsdist = true

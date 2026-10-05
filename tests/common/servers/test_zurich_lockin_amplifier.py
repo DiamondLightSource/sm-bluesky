@@ -4,14 +4,14 @@ import numpy as np
 import pytest
 from zhinst.core import ziDAQServer
 
-from sm_bluesky.common.server import HF2Server
+from sm_bluesky.common.servers.zurich_lockin_amplifier import HF2Server
 
 
 @pytest.fixture
 def mock_daq():
     """Patches Serial and returns the class mock."""
     with patch(
-        "sm_bluesky.common.server.zurich_lockin_amplifier.ziDAQServer", spec=True
+        "sm_bluesky.common.servers.zurich_lockin_amplifier.ziDAQServer", spec=True
     ) as mock_daq:
         yield mock_daq
 
@@ -101,7 +101,7 @@ def test_setup_scope_failed_no_device(mock_server: HF2Server):
         mock_server._setup_scope()
 
 
-@patch("sm_bluesky.common.server.zurich_lockin_amplifier.sleep")
+@patch("sm_bluesky.common.servers.zurich_lockin_amplifier.sleep")
 def test_get_single_scope_shot_success(mock_sleep: MagicMock, mock_server: HF2Server):
 
     mock_server._scope_frequency = 1000
