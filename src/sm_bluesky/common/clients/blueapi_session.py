@@ -35,16 +35,6 @@ class BlueAPISession:
                 fg="red",
             )
 
-    @property
-    def bc(self) -> BlueapiClient:
-        if self._bc is None:
-            raise RuntimeError("BlueAPI client is not initialized.")
-        return self._bc
-
-    @bc.setter
-    def bc(self, value: BlueapiClient) -> None:
-        self._bc = value
-
     def start_shell(self) -> None:
         """Start an interactive IPython shell with the BlueAPI client available."""
         from IPython import start_ipython
