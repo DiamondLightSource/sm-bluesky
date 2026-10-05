@@ -26,8 +26,9 @@ List of supported beamlines:
 
 Core beamline configurations and device logic can be found in <https://github.com/DiamondLightSource/dodal>
 
-Source          | <https://github.com/DiamondLightSource/sm-bluesky>
+What            | Where
 :---:           | :---:
+Source          | <https://github.com/DiamondLightSource/sm-bluesky>
 PyPI            | `pip install sm_bluesky`
 Documentation   | <https://diamondlightsource.github.io/sm-bluesky>
 Releases        | <https://github.com/DiamondLightSource/sm-bluesky/releases>

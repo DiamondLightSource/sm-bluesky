@@ -11,7 +11,7 @@
       "passEnergy": "5.0",
       "iterations": 1,
       "exposureTime": 1.0,
-      "enabled": false,
+      "enabled": true,
       "bindingEnergy": false,
       "values": 1,
       "slices": 100,
