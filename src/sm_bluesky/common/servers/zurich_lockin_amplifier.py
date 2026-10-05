@@ -34,19 +34,6 @@ class HF2Server(AbstractInstrumentServer):
         self._device: ziDAQServer | None = None
         self._scope: ScopeModule | None = None
         self._scope_frequency: float | None = None
-        # Register HF2 specific commands
-        self._command_registry.update(
-            {
-                b"setCurrentInRange": self._set_current_range,
-                b"autoCurrentInRange": self._auto_current_range,
-                b"setRefFreq": self._set_ref_freq,
-                b"setRefV": self._set_ref_vpk,
-                b"setRefVoff": self._set_ref_voff,
-                b"setsRefOutSwitch": self._set_ref_output,
-                b"setsRefHarm": self._set_ref_harmonic,
-                b"setupScope": self._setup_scope_cmd,
-            }
-        )
 
     @property
     def device(self) -> ziDAQServer:
@@ -169,11 +156,13 @@ class HF2Server(AbstractInstrumentServer):
         response = f"{x:e}, {y:e}, {theta:f}, {static:e}, {r:e}"
         self._send_response(response.encode())
 
+    @register_command(b"setup_scope")
     @auto_type_cast
     def _setup_scope_cmd(self, freq: float = 5.0, length: int = 4096, channel: int = 0):
         self._setup_scope(freq, length, channel)
         self._send_response(b"Scope configured")
 
+    @register_command(b"set_curr_range")
     @auto_type_cast
     def _set_current_range(self, value: float):
         # current range is in multiple of 10 between 1e-9 to 1e-2
@@ -185,18 +174,20 @@ class HF2Server(AbstractInstrumentServer):
             response_msg=b"Current range set",
         )
 
+    @register_command(b"set_ref_out")
     @auto_type_cast
     def _set_ref_output(self, value: int):
         self._set_node(
             path="sigouts/0/enables/1", value=value, response_msg=b"Output set to"
         )
 
-    @register_command(b"auto_v")
+    @register_command(b"auto_volt_range")
     def _auto_voltage_range(self):
         self._set_node(
             path="sigins/0/autorange", value=1, response_msg=b"Auto voltage triggered"
         )
 
+    @register_command(b"auto_curr_range")
     def _auto_current_range(self):
         self._set_node(
             path="currins/0/autorange", value=1, response_msg=b"Auto current triggered"
@@ -209,6 +200,7 @@ class HF2Server(AbstractInstrumentServer):
             path="demods/0/timeconstant", value=val, response_msg=b"Time constant set"
         )
 
+    @register_command(b"set_ref_freq")
     @auto_type_cast
     def _set_ref_freq(self, val: float):
         self._set_node(path="oscs/0/freq", value=val, response_msg=b"Frequency set")
@@ -218,16 +210,19 @@ class HF2Server(AbstractInstrumentServer):
     def _set_data_rate(self, val: float):
         self._set_node(path="demods/0/rate", value=val, response_msg=b"Data rate set")
 
+    @register_command(b"set_ref_v")
     @auto_type_cast
     def _set_ref_vpk(self, val: float):
         self._set_node(
             path="sigouts/0/amplitudes/1", value=val, response_msg=b"Ref Vpk set"
         )
 
+    @register_command(b"set_ref_voff")
     @auto_type_cast
     def _set_ref_voff(self, val: float):
         self._set_node(path="sigouts/0/offset", value=val, response_msg=b"Ref Voff set")
 
+    @register_command(b"set_ref_harm")
     @auto_type_cast
     def _set_ref_harmonic(self, val: float):
         self._set_node(
