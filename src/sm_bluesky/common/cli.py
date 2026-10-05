@@ -103,6 +103,50 @@ def start_sh_pulse_generator(
 
 
 @start.command(
+    name="zurich_lockin_amplifier",
+    help="Start a Zurich Instruments HF2 lockin amplifier server",
+    epilog=(
+        "\b\n"
+        "Example usage:\n"
+        "\tsm-bluesky start zurich_lockin_amplifier --hf2-ip 172.23.110.84 --port 7891"
+    ),
+)
+@click.option("--host", type=str, default="0.0.0.0", help="Binding host IP")
+@click.option("--port", type=int, default=7891, help="TCP Port")
+@click.option("--hf2-ip", type=str, default="172.23.110.84", help="HF2 Data Server IP")
+@click.option("--hf2-port", type=int, default=8004, help="HF2 Data Server Port")
+@click.option("--api-level", type=int, default=6, help="ziDAQ API Level")
+@click.option("--device-id", type=str, default="dev4206", help="HF2 Device ID")
+def start_zurich_lockin_amplifier(
+    host: str,
+    port: int,
+    hf2_ip: str,
+    hf2_port: int,
+    api_level: int,
+    device_id: str,
+):
+    """Start Zurich Lockin Amplifier server."""
+    from sm_bluesky.common.servers import HF2Server
+
+    print(
+        f"🚀 Initializing Zurich HF2 Server for {device_id} at {hf2_ip}:{hf2_port}..."
+    )
+    server = HF2Server(
+        host=host,
+        port=port,
+        hf2_ip=hf2_ip,
+        hf2_port=hf2_port,
+        api_level=api_level,  # type: ignore
+        device_id=device_id,
+    )
+    try:
+        server.start()
+    except KeyboardInterrupt:
+        print("\nStopping server ...")
+        server.shutdown()
+
+
+@start.command(
     name="blueapi",
     help="Start a BlueAPI server using a configuration file",
 )

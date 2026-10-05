@@ -17,6 +17,12 @@ def mock_sh_generator() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
+def mock_hf2_server() -> Generator[MagicMock, None, None]:
+    with patch("sm_bluesky.common.servers.HF2Server") as mock_server:
+        yield mock_server
+
+
+@pytest.fixture
 def mock_instrument_client() -> Generator[MagicMock, None, None]:
     with patch("sm_bluesky.common.clients.InstrumentClient") as mock_client:
         yield mock_client
@@ -84,6 +90,72 @@ def test_cli_handles_keyboard_interrupt(mock_sh_generator: MagicMock) -> None:
     runner = CliRunner()
 
     result = runner.invoke(cli, ["start", "sh_pulse_generator"])
+
+    assert result.exit_code == 0
+    mock_instance.shutdown.assert_called_once()
+
+
+def test_cli_zurich_lockin_start_default_arguments(
+    mock_hf2_server: MagicMock,
+) -> None:
+    mock_instance = mock_hf2_server.return_value
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["start", "zurich_lockin_amplifier"])
+
+    assert result.exit_code == 0
+    mock_hf2_server.assert_called_once_with(
+        host="0.0.0.0",
+        port=7891,
+        hf2_ip="172.23.110.84",
+        hf2_port=8004,
+        api_level=6,
+        device_id="dev4206",
+    )
+    mock_instance.start.assert_called_once()
+
+
+def test_cli_zurich_lockin_start_custom_flags(mock_hf2_server: MagicMock) -> None:
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "start",
+            "zurich_lockin_amplifier",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "8080",
+            "--hf2-ip",
+            "192.168.1.100",
+            "--hf2-port",
+            "8005",
+            "--api-level",
+            "5",
+            "--device-id",
+            "dev1234",
+        ],
+    )
+
+    assert result.exit_code == 0
+    mock_hf2_server.assert_called_once_with(
+        host="127.0.0.1",
+        port=8080,
+        hf2_ip="192.168.1.100",
+        hf2_port=8005,
+        api_level=5,
+        device_id="dev1234",
+    )
+
+
+def test_cli_zurich_lockin_handles_keyboard_interrupt(
+    mock_hf2_server: MagicMock,
+) -> None:
+    mock_instance = mock_hf2_server.return_value
+    mock_instance.start.side_effect = KeyboardInterrupt()
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["start", "zurich_lockin_amplifier"])
 
     assert result.exit_code == 0
     mock_instance.shutdown.assert_called_once()
