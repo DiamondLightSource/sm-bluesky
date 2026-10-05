@@ -41,7 +41,7 @@ A TCP-based gateway for Zurich Instruments HF2 series lock-in amplifiers. This s
 | **Input & Autorange** | | |
 | `set_curr_range`| `val` (float) | Sets Current Input Range (Powers of 10). |
 | `auto_curr_range`| None | Triggers Autorange for Current Input 0. |
-| `auto_v`| None | Triggers Autorange for Signal Input 0. |
+| `auto_volt_range`| None | Triggers Autorange for Signal Input 0. |
 | **System** | | |
 | `ping` | None | Returns `1\t` if server is alive. |
 | `connect_hardware`| None | Re-establishes connection to ZI Data Server. |
