@@ -4,7 +4,8 @@ from typing import Literal
 import numpy as np
 from zhinst.core import ScopeModule, ziDAQServer
 
-from sm_bluesky.common.server import AbstractInstrumentServer
+from sm_bluesky.common.servers import AbstractInstrumentServer
+from sm_bluesky.common.servers.abstract_instrument_server import register_command
 from sm_bluesky.common.utils import auto_type_cast
 from sm_bluesky.log import LOGGER
 
@@ -36,10 +37,6 @@ class HF2Server(AbstractInstrumentServer):
         # Register HF2 specific commands
         self._command_registry.update(
             {
-                b"getData": self._get_combined_data,
-                b"autoVoltageInRange": self._auto_voltage_range,
-                b"setTimeConstant": self._set_time_constant,
-                b"setDataRate": self._set_data_rate,
                 b"setCurrentInRange": self._set_current_range,
                 b"autoCurrentInRange": self._auto_current_range,
                 b"setRefFreq": self._set_ref_freq,
@@ -164,6 +161,7 @@ class HF2Server(AbstractInstrumentServer):
             self._send_response(response_msg + b": %f" % value)
 
     # --- Command Handlers ---
+    @register_command(b"get_data")
     @auto_type_cast
     def _get_combined_data(self, duration: float = 0.1) -> None:
         x, y, r, theta = self._get_lockin_data(duration)
@@ -193,6 +191,7 @@ class HF2Server(AbstractInstrumentServer):
             path="sigouts/0/enables/1", value=value, response_msg=b"Output set to"
         )
 
+    @register_command(b"auto_v")
     def _auto_voltage_range(self):
         self._set_node(
             path="sigins/0/autorange", value=1, response_msg=b"Auto voltage triggered"
@@ -203,6 +202,7 @@ class HF2Server(AbstractInstrumentServer):
             path="currins/0/autorange", value=1, response_msg=b"Auto current triggered"
         )
 
+    @register_command(b"set_tc")
     @auto_type_cast
     def _set_time_constant(self, val: float):
         self._set_node(
@@ -213,6 +213,7 @@ class HF2Server(AbstractInstrumentServer):
     def _set_ref_freq(self, val: float):
         self._set_node(path="oscs/0/freq", value=val, response_msg=b"Frequency set")
 
+    @register_command(b"set_datarate")
     @auto_type_cast
     def _set_data_rate(self, val: float):
         self._set_node(path="demods/0/rate", value=val, response_msg=b"Data rate set")
