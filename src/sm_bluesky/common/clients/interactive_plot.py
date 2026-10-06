@@ -40,7 +40,7 @@ class InteractivePlotWindow:
         self.widgets: dict[str, Any] = {}
 
         self.fig, self.ax = self.plt.subplots(figsize=(10, 6))
-        self.plt.subplots_adjust(left=0.08, right=0.72, top=0.95, bottom=0.1)
+        self.fig.subplots_adjust(left=0.08, right=0.72, top=0.95, bottom=0.1)
 
         self.ax_scan_txt = self.plt.axes((0.76, 0.91, 0.22, 0.04))
         self.ax_scan = self.plt.axes((0.76, 0.62, 0.22, 0.25))
