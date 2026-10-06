@@ -193,6 +193,12 @@ class InteractivePlotWindow:
         x_widget = self.widgets.get("radio_x")
         x_choice = x_widget.value_selected if x_widget else "Point number"
 
+        if x_choice != "Point number":
+            for s_id in self.active_scans:
+                if x_choice not in self.data_source[s_id]:
+                    x_choice = "Point number"
+                    break
+
         plotted_any = False
         for s_id in self.active_scans:
             s_data = self.data_source[s_id]
@@ -216,7 +222,7 @@ class InteractivePlotWindow:
                     )
                     plotted_any = True
 
-        self.ax.set_xlabel(x_choice if x_widget else "Point number")
+        self.ax.set_xlabel(x_choice)
         self.ax.set_title("Nearly Live Plot")
         self.ax.grid(True)
         if plotted_any:
