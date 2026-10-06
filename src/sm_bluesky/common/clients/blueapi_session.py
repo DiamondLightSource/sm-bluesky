@@ -14,7 +14,6 @@ class BlueAPISession:
     def __init__(
         self, config: ApplicationConfig, instrument_session: str | None = None
     ):
-        self._bc: BlueapiClient | None = None
         self.config: ApplicationConfig = config
         self.data: dict[str, dict[str, list[Any]]] = {}
         self.current_scan_id: Any | None = None
