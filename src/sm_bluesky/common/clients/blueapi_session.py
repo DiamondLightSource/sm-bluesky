@@ -101,7 +101,7 @@ class BlueAPISession:
         self.print_devices()
 
     def _install_callbacks(self) -> None:
-        """Install a callback to store the date event locally"""
+        """Install a callback to store the data events locally"""
 
         def feedback(event: AnyEvent) -> None:
 
