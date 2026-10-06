@@ -204,3 +204,15 @@ def test_draw_plot_explicitly(window):
     window.active_scans.add("scan1")
     window.draw_plot()
     assert len(window.ax.lines) > 0
+
+
+def test_draw_plot_x_axis_fallback(window):
+    class MockRadio:
+        value_selected = "motor1"
+
+    window.widgets["radio_x"] = MockRadio()
+    window.active_scans.add("scan1")
+    window.active_scans.add("scan2")
+    with patch.object(window.ax, "set_xlabel") as mock_xlabel:
+        window.draw_plot()
+        mock_xlabel.assert_called_with("Point number")
