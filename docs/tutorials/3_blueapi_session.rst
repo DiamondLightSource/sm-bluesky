@@ -8,8 +8,8 @@ Launching the Session
 
 You can launch an interactive session either through the command-line interface or programmatically in Python.
 
-Via CLI
-^^^^^^^
+CLI
+^^^
 
 Use the ``sm-bluesky client`` command to start a session. You can specify a remote beamline configuration or provide a local YAML config file.
 
