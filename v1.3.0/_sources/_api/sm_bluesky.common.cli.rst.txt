@@ -1,0 +1,23 @@
+``sm_bluesky.common.cli``
+=========================
+        
+        
+
+.. automodule:: sm_bluesky.common.cli
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        load_config
+        main
+    
+    
