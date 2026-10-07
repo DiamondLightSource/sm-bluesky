@@ -1,3 +1,4 @@
+import inspect
 import re
 import socket
 from abc import ABC, abstractmethod
@@ -61,9 +62,11 @@ class AbstractInstrumentServer(ABC):
             if attr_name.startswith("__"):
                 continue
 
-            attr = getattr(self, attr_name)
+            static_attr = inspect.getattr_static(self, attr_name)
 
-            if callable(attr) and hasattr(attr, "command_name"):
+            if hasattr(static_attr, "command_name"):
+                attr = getattr(self, attr_name)
+
                 # register_command will tag the function with command_name
                 cmd_bytes = attr.command_name  # type: ignore
 

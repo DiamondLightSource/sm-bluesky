@@ -32,8 +32,8 @@ requires-python = ">=3.11"
 
 
 [project.optional-dependencies]
-server = ["pyserial"]
 testing = ["jupyter", "matplotlib", "numpy", "pyepics"]
+server = ["pyserial", "zhinst-core"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",

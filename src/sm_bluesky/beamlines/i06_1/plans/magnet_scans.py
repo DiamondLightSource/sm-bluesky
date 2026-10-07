@@ -8,8 +8,8 @@ from dodal.common.coordination import inject
 from dodal.devices.beamlines.i06_1.magnet import FlyMagnetInfo, MagnetAxis
 from dodal.devices.scaler_card import ScalerCard
 
-from sm_bluesky.common.helper.utils import deep_update, unique_objs
 from sm_bluesky.common.plan_stubs.detection import fly_kickoff_complete
+from sm_bluesky.common.utils.utils import deep_update, unique_objs
 
 
 def _raw_fastfieldscan(

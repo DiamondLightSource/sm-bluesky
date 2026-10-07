@@ -1,4 +1,4 @@
-from sm_bluesky.common.helper.utils import deep_update, unique_objs
+from sm_bluesky.common.utils.utils import deep_update, unique_objs
 
 
 def test_unique_objs_removes_duplicates_preserving_order():
