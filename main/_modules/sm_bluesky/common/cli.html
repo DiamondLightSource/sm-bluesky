@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.cli &#8212; sm-bluesky 1.1.3.dev42+gb0f61b4a4 documentation</title>
+    <title>sm_bluesky.common.cli &#8212; sm-bluesky 1.2.1.dev1+g8ad5d5fa9 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../../_static/documentation_options.js?v=45ed5f68"></script>
+    <script src="../../../_static/documentation_options.js?v=82c23ccb"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -463,6 +463,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">click</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">blueapi.config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ApplicationConfig</span><span class="p">,</span>
+    <span class="n">ConfigLoader</span><span class="p">,</span>
+    <span class="n">HttpUrl</span><span class="p">,</span>
+    <span class="n">RestConfig</span><span class="p">,</span>
+    <span class="n">StompConfig</span><span class="p">,</span>
+    <span class="n">TcpUrl</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
 
@@ -649,13 +657,18 @@
     <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">help</span><span class="o">=</span><span class="s2">"Pre-assign the active instrument session (e.g. cm44186-1)."</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"-d"</span><span class="p">,</span>
+    <span class="s2">"--dummy"</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Automatically set the active instrument session to 'dummy'."</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">blueapi_client</span><span class="p">(</span>
-    <span class="n">beamline</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">beamline</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dummy</span><span class="p">:</span> <span class="nb">bool</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Launch an interactive IPython BlueAPI client session."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.clients</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-        <span class="n">BlueapiSession</span><span class="p">,</span>
-        <span class="n">load_config</span><span class="p">,</span>
+        <span class="n">BlueAPISession</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">beamline</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="p">:</span>
@@ -669,11 +682,49 @@
         <span class="n">beamline</span><span class="o">=</span><span class="n">beamline</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">bs_session</span> <span class="o">=</span> <span class="n">BlueapiSession</span><span class="p">(</span>
+    <span class="k">if</span> <span class="n">dummy</span><span class="p">:</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="s2">"dummy"</span>
+
+    <span class="n">bs_session</span> <span class="o">=</span> <span class="n">BlueAPISession</span><span class="p">(</span>
         <span class="n">config</span><span class="o">=</span><span class="n">app_config</span><span class="p">,</span>
         <span class="n">instrument_session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">bs_session</span><span class="o">.</span><span class="n">start_shell</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="load_config">
+<a class="viewcode-back" href="../../../_api/sm_bluesky.common.cli.html#sm_bluesky.common.cli.load_config">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_config</span><span class="p">(</span>
+    <span class="n">config_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">beamline</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ApplicationConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Load configuration from file orCLI beamline flag"""</span>
+
+    <span class="k">if</span> <span class="n">config_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Loading configuration from file: </span><span class="si">{</span><span class="n">config_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">ConfigLoader</span><span class="p">(</span><span class="n">ApplicationConfig</span><span class="p">)</span>
+        <span class="n">loader</span><span class="o">.</span><span class="n">use_values_from_yaml</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loader</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+    <span class="n">target_beamline</span> <span class="o">=</span> <span class="n">beamline</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_beamline</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"No beamline specified. Please provide either:</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  --beamline / -b &lt;beamline_name&gt;</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  --config / -c &lt;path_to_yaml&gt;</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Connecting using default config for beamline: </span><span class="si">{</span><span class="n">target_beamline</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ApplicationConfig</span><span class="p">(</span>
+        <span class="n">api</span><span class="o">=</span><span class="n">RestConfig</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">HttpUrl</span><span class="p">(</span><span class="sa">f</span><span class="s2">"https://</span><span class="si">{</span><span class="n">target_beamline</span><span class="si">}</span><span class="s2">-blueapi.diamond.ac.uk"</span><span class="p">)),</span>
+        <span class="n">stomp</span><span class="o">=</span><span class="n">StompConfig</span><span class="p">(</span>
+            <span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">TcpUrl</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tcp://</span><span class="si">{</span><span class="n">target_beamline</span><span class="si">}</span><span class="s2">-rabbitmq-daq.diamond.ac.uk:61613"</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span></div>
+
 </pre></div>
 
                 </article>

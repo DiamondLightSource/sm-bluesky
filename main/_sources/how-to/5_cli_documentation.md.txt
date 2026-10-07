@@ -85,6 +85,7 @@ sm-bluesky client [FLAGS]
 | -b, --beamline | str | None | Target beamline name (e.g., iXX). |
 | -c, --config | Path | None | Path to BlueAPI YAML config file. |
 | -s, --session | str | None | Pre-assign the active instrument session (e.g. cm44186-1). |
+| -d, --dummy | bool | False | Automatically set the active instrument session to 'dummy'. |
 
 *(Note: You must provide either `-b` or `-c`)*
 

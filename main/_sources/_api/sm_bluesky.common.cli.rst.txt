@@ -1,6 +1,7 @@
 ``sm_bluesky.common.cli``
 =========================
         
+        
 
 .. automodule:: sm_bluesky.common.cli
     :members:
@@ -16,6 +17,7 @@
     .. autosummary::
         :nosignatures:
     
+        load_config
         main
     
     

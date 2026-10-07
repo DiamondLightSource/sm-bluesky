@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sm_bluesky.beamlines.i10 &#8212; sm-bluesky 1.2.1.dev1+g8ad5d5fa9 documentation</title>
+    <title>Interactive BlueAPI Session &#8212; sm-bluesky 1.2.1.dev1+g8ad5d5fa9 documentation</title>
   
   
   
@@ -46,7 +46,7 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=30646c52"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_api/sm_bluesky.beamlines.i10';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/3_blueapi_session';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
@@ -58,8 +58,8 @@
     <link rel="icon" href="../_static/dls-logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sm_bluesky.beamlines.i10.plans" href="sm_bluesky.beamlines.i10.plans.html" />
-    <link rel="prev" title="sm_bluesky.beamlines.i06_1.plans" href="sm_bluesky.beamlines.i06_1.plans.html" />
+    <link rel="next" title="How-to Guides" href="../how-to.html" />
+    <link rel="prev" title="Running Bluesky locally" href="2_running_bluesky.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="main" />
@@ -152,7 +152,7 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
+<li class="nav-item current active">
   <a class="nav-link nav-internal" href="../tutorials.html">
     Tutorials
   </a>
@@ -173,7 +173,7 @@
 </li>
 
 
-<li class="nav-item current active">
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../reference.html">
     Reference
   </a>
@@ -305,7 +305,7 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
+<li class="nav-item current active">
   <a class="nav-link nav-internal" href="../tutorials.html">
     Tutorials
   </a>
@@ -326,7 +326,7 @@
 </li>
 
 
-<li class="nav-item current active">
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../reference.html">
     Reference
   </a>
@@ -421,46 +421,9 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="sm_bluesky.html">API</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="sm_bluesky.beamlines.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines</span></code></a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l3 has-children"><a class="reference internal" href="sm_bluesky.beamlines.i06_1.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.i06_1</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="sm_bluesky.beamlines.i06_1.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.i06_1.plans</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l3 current active has-children"><a aria-current="page" class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.i10</span></code></a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="sm_bluesky.beamlines.i10.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.i10.plans</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="sm_bluesky.beamlines.p99.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.p99</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="sm_bluesky.beamlines.p99.helper.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.p99.helper</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="sm_bluesky.beamlines.p99.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.p99.plans</span></code></a></li>
-</ul>
-</details></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="sm_bluesky.common.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.cli.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.cli</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.clients.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.clients</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.helper.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.helper</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.math_functions.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.math_functions</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.plan_stubs.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.plan_stubs</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.plans</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.servers.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.servers</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.sim_devices.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.sim_devices</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="sm_bluesky.electron_analyser.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.electron_analyser</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="sm_bluesky.electron_analyser.plan_stubs.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.electron_analyser.plan_stubs</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="sm_bluesky.electron_analyser.plan_stubs.analyser_per_step.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.electron_analyser.plan_stubs.analyser_per_step</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.electron_analyser.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.electron_analyser.plans</span></code></a></li>
-</ul>
-</details></li>
-</ul>
-</details></li>
-<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/DiamondLightSource/sm-bluesky/releases">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1_installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2_running_bluesky.html">Running Bluesky locally</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Interactive BlueAPI Session</a></li>
 </ul>
 </div>
 </nav></div>
@@ -502,15 +465,9 @@
       </a>
     </li>
     
-    <li class="breadcrumb-item"><a href="../reference.html" class="nav-link">Reference</a></li>
+    <li class="breadcrumb-item"><a href="../tutorials.html" class="nav-link">Tutorials</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="sm_bluesky.html" class="nav-link"><code class="docutils literal notranslate"><span class="pre">sm_bluesky</span></code></a></li>
-    
-    
-    <li class="breadcrumb-item"><a href="sm_bluesky.beamlines.html" class="nav-link"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines</span></code></a></li>
-    
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.i10</span></code></span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Interactive BlueAPI Session</span></li>
   </ul>
 </nav>
 </div>
@@ -527,17 +484,92 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-sm_bluesky.beamlines.i10">
-<span id="sm-bluesky-beamlines-i10"></span><h1><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.i10</span></code><a class="headerlink" href="#module-sm_bluesky.beamlines.i10" title="Link to this heading">#</a></h1>
-<p class="rubric">Submodules</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="sm_bluesky.beamlines.i10.plans.html#module-sm_bluesky.beamlines.i10.plans" title="sm_bluesky.beamlines.i10.plans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plans</span></code></a></p></td>
-<td><p>Bluesky plans for beamline I10.</p></td>
-</tr>
-</tbody>
-</table>
+  <section id="interactive-blueapi-session">
+<h1>Interactive BlueAPI Session<a class="headerlink" href="#interactive-blueapi-session" title="Link to this heading">#</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">BlueAPISession</span></code> class provides a rich, interactive IPython environment on top of the standard <code class="docutils literal notranslate"><span class="pre">BlueapiClient</span></code>. It comes pre-configured with automatic data collection callbacks, live plotting, and convenient shortcuts for dispatching plans.</p>
+<section id="launching-the-session">
+<h2>Launching the Session<a class="headerlink" href="#launching-the-session" title="Link to this heading">#</a></h2>
+<p>You can launch an interactive session either through the command-line interface or programmatically in Python.</p>
+<section id="cli">
+<h3>CLI<a class="headerlink" href="#cli" title="Link to this heading">#</a></h3>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">sm-bluesky</span> <span class="pre">client</span></code> command to start a session. You can specify a remote beamline configuration or provide a local YAML config file.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Connect to a remote beamline server (e.g., p99) with a specific session ID</span>
+sm-bluesky<span class="w"> </span>client<span class="w"> </span>-b<span class="w"> </span>p99<span class="w"> </span>-s<span class="w"> </span>my_session
+
+<span class="c1"># Connect using a local configuration file</span>
+sm-bluesky<span class="w"> </span>client<span class="w"> </span>-c<span class="w"> </span>./src/yaml_config/blueapi_config.yaml<span class="w"> </span>-s<span class="w"> </span>my_session
+</pre></div>
 </div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you omit the <code class="docutils literal notranslate"><span class="pre">-s</span></code> flag, you will be prompted to provide an instrument session ID, or use <code class="docutils literal notranslate"><span class="pre">-d</span></code> for a dummy session.</p>
+</div>
+</section>
+<section id="programmatically">
+<h3>Programmatically<a class="headerlink" href="#programmatically" title="Link to this heading">#</a></h3>
+<p>You can also embed the session directly into your own Python scripts or Jupyter Notebooks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.clients</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlueAPISession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+
+<span class="c1"># Load configuration for a specific beamline</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">beamline</span><span class="o">=</span><span class="s2">"p99"</span><span class="p">)</span>
+
+<span class="c1"># Initialise the session</span>
+<span class="n">session</span> <span class="o">=</span> <span class="n">BlueAPISession</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">instrument_session</span><span class="o">=</span><span class="s2">"my_session"</span><span class="p">)</span>
+
+<span class="c1"># Start the interactive IPython shell</span>
+<span class="n">session</span><span class="o">.</span><span class="n">start_shell</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="the-interactive-shell-environment">
+<h2>The Interactive Shell Environment<a class="headerlink" href="#the-interactive-shell-environment" title="Link to this heading">#</a></h2>
+<p>Once the interactive IPython shell is running, you have access to:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bc</span></code>: The underlying <code class="docutils literal notranslate"><span class="pre">BlueapiClient</span></code> instance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pl</span></code>: A shortcut to access available plans (e.g., <code class="docutils literal notranslate"><span class="pre">pl.step_scan(...)</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dev</span></code>: A shortcut to access available devices (e.g., <code class="docutils literal notranslate"><span class="pre">dev.dcm</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_plan()</span></code>: Prints a list of all plans available on the server.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_devices()</span></code>: Prints a list of all devices available on the server.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scan_data</span></code>: A dictionary containing all collected event data from your scans.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">plot(scan_id=None)</span></code>: Opens an interactive visualization window.</p></li>
+</ul>
+</section>
+<section id="data-collection-live-plotting">
+<h2>Data Collection &amp; Live Plotting<a class="headerlink" href="#data-collection-live-plotting" title="Link to this heading">#</a></h2>
+<p>When you initialise a <code class="docutils literal notranslate"><span class="pre">BlueAPISession</span></code>, it automatically subscribes to data events from the BlueAPI server. As you run plans, data points are collected and stored in memory.</p>
+<section id="accessing-data">
+<h3>Accessing Data<a class="headerlink" href="#accessing-data" title="Link to this heading">#</a></h3>
+<p>Live data is stored in the <code class="docutils literal notranslate"><span class="pre">scan_data</span></code> dictionary, which is keyed first by the <code class="docutils literal notranslate"><span class="pre">scan_id</span></code> and then by the device name.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run a simple count on the DCM device</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">dev</span><span class="o">.</span><span class="n">dcm</span><span class="p">)</span>
+
+<span class="c1"># Run a step scan</span>
+<span class="c1"># - Detectors: [dev.idd_gap]</span>
+<span class="c1"># - Axes &amp; Ranges: [[dev.pgm.energy, [start=200, stop=300, step=1]]]</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">step_scan</span><span class="p">([</span><span class="n">dev</span><span class="o">.</span><span class="n">idd_gap</span><span class="p">],</span> <span class="p">[[</span><span class="n">dev</span><span class="o">.</span><span class="n">pgm</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]])</span>
+
+<span class="c1"># Access the collected data for the last scan</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">scan_data</span><span class="p">[</span><span class="o">&lt;</span><span class="n">last_scan_num</span><span class="o">&gt;</span><span class="p">])</span>
+<span class="c1"># You can also get the last scan number by getting the last item in the dictionary</span>
+<span class="n">last_scan_num</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">scan_data</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="interactive-plotting">
+<h3>Interactive Plotting<a class="headerlink" href="#interactive-plotting" title="Link to this heading">#</a></h3>
+<p>You can visualise this data in near real-time using the built-in interactive plot window. By default, the window will attempt to open automatically, but you can also summon it manually:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Open the plotting window for the current data</span>
+<span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The interactive plot window allows you to select which scan to view and choose different axes for your X and Y data directly from the collected device outputs. It polls for new data in the background, keeping your plot updated as the scan progresses.</p>
+</div>
+</section>
+</section>
 </section>
 
 
@@ -551,20 +583,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="sm_bluesky.beamlines.i06_1.plans.html"
+       href="2_running_bluesky.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.i06_1.plans</span></code></p>
+        <p class="prev-next-title">Running Bluesky locally</p>
       </div>
     </a>
     <a class="right-next"
-       href="sm_bluesky.beamlines.i10.plans.html"
+       href="../how-to.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.beamlines.i10.plans</span></code></p>
+        <p class="prev-next-title">How-to Guides</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -580,10 +612,32 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#launching-the-session">Launching the Session</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cli">CLI</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#programmatically">Programmatically</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-interactive-shell-environment">The Interactive Shell Environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-collection-live-plotting">Data Collection &amp; Live Plotting</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#accessing-data">Accessing Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-plotting">Interactive Plotting</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/DiamondLightSource/sm-bluesky/edit/main/docs/_api/sm_bluesky.beamlines.i10.rst">
+    <a href="https://github.com/DiamondLightSource/sm-bluesky/edit/main/docs/tutorials/3_blueapi_session.rst">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -598,7 +652,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/_api/sm_bluesky.beamlines.i10.rst.txt">
+    <a href="../_sources/tutorials/3_blueapi_session.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
