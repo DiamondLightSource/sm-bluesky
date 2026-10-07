@@ -85,7 +85,7 @@ Live data is stored in the ``scan_data`` dictionary, which is keyed first by the
 Interactive Plotting
 ^^^^^^^^^^^^^^^^^^^^
 
-You can visualize this data in near real-time using the built-in interactive plot window. By default, the window will attempt to open automatically, but you can also summon it manually:
+You can visualise this data in near real-time using the built-in interactive plot window. By default, the window will attempt to open automatically, but you can also summon it manually:
 
 .. code-block:: python
 
