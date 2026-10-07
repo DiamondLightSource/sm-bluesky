@@ -3,6 +3,14 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import click
+from blueapi.config import (
+    ApplicationConfig,
+    ConfigLoader,
+    HttpUrl,
+    RestConfig,
+    StompConfig,
+    TcpUrl,
+)
 
 from sm_bluesky import __version__
 
@@ -230,13 +238,18 @@ def send(payload: str, host: str = "127.0.0.1", port: int = 7891, timeout: float
     default=None,
     help="Pre-assign the active instrument session (e.g. cm44186-1).",
 )
+@click.option(
+    "-d",
+    "--dummy",
+    is_flag=True,
+    help="Automatically set the active instrument session to 'dummy'.",
+)
 def blueapi_client(
-    beamline: str | None, config: Path | None, session: str | None
+    beamline: str | None, config: Path | None, session: str | None, dummy: bool
 ) -> None:
     """Launch an interactive IPython BlueAPI client session."""
     from sm_bluesky.common.clients import (
-        BlueapiSession,
-        load_config,
+        BlueAPISession,
     )
 
     if not beamline and not config:
@@ -250,8 +263,43 @@ def blueapi_client(
         beamline=beamline,
     )
 
-    bs_session = BlueapiSession(
+    if dummy:
+        session = "dummy"
+
+    bs_session = BlueAPISession(
         config=app_config,
         instrument_session=session,
     )
     bs_session.start_shell()
+
+
+def load_config(
+    config_path: Path | None = None,
+    beamline: str | None = None,
+) -> ApplicationConfig:
+    """Load configuration from file orCLI beamline flag"""
+
+    if config_path is not None:
+        print(f"Loading configuration from file: {config_path}")
+        loader = ConfigLoader(ApplicationConfig)
+        loader.use_values_from_yaml(config_path)
+        return loader.load()
+
+    target_beamline = beamline
+
+    if not target_beamline:
+        raise ValueError(
+            "No beamline specified. Please provide either:\n"
+            "  --beamline / -b <beamline_name>\n"
+            "  --config / -c <path_to_yaml>\n"
+        )
+
+    print(f"Connecting using default config for beamline: {target_beamline}")
+
+    return ApplicationConfig(
+        api=RestConfig(url=HttpUrl(f"https://{target_beamline}-blueapi.diamond.ac.uk")),
+        stomp=StompConfig(
+            enabled=True,
+            url=TcpUrl(f"tcp://{target_beamline}-rabbitmq-daq.diamond.ac.uk:61613"),
+        ),
+    )

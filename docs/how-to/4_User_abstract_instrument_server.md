@@ -50,7 +50,7 @@ class MyMotorServer(AbstractInstrumentServer):
         super().__init__(host, port)
 
     def connect_hardware(self) -> bool:
-        # Logic to initialize your physical device
+        # Logic to initialise your physical device
         print("Initializing Motor...")
         return True
 
@@ -69,8 +69,8 @@ class MyMotorServer(AbstractInstrumentServer):
         
         self._send_response(b"Moved to " + position)
 if __name__ == "__main__":
-    # Initialize and start the server
-    server = MyMotorServer("127.0.0.1", 5000)
+    # initialise and start the server
+    server = MyInstrumentServer("127.0.0.1", 5000)
     try:
         server.start()
     except KeyboardInterrupt:

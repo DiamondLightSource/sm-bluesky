@@ -175,6 +175,8 @@ commands = [
     [
         "sphinx-autobuild",
         "--show-traceback",
+        "--port",
+        "0",
         "--watch",
         "README.md",
         "docs",

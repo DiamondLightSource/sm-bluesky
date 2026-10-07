@@ -25,7 +25,7 @@ class GeneratorServerShanghaiTech(AbstractInstrumentServer):
         self.device: Serial | None = None
 
     def connect_hardware(self) -> bool:
-        """Initialize the USB connection protocol."""
+        """initialise the USB connection protocol."""
         try:
             self.device = Serial(
                 port=self.usb_port, baudrate=self.baud_rate, timeout=self.timeout
