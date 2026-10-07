@@ -43,6 +43,18 @@ sm-bluesky start sh_pulse_generator [FLAGS]
 sm-bluesky start sh_pulse_generator --usb-port COM9 --port 8080
 ```
 
+### zurich_lockin_amplifier Specific Flags
+
+| Flag   | Type | Default | Description| 
+| -----  | -----| ------  | -----------| 
+| --hf2-ip | str | 172.23.110.84 | HF2 Data Server IP. | 
+| --hf2-port | int | 8004 | HF2 Data Server Port. | 
+| --api-level | int | 6 | ziDAQ API Level (0, 1, 4, 5, or 6). | 
+| --device-id | str | dev4206 | HF2 Device ID. | 
+```bash
+sm-bluesky start zurich_lockin_amplifier --hf2-ip 172.23.110.84 --port 7891
+```
+
 ### 2. Sending Payloads (Commands)
 
 Sends a single string payload directly to an active server. It defaults to the local loopback address (127.0.0.1) to ensure accidental commands don't interact with external instruments.
@@ -61,7 +73,7 @@ sm-bluesky send "PAYLOAD" [FLAGS]
 sm-bluesky send "command_list"
 
 # Adjust settings on a remote beamline server
-sm-bluesky send "SET_DELAY 512" --host 192.168.1.50 --port 7891
+sm-bluesky send "set_delay\t512" --host 192.168.1.50 --port 7891
 ```
 
 ### 3. Starting the BlueAPI Server

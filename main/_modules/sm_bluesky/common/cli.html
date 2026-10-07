@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.cli &#8212; sm-bluesky 1.2.1.dev1+g8ad5d5fa9 documentation</title>
+    <title>sm_bluesky.common.cli &#8212; sm-bluesky 1.2.1.dev2+gbb38e8ab0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../../_static/documentation_options.js?v=82c23ccb"></script>
+    <script src="../../../_static/documentation_options.js?v=23021959"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -565,6 +565,50 @@
         <span class="n">baud_rate</span><span class="o">=</span><span class="n">baud_rate</span><span class="p">,</span>
         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
         <span class="n">max_pulse_delay</span><span class="o">=</span><span class="n">max_pulse_delay</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Stopping server ..."</span><span class="p">)</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+
+<span class="nd">@start</span><span class="o">.</span><span class="n">command</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"zurich_lockin_amplifier"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Start a Zurich Instruments HF2 lockin amplifier server"</span><span class="p">,</span>
+    <span class="n">epilog</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"</span><span class="se">\b\n</span><span class="s2">"</span>
+        <span class="s2">"Example usage:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"</span><span class="se">\t</span><span class="s2">sm-bluesky start zurich_lockin_amplifier --hf2-ip 172.23.110.84 --port 7891"</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--host"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"0.0.0.0"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Binding host IP"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--port"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">7891</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"TCP Port"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--hf2-ip"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"172.23.110.84"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"HF2 Data Server IP"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--hf2-port"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">8004</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"HF2 Data Server Port"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--api-level"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"ziDAQ API Level"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"--device-id"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"dev4206"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"HF2 Device ID"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">start_zurich_lockin_amplifier</span><span class="p">(</span>
+    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">port</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">hf2_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">hf2_port</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">api_level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">device_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Start Zurich Lockin Amplifier server."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.servers</span><span class="w"> </span><span class="kn">import</span> <span class="n">HF2Server</span>
+
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"🚀 Initializing Zurich HF2 Server for </span><span class="si">{</span><span class="n">device_id</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">hf2_ip</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">hf2_port</span><span class="si">}</span><span class="s2">..."</span>
+    <span class="p">)</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">HF2Server</span><span class="p">(</span>
+        <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span>
+        <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span>
+        <span class="n">hf2_ip</span><span class="o">=</span><span class="n">hf2_ip</span><span class="p">,</span>
+        <span class="n">hf2_port</span><span class="o">=</span><span class="n">hf2_port</span><span class="p">,</span>
+        <span class="n">api_level</span><span class="o">=</span><span class="n">api_level</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
+        <span class="n">device_id</span><span class="o">=</span><span class="n">device_id</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sm_bluesky.common.servers &#8212; sm-bluesky 1.2.1.dev1+g8ad5d5fa9 documentation</title>
+    <title>sm_bluesky.common.servers &#8212; sm-bluesky 1.2.1.dev2+gbb38e8ab0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=82c23ccb"></script>
+    <script src="../_static/documentation_options.js?v=23021959"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -441,12 +441,12 @@
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="sm_bluesky.common.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common</span></code></a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.cli.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.cli</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.clients.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.clients</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.helper.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.helper</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.math_functions.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.math_functions</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.plan_stubs.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.plan_stubs</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.plans.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.plans</span></code></a></li>
 <li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.servers</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.sim_devices.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.sim_devices</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sm_bluesky.common.utils.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.common.utils</span></code></a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="sm_bluesky.electron_analyser.html"><code class="docutils literal notranslate"><span class="pre">sm_bluesky.electron_analyser</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -541,6 +541,9 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#sm_bluesky.common.servers.register_command" title="sm_bluesky.common.servers.register_command"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_command</span></code></a></p></td>
 <td><p>Decorator to register a subclass method as an instrument command.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#sm_bluesky.common.servers.HF2Server" title="sm_bluesky.common.servers.HF2Server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HF2Server</span></code></a></p></td>
+<td><p>Python class to create a sever that connect to HF2 data server and listen for data request from client.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -580,6 +583,25 @@ parsing. Subclasses must implement hardware-specific control logic.</p>
 <dt class="sig sig-object py" id="sm_bluesky.common.servers.register_command">
 <span class="sig-prename descclassname"><span class="pre">sm_bluesky.common.servers.</span></span><span class="sig-name descname"><span class="pre">register_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#bytes" title="(in Python v3.14)"><span class="pre">bytes</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">F</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">F</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/sm_bluesky/common/servers/abstract_instrument_server.html#register_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sm_bluesky.common.servers.register_command" title="Link to this definition">#</a></dt>
 <dd><p>Decorator to register a subclass method as an instrument command.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sm_bluesky.common.servers.HF2Server">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sm_bluesky.common.servers.</span></span><span class="sig-name descname"><span class="pre">HF2Server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">7891</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf2_ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'172.23.110.84'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf2_port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8004</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">4</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">5</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">6</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dev4206'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sm_bluesky/common/servers/zurich_lockin_amplifier.html#HF2Server"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sm_bluesky.common.servers.HF2Server" title="Link to this definition">#</a></dt>
+<dd><p>Python class to create a sever that connect to HF2 data server and listen for
+data request from client.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sm_bluesky.common.servers.HF2Server.connect_hardware">
+<span class="sig-name descname"><span class="pre">connect_hardware</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/sm_bluesky/common/servers/zurich_lockin_amplifier.html#HF2Server.connect_hardware"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sm_bluesky.common.servers.HF2Server.connect_hardware" title="Link to this definition">#</a></dt>
+<dd><p>Connect to Zurich Instruments HF2 Data Server.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sm_bluesky.common.servers.HF2Server.disconnect_hardware">
+<span class="sig-name descname"><span class="pre">disconnect_hardware</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/sm_bluesky/common/servers/zurich_lockin_amplifier.html#HF2Server.disconnect_hardware"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sm_bluesky.common.servers.HF2Server.disconnect_hardware" title="Link to this definition">#</a></dt>
+<dd><p>Disconnect from HF2 and cleanup modules.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -639,6 +661,11 @@ parsing. Subclasses must implement hardware-specific control logic.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sm_bluesky.common.servers.register_command"><code class="docutils literal notranslate"><span class="pre">register_command()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sm_bluesky.common.servers.HF2Server"><code class="docutils literal notranslate"><span class="pre">HF2Server</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sm_bluesky.common.servers.HF2Server.connect_hardware"><code class="docutils literal notranslate"><span class="pre">HF2Server.connect_hardware()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sm_bluesky.common.servers.HF2Server.disconnect_hardware"><code class="docutils literal notranslate"><span class="pre">HF2Server.disconnect_hardware()</span></code></a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

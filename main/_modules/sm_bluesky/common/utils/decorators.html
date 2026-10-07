@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sm_bluesky.common.plans.ad_plans &#8212; sm-bluesky 1.2.1.dev2+gbb38e8ab0 documentation</title>
+    <title>sm_bluesky.common.utils.decorators &#8212; sm-bluesky 1.2.1.dev2+gbb38e8ab0 documentation</title>
   
   
   
@@ -45,7 +45,7 @@
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=30646c52"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/common/plans/ad_plans';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/sm_bluesky/common/utils/decorators';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://DiamondLightSource.github.io/sm-bluesky/switcher.json';
@@ -440,7 +440,7 @@
     
     <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">sm_bluesky.common.plans.ad_plans</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">sm_bluesky.common.utils.decorators</span></li>
   </ul>
 </nav>
 </div>
@@ -457,46 +457,95 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for sm_bluesky.common.plans.ad_plans</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+  <h1>Source code for sm_bluesky.common.utils.decorators</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">get_type_hints</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky</span><span class="w"> </span><span class="kn">import</span> <span class="n">plan_stubs</span> <span class="k">as</span> <span class="n">bps</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky</span><span class="w"> </span><span class="kn">import</span> <span class="n">preprocessors</span> <span class="k">as</span> <span class="n">bpp</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Msg</span><span class="p">,</span> <span class="n">MsgGenerator</span><span class="p">,</span> <span class="n">plan</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ophyd_async.epics.adandor</span><span class="w"> </span><span class="kn">import</span> <span class="n">AndorDetector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bluesky.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MsgGenerator</span>
+
+<span class="n">TCallable</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"TCallable"</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">MsgGenerator</span><span class="p">])</span>
 
 
-<div class="viewcode-block" id="trigger_img">
-<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.plans.html#sm_bluesky.common.plans.trigger_img">[docs]</a>
-<span class="nd">@plan</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">trigger_img</span><span class="p">(</span>
-    <span class="n">dets</span><span class="p">:</span> <span class="n">AndorDetector</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+<div class="viewcode-block" id="add_default_metadata">
+<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.utils.html#sm_bluesky.common.utils.add_default_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_default_metadata</span><span class="p">(</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">TCallable</span><span class="p">,</span> <span class="n">extra_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TCallable</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Set the acquire time and trigger the detector to read data.</span>
+<span class="sd">    Decorator to add or update default metadata in the 'md' keyword argument.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    dets : Andor2Detector</span>
-<span class="sd">        The detector to trigger.</span>
-<span class="sd">    value : int</span>
-<span class="sd">        The acquire time to set on the detector.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    MsgGenerator</span>
-<span class="sd">        A Bluesky generator for triggering the detector.</span>
+<span class="sd">    If 'md' is not provided, it will be set to extra_metadata.</span>
+<span class="sd">    If 'md' is provided and not None, it will be updated with extra_metadata.</span>
+<span class="sd">    If 'md' is provided and is None, it will be set to extra_metadata.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">md</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">md</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">yield</span> <span class="n">Msg</span><span class="p">(</span><span class="s2">"set"</span><span class="p">,</span> <span class="n">dets</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">acquire_time</span><span class="p">,</span> <span class="n">acquire_time</span><span class="p">)</span>
 
-    <span class="nd">@bpp</span><span class="o">.</span><span class="n">stage_decorator</span><span class="p">([</span><span class="n">dets</span><span class="p">])</span>
-    <span class="nd">@bpp</span><span class="o">.</span><span class="n">run_decorator</span><span class="p">(</span><span class="n">md</span><span class="o">=</span><span class="n">md</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">inner_trigger_img</span><span class="p">():</span>
-        <span class="k">return</span> <span class="p">(</span><span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">trigger_and_read</span><span class="p">([</span><span class="n">dets</span><span class="p">]))</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inner</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MsgGenerator</span><span class="p">:</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"md"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">extra_metadata</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">md</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">"md"</span><span class="p">]</span> <span class="o">=</span> <span class="n">extra_metadata</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">"md"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">md</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_metadata</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"md is reserved for meta data."</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">md</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"md"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">yield from</span> <span class="n">inner_trigger_img</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">TCallable</span><span class="p">,</span> <span class="n">inner</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">add_extra_names_to_meta</span><span class="p">(</span>
+    <span class="n">md</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
+        <span class="n">md</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">md</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+</span> <span class="n">names</span>
+        <span class="k">return</span> <span class="n">md</span>
+    <span class="n">md</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span>
+    <span class="k">return</span> <span class="n">md</span>
+
+
+<div class="viewcode-block" id="auto_type_cast">
+<a class="viewcode-back" href="../../../../_api/sm_bluesky.common.utils.html#sm_bluesky.common.utils.auto_type_cast">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">auto_type_cast</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Casts positional byte arguments to hinted types.</span>
+<span class="sd">    Skips 'self' and handles empty strings gracefully.</span>
+<span class="sd">    """</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="n">hints</span> <span class="o">=</span> <span class="n">get_type_hints</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+
+        <span class="n">bound_args</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">bound_args</span><span class="o">.</span><span class="n">apply_defaults</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">bound_args</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">hints</span><span class="p">:</span>
+                <span class="n">target_type</span> <span class="o">=</span> <span class="n">hints</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">str_val</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">str_val</span><span class="p">:</span>
+                        <span class="n">default_val</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
+                        <span class="k">if</span> <span class="n">default_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                            <span class="n">bound_args</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_val</span>
+                            <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">target_type</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                        <span class="n">bound_args</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_type</span><span class="p">(</span><span class="n">str_val</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">UnicodeDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Argument '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' casting failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">bound_args</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span></div>
 
 </pre></div>
 

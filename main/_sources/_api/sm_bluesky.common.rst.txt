@@ -15,12 +15,12 @@
     
         cli
         clients
-        helper
         math_functions
         plan_stubs
         plans
         servers
         sim_devices
+        utils
     
     
 
