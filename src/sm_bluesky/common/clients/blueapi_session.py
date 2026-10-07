@@ -17,6 +17,7 @@ class BlueAPISession:
         self.config: ApplicationConfig = config
         self.data: dict[str, dict[str, list[Any]]] = {}
         self.current_scan_id: Any | None = None
+        self._active_plot_windows: list[InteractivePlotWindow] = []
         click.echo("Connecting to BlueAPI service...")
         self.bc = BlueapiClient.from_config(self.config)
         self.bc.login()
@@ -71,14 +72,11 @@ class BlueAPISession:
 
     def plot(self, scan_id: Any | None = None) -> None:
         """Open an interactive plot window for multiple scans and axes."""
-        if hasattr(self, "_active_plot_windows"):
-            self._active_plot_windows = [
-                win
-                for win in self._active_plot_windows
-                if win.plt.fignum_exists(win.fig.number)
-            ]
-        else:
-            self._active_plot_windows = []
+        self._active_plot_windows = [
+            win
+            for win in self._active_plot_windows
+            if win.plt.fignum_exists(win.fig.number)
+        ]
 
         try:
             window = InteractivePlotWindow(self.data, scan_id)
