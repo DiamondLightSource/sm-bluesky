@@ -184,7 +184,7 @@ def test_dead_plot_window_removed(mock_client_class: MagicMock) -> None:
         fig = FakeFig()
         plt = FakePlt()
 
-    session._active_plot_windows = [FakePlot(), FakeDeadPlot()]
+    session._active_plot_windows = [FakePlot(), FakeDeadPlot()]  # type: ignore
 
     with patch(
         "sm_bluesky.common.clients.blueapi_session.InteractivePlotWindow"
