@@ -22,13 +22,17 @@ def mock_instrument_client() -> Generator[MagicMock, None, None]:
         yield mock_client
 
 
+@pytest.fixture(scope="module")
+def cli_runner() -> CliRunner:
+    return CliRunner()
+
+
 def test_cli_shanghai_tech_start_default_arguments(
-    mock_sh_generator: MagicMock,
+    mock_sh_generator: MagicMock, cli_runner: CliRunner
 ) -> None:
     mock_instance = mock_sh_generator.return_value
-    runner = CliRunner()
 
-    result = runner.invoke(cli, ["start", "sh_pulse_generator"])
+    result = cli_runner.invoke(cli, ["start", "sh_pulse_generator"])
 
     assert result.exit_code == 0
     mock_sh_generator.assert_called_once_with(
@@ -43,9 +47,10 @@ def test_cli_shanghai_tech_start_default_arguments(
     mock_instance.start.assert_called_once()
 
 
-def test_cli_shanghai_tech_start_custom_flags(mock_sh_generator: MagicMock) -> None:
-    runner = CliRunner()
-    result = runner.invoke(
+def test_cli_shanghai_tech_start_custom_flags(
+    mock_sh_generator: MagicMock, cli_runner: CliRunner
+) -> None:
+    result = cli_runner.invoke(
         cli,
         [
             "start",
@@ -78,23 +83,25 @@ def test_cli_shanghai_tech_start_custom_flags(mock_sh_generator: MagicMock) -> N
     )
 
 
-def test_cli_handles_keyboard_interrupt(mock_sh_generator: MagicMock) -> None:
+def test_cli_handles_keyboard_interrupt(
+    mock_sh_generator: MagicMock, cli_runner: CliRunner
+) -> None:
     mock_instance = mock_sh_generator.return_value
     mock_instance.start.side_effect = KeyboardInterrupt()
-    runner = CliRunner()
 
-    result = runner.invoke(cli, ["start", "sh_pulse_generator"])
+    result = cli_runner.invoke(cli, ["start", "sh_pulse_generator"])
 
     assert result.exit_code == 0
     mock_instance.shutdown.assert_called_once()
 
 
 @patch("subprocess.run")
-def test_start_blueapi_success(mock_subprocess_run: MagicMock) -> None:
+def test_start_blueapi_success(
+    mock_subprocess_run: MagicMock, cli_runner: CliRunner
+) -> None:
     import sys
 
-    runner = CliRunner()
-    result = runner.invoke(cli, ["start", "blueapi", "-c", "my_config.yaml"])
+    result = cli_runner.invoke(cli, ["start", "blueapi", "-c", "my_config.yaml"])
 
     assert result.exit_code == 0
     mock_subprocess_run.assert_called_once_with(
@@ -105,24 +112,26 @@ def test_start_blueapi_success(mock_subprocess_run: MagicMock) -> None:
 
 
 @patch("subprocess.run")
-def test_start_blueapi_keyboard_interrupt(mock_subprocess_run: MagicMock) -> None:
+def test_start_blueapi_keyboard_interrupt(
+    mock_subprocess_run: MagicMock, cli_runner: CliRunner
+) -> None:
     mock_subprocess_run.side_effect = KeyboardInterrupt()
-    runner = CliRunner()
 
-    result = runner.invoke(cli, ["start", "blueapi", "-c", "my_config.yaml"])
+    result = cli_runner.invoke(cli, ["start", "blueapi", "-c", "my_config.yaml"])
 
     assert result.exit_code == 0
     assert "Stopping BlueAPI server ..." in result.output
 
 
 @patch("subprocess.run")
-def test_start_blueapi_called_process_error(mock_subprocess_run: MagicMock) -> None:
+def test_start_blueapi_called_process_error(
+    mock_subprocess_run: MagicMock, cli_runner: CliRunner
+) -> None:
     import subprocess
 
     mock_subprocess_run.side_effect = subprocess.CalledProcessError(1, ["cmd"])
-    runner = CliRunner()
 
-    result = runner.invoke(cli, ["start", "blueapi", "-c", "my_config.yaml"])
+    result = cli_runner.invoke(cli, ["start", "blueapi", "-c", "my_config.yaml"])
 
     assert result.exit_code == 1
     assert "❌ BlueAPI server exited with error code 1" in result.output
@@ -150,32 +159,27 @@ def test_start_blueapi_called_process_error(mock_subprocess_run: MagicMock) -> N
     ],
 )
 def test_cli_shows_help_on_invalid_command(
-    command: list[str],
-    expected_output: str,
-    exit_code: int,
+    command: list[str], expected_output: str, exit_code: int, cli_runner: CliRunner
 ) -> None:
-    runner = CliRunner()
-    result = runner.invoke(cli, command)
+    result = cli_runner.invoke(cli, command)
 
     assert result.exit_code == exit_code
     assert expected_output in result.output
 
 
-def test_cli_version():
-    runner = CliRunner()
-    result = runner.invoke(cli, ["--version"])
+def test_cli_version(cli_runner: CliRunner):
+    result = cli_runner.invoke(cli, ["--version"])
     assert result.exit_code == 0
     assert __version__ in result.output
 
 
 def test_cli_send_command_success(
-    mock_instrument_client: MagicMock,
+    mock_instrument_client: MagicMock, cli_runner: CliRunner
 ) -> None:
     mock_instance = mock_instrument_client.return_value
     mock_instance.send_payload.return_value = "512"
 
-    runner = CliRunner()
-    result = runner.invoke(
+    result = cli_runner.invoke(
         cli, ["send", "SET_DELAY 512", "--host", "0.0.0.0", "--port", "8888"]
     )
 
@@ -190,32 +194,29 @@ def test_cli_send_command_success(
 
 
 def test_cli_send_command_failure(
-    mock_instrument_client: MagicMock,
+    mock_instrument_client: MagicMock, cli_runner: CliRunner
 ) -> None:
     mock_instance = mock_instrument_client.return_value
     mock_instance.send_payload.side_effect = ConnectionError("Help help")
 
-    runner = CliRunner()
-    result = runner.invoke(cli, ["send", "do not matter"])
+    result = cli_runner.invoke(cli, ["send", "do not matter"])
 
     assert result.exit_code == 0
     assert "FAILED: Help help" in result.output
 
 
 def test_cli_send_empty_payload(
-    mock_instrument_client: MagicMock,
+    mock_instrument_client: MagicMock, cli_runner: CliRunner
 ) -> None:
-    runner = CliRunner()
-    result = runner.invoke(cli, ["send", "   "])
+    result = cli_runner.invoke(cli, ["send", "   "])
 
     assert result.exit_code == 0
     assert "FAILED: Payload cannot be empty" in result.output
     mock_instrument_client.assert_not_called()
 
 
-def test_cli_client_missing_args() -> None:
-    runner = CliRunner()
-    result = runner.invoke(cli, ["client"])
+def test_cli_client_missing_args(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(cli, ["client"])
 
     assert result.exit_code == 0
     assert (
@@ -224,16 +225,15 @@ def test_cli_client_missing_args() -> None:
     )
 
 
-@patch("sm_bluesky.common.clients.BlueapiSession")
-@patch("sm_bluesky.common.clients.load_config")
+@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.cli.load_config")
 def test_cli_client_with_beamline(
-    mock_load_config: MagicMock, mock_blueapi_session: MagicMock
+    mock_load_config: MagicMock, mock_blueapi_session: MagicMock, cli_runner: CliRunner
 ) -> None:
-    runner = CliRunner()
     mock_instance = mock_blueapi_session.return_value
     mock_config = mock_load_config.return_value
 
-    result = runner.invoke(cli, ["client", "-b", "i10", "-s", "my-session"])
+    result = cli_runner.invoke(cli, ["client", "-b", "i10", "-s", "my-session"])
 
     assert result.exit_code == 0
     mock_load_config.assert_called_once_with(config_path=None, beamline="i10")
@@ -243,16 +243,15 @@ def test_cli_client_with_beamline(
     mock_instance.start_shell.assert_called_once()
 
 
-@patch("sm_bluesky.common.clients.BlueapiSession")
-@patch("sm_bluesky.common.clients.load_config")
+@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.cli.load_config")
 def test_cli_client_with_config(
-    mock_load_config: MagicMock, mock_blueapi_session: MagicMock
+    mock_load_config: MagicMock, mock_blueapi_session: MagicMock, cli_runner: CliRunner
 ) -> None:
-    runner = CliRunner()
     mock_instance = mock_blueapi_session.return_value
     mock_config = mock_load_config.return_value
 
-    result = runner.invoke(cli, ["client", "-c", "/path/to/config.yaml"])
+    result = cli_runner.invoke(cli, ["client", "-c", "/path/to/config.yaml"])
 
     assert result.exit_code == 0
     mock_load_config.assert_called_once()
@@ -266,12 +265,11 @@ def test_cli_client_with_config(
     mock_instance.start_shell.assert_called_once()
 
 
-def test_install_completion_unsupported_shell():
+def test_install_completion_unsupported_shell(cli_runner: CliRunner):
     from sm_bluesky.common.cli import install_completion
 
-    runner = CliRunner()
     with patch.dict(os.environ, {"SHELL": "fish"}):
-        result = runner.invoke(install_completion)
+        result = cli_runner.invoke(install_completion)
         assert "Unsupported shell" in result.output
 
 
@@ -291,10 +289,9 @@ def test_main_with_args():
         mock_cli.assert_called_once_with(["--help"])
 
 
-def test_install_completion_zsh_already_installed():
+def test_install_completion_zsh_already_installed(cli_runner: CliRunner):
     from sm_bluesky.common.cli import install_completion
 
-    runner = CliRunner()
     with (
         patch.dict(os.environ, {"SHELL": "/bin/zsh"}),
         patch("pathlib.Path.exists", return_value=True),
@@ -303,14 +300,13 @@ def test_install_completion_zsh_already_installed():
             return_value='eval "$(_SM_BLUESKY_COMPLETE=zsh_source sm-bluesky)"',
         ),
     ):
-        result = runner.invoke(install_completion)
+        result = cli_runner.invoke(install_completion)
         assert "already installed" in result.output
 
 
-def test_install_completion_bash_success(tmp_path: Path):
+def test_install_completion_bash_success(tmp_path: Path, cli_runner: CliRunner):
     from sm_bluesky.common.cli import install_completion
 
-    runner = CliRunner()
     bashrc = tmp_path / ".bashrc"
     bashrc.write_text("some content")
 
@@ -318,7 +314,7 @@ def test_install_completion_bash_success(tmp_path: Path):
         patch.dict(os.environ, {"SHELL": "/bin/bash"}),
         patch("pathlib.Path.home", return_value=tmp_path),
     ):
-        result = runner.invoke(install_completion)
+        result = cli_runner.invoke(install_completion)
         assert "Tab completion installed" in result.output
         content = bashrc.read_text()
         assert 'eval "$(_SM_BLUESKY_COMPLETE=bash_source sm-bluesky)"' in content
@@ -331,3 +327,21 @@ def test_cli_group_callback():
     cli.callback()
     assert start.callback is not None
     start.callback()
+
+
+@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.cli.load_config")
+def test_cli_client_with_dummy_flag(
+    mock_load_config: MagicMock, mock_blueapi_session: MagicMock, cli_runner: CliRunner
+) -> None:
+    mock_instance = mock_blueapi_session.return_value
+    mock_config = mock_load_config.return_value
+
+    result = cli_runner.invoke(cli, ["client", "-b", "i10", "--dummy"])
+
+    assert result.exit_code == 0
+    mock_load_config.assert_called_once_with(config_path=None, beamline="i10")
+    mock_blueapi_session.assert_called_once_with(
+        config=mock_config, instrument_session="dummy"
+    )
+    mock_instance.start_shell.assert_called_once()

@@ -1,4 +1,4 @@
-from .blueapi_session import BlueapiSession, load_config
+from .blueapi_session import BlueAPISession
 from .instrument_client import InstrumentClient
 
-__all__ = ["InstrumentClient", "BlueapiSession", "load_config"]
+__all__ = ["InstrumentClient", "BlueAPISession"]

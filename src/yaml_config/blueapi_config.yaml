@@ -6,7 +6,7 @@ env:
     instrument: iXX
   sources:
     - kind: deviceManager
-      module: dodal.beamlines.i09
+      module: dodal.beamlines.i06
       mock: True
     - kind: planFunctions
       module: dodal.plans
