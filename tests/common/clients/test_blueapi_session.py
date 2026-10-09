@@ -305,5 +305,4 @@ def test_blueapi_session_save_cache_missing_scan_id(
     config = ApplicationConfig()
     session = BlueAPISession(config=config, instrument_session="test-session")
     session._save_scan_to_cache("missing-scan-id")
-    # Verify it does nothing by asserting open() is never called
     mock_open.assert_not_called()
