@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from daq_config_server.client import ConfigClient
@@ -200,3 +200,20 @@ async def andor2_point() -> SingleTriggerDetector:
         andor2_point = SingleTriggerDetector(drv=ADBaseIO("p99"))
 
     return andor2_point
+
+
+@pytest.fixture(autouse=True)
+def mock_global_expanduser(tmp_path: Path):
+    import os
+
+    original_expanduser = os.path.expanduser
+
+    def _expanduser(path: str) -> str:
+        if path == "~":
+            return str(tmp_path)
+        if path.startswith("~/"):
+            return str(tmp_path / path[2:])
+        return original_expanduser(path)
+
+    with patch("os.path.expanduser", side_effect=_expanduser):
+        yield

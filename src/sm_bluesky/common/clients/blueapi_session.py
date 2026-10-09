@@ -1,3 +1,5 @@
+import json
+import os
 from datetime import datetime
 from typing import Any
 
@@ -28,12 +30,49 @@ class BlueAPISession:
         if instrument_session:
             self.bc.instrument_session = instrument_session
             click.echo(f"Active instrument session: {instrument_session}")
+            self._load_scan_cache()
         else:
             click.secho(
                 "\n[Notice] No instrument session set. Set `bc.instrument_session ="
                 " '<session_id>'` before dispatching plans.",
                 fg="red",
             )
+
+    def _get_cache_path(self) -> str | None:
+        if not getattr(self.bc, "instrument_session", None):
+            return None
+        cache_dir = os.path.expanduser("~/.sm-bluesky/cache")
+        os.makedirs(cache_dir, exist_ok=True)
+        return os.path.join(cache_dir, f"{self.bc.instrument_session}_scans.jsonl")
+
+    def _load_scan_cache(self) -> None:
+        cache_file = self._get_cache_path()
+        if not cache_file:
+            return
+        if not os.path.exists(cache_file):
+            return
+
+        try:
+            with open(cache_file) as f:
+                for line in f:
+                    data_chunk = json.loads(line)
+                    self.data.update(data_chunk)
+            if self.data:
+                click.echo(f"Loaded {len(self.data)} previous scans from cache.")
+        except Exception as e:
+            click.echo(f"Warning: Could not read scan cache: {e}")
+
+    def _save_scan_to_cache(self, scan_id: str) -> None:
+        cache_file = self._get_cache_path()
+        if not cache_file or scan_id not in self.data:
+            return
+
+        try:
+            with open(cache_file, "a") as f:
+                line = json.dumps({str(scan_id): self.data[scan_id]})
+                f.write(line + "\n")
+        except Exception as e:
+            click.echo(f"Warning: Could not write to scan cache: {e}")
 
     def start_shell(self) -> None:
         """Start an interactive IPython shell with the BlueAPI client available."""
@@ -107,8 +146,9 @@ class BlueAPISession:
                 case DataEvent(
                     name="start", doc={"scan_id": scan_id, "uid": uid, "time": time}
                 ):
-                    self.current_scan_id = scan_id
-                    self.data[scan_id] = {}
+                    scan_id_str = str(scan_id)
+                    self.current_scan_id = scan_id_str
+                    self.data[scan_id_str] = {}
 
                     click.echo(
                         f"{self._format_time(time)} -"
@@ -128,6 +168,8 @@ class BlueAPISession:
                         f" Run complete (scan_id={self.current_scan_id}, "
                         f"uid: {uid}): {status}"
                     )
+                    if self.current_scan_id is not None:
+                        self._save_scan_to_cache(str(self.current_scan_id))
                     self.current_scan_id = None
 
                 case DataEvent(
