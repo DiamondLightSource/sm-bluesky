@@ -1,3 +1,4 @@
+import json
 import os
 from collections.abc import Generator
 from pathlib import Path
@@ -8,6 +9,19 @@ from click.testing import CliRunner
 
 from sm_bluesky import __version__
 from sm_bluesky.common.cli import cli
+
+
+@pytest.fixture(autouse=True)
+def mock_cache_dir(tmp_path: Path) -> Generator[None, None, None]:
+    def _expanduser(path: str) -> str:
+        if path == "~":
+            return str(tmp_path)
+        if path.startswith("~/"):
+            return str(tmp_path / path[2:])
+        return path
+
+    with patch("sm_bluesky.common.cli.os.path.expanduser", side_effect=_expanduser):
+        yield
 
 
 @pytest.fixture
@@ -417,3 +431,51 @@ def test_cli_client_with_dummy_flag(
         config=mock_config, instrument_session="dummy"
     )
     mock_instance.start_shell.assert_called_once()
+
+
+@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.cli.load_config")
+def test_cli_client_saves_and_loads_session_cache(
+    mock_load_config: MagicMock,
+    mock_blueapi_session: MagicMock,
+    cli_runner: CliRunner,
+    tmp_path: Path,
+) -> None:
+    result = cli_runner.invoke(cli, ["client", "-b", "i10", "-s", "saved-session-123"])
+    assert result.exit_code == 0
+
+    cache_file = tmp_path / ".sm-bluesky" / "session_config.json"
+    assert cache_file.exists()
+    assert json.loads(cache_file.read_text()) == {"last_session": "saved-session-123"}
+
+    mock_blueapi_session.reset_mock()
+
+    result = cli_runner.invoke(cli, ["client", "-b", "i10"])
+    assert result.exit_code == 0
+    assert "Restoring last used session: saved-session-123" in result.output
+
+    mock_blueapi_session.assert_called_once_with(
+        config=mock_load_config.return_value, instrument_session="saved-session-123"
+    )
+
+
+@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.cli.load_config")
+def test_cli_client_handles_corrupt_cache(
+    mock_load_config: MagicMock,
+    mock_blueapi_session: MagicMock,
+    cli_runner: CliRunner,
+    tmp_path: Path,
+) -> None:
+    cache_dir = tmp_path / ".sm-bluesky"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_file = cache_dir / "session_config.json"
+    cache_file.write_text("junk json {")
+
+    result = cli_runner.invoke(cli, ["client", "-b", "i10"])
+    assert result.exit_code == 0
+    assert "Warning: Could not read session cache" in result.output
+
+    mock_blueapi_session.assert_called_once_with(
+        config=mock_load_config.return_value, instrument_session=None
+    )

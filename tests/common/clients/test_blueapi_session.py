@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -203,3 +204,76 @@ def test_plot_import_error(mock_client_class: MagicMock) -> None:
         side_effect=ImportError("mock error"),
     ):
         session.plot()
+
+
+@patch("sm_bluesky.common.clients.blueapi_session.os.path.expanduser")
+@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+def test_blueapi_session_scan_caching(
+    mock_client_class: MagicMock, mock_expanduser: MagicMock, tmp_path: Path
+) -> None:
+    def _expanduser(path: str) -> str:
+        if path.startswith("~/"):
+            return str(tmp_path / path[2:])
+        return path
+
+    mock_expanduser.side_effect = _expanduser
+    mock_client = mock_client_class.from_config.return_value
+    config = ApplicationConfig()
+    session1 = BlueAPISession(config=config, instrument_session="test-session")
+
+    callback = mock_client.add_callback.call_args[0][0]
+
+    callback(
+        DataEvent(
+            name="start",
+            doc={"scan_id": 888, "uid": "uid1", "time": 0.0},
+            task_id="task1",
+        )
+    )
+    assert session1.data["888"] == {}
+
+    callback(
+        DataEvent(
+            name="event",
+            doc={"seq_num": 1, "data": {"motor": 10}, "time": 0.0},
+            task_id="task1",
+        )
+    )
+    assert session1.data["888"]["motor"] == [10]
+
+    callback(
+        DataEvent(
+            name="stop",
+            doc={"exit_status": "success", "uid": "uid1", "time": 0.0},
+            task_id="task1",
+        )
+    )
+    cache_file = tmp_path / ".sm-bluesky" / "cache" / "test-session_scans.jsonl"
+    assert cache_file.exists()
+    assert json.loads(cache_file.read_text().strip()) == {"888": {"motor": [10]}}
+
+    session2 = BlueAPISession(config=config, instrument_session="test-session")
+    assert "888" in session2.data
+    assert session2.data["888"]["motor"] == [10]
+
+
+@patch("sm_bluesky.common.clients.blueapi_session.os.path.expanduser")
+@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+def test_blueapi_session_corrupt_scan_cache(
+    mock_client_class: MagicMock, mock_expanduser: MagicMock, tmp_path: Path
+) -> None:
+    def _expanduser(path: str) -> str:
+        if path.startswith("~/"):
+            return str(tmp_path / path[2:])
+        return path
+
+    mock_expanduser.side_effect = _expanduser
+
+    cache_dir = tmp_path / ".sm-bluesky" / "cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_file = cache_dir / "bad-session_scans.jsonl"
+    cache_file.write_text("invalid json format {")
+
+    config = ApplicationConfig()
+    session = BlueAPISession(config=config, instrument_session="bad-session")
+    assert session.data == {}
