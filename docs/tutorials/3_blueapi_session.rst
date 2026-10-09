@@ -95,3 +95,44 @@ You can visualise this data in near real-time using the built-in interactive plo
 .. note::
 
     The interactive plot window allows you to select which scan to view and choose different axes for your X and Y data directly from the collected device outputs. It polls for new data in the background, keeping your plot updated as the scan progresses.
+
+Session Caching & Variable Persistence
+--------------------------------------
+
+The interactive client automatically caches your active session ID and collected scan data so you can seamlessly resume your work after closing the terminal.
+
+Automatic Caching
+^^^^^^^^^^^^^^^^^
+
+- **Session ID:** When you launch the client with the ``-s`` flag (e.g., ``sm-bluesky client -b i10 -s my_session``), your session ID is remembered. The next time you launch the client without the ``-s`` flag, it will automatically reconnect to ``my_session``.
+- **Scan Data:** Every time a hardware scan completes, the collected data is automatically saved to a local cache (``~/.sm-bluesky/cache/``). When you restart your client and reconnect to the same session, your previous ``scan_data`` is automatically loaded back into memory, allowing you to instantly run ``plot()`` on older scans.
+
+User Variables
+^^^^^^^^^^^^^^
+
+It is no easy to restore namespace completely as we have active network connections and thread locking is used by the client. Therefore while raw ``scan_data`` is cached automatically, any custom variables or processed data arrays you create must be manually set to be persistent. 
+
+You can save these across sessions using IPython's built-in ``%store`` magic command:
+
+.. tip::
+
+    **Saving a variable:**
+    
+    .. code-block:: python
+    
+        # Create a variable
+        my_custom_data = scan_data["123"] * 2.5
+        
+        # Store it to the local IPython cache
+        %store my_custom_data
+
+    **Restoring a variable (after restarting the client):**
+    
+    .. code-block:: python
+
+        # Retrieve the variable from the local IPython cache
+        %store -r my_custom_data
+        
+        print(my_custom_data)
+
+    To view all currently stored variables, simply run ``%store`` without any arguments. You can also restore previously saved variables into your current namespace with ``%store -r``.
