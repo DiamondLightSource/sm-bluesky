@@ -110,7 +110,7 @@ Automatic Caching
 User Variables
 ^^^^^^^^^^^^^^
 
-It is no easy to restore namespace completely as we have active network connections and thread locking is used by the client. Therefore while raw ``scan_data`` is cached automatically, any custom variables or processed data arrays you create must be manually set to be persistent. 
+There is no easy way to restore the whole namespace as we have active network connections and thread locking is used by the client. Therefore while raw ``scan_data`` is cached automatically, any custom variables or processed data arrays you create must be manually set to be persistent. 
 
 You can save these across sessions using IPython's built-in ``%store`` magic command:
 
