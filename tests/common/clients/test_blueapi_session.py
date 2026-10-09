@@ -206,17 +206,10 @@ def test_plot_import_error(mock_client_class: MagicMock) -> None:
         session.plot()
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.os.path.expanduser")
 @patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 def test_blueapi_session_scan_caching(
-    mock_client_class: MagicMock, mock_expanduser: MagicMock, tmp_path: Path
+    mock_client_class: MagicMock, tmp_path: Path
 ) -> None:
-    def _expanduser(path: str) -> str:
-        if path.startswith("~/"):
-            return str(tmp_path / path[2:])
-        return path
-
-    mock_expanduser.side_effect = _expanduser
     mock_client = mock_client_class.from_config.return_value
     config = ApplicationConfig()
     session1 = BlueAPISession(config=config, instrument_session="test-session")
@@ -257,17 +250,10 @@ def test_blueapi_session_scan_caching(
     assert session2.data["888"]["motor"] == [10]
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.os.path.expanduser")
 @patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 def test_blueapi_session_corrupt_scan_cache(
-    mock_client_class: MagicMock, mock_expanduser: MagicMock, tmp_path: Path
+    mock_client_class: MagicMock, tmp_path: Path
 ) -> None:
-    def _expanduser(path: str) -> str:
-        if path.startswith("~/"):
-            return str(tmp_path / path[2:])
-        return path
-
-    mock_expanduser.side_effect = _expanduser
 
     cache_dir = tmp_path / ".sm-bluesky" / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -277,3 +263,47 @@ def test_blueapi_session_corrupt_scan_cache(
     config = ApplicationConfig()
     session = BlueAPISession(config=config, instrument_session="bad-session")
     assert session.data == {}
+
+
+@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+def test_blueapi_session_no_instrument_session_cache_bypassed(
+    mock_client_class: MagicMock,
+) -> None:
+    config = ApplicationConfig()
+    session = BlueAPISession(config=config, instrument_session=None)
+    session.bc.instrument_session = None  # type: ignore
+    assert session._get_cache_path() is None
+    session._load_scan_cache()
+    session._save_scan_to_cache("123")
+
+
+@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+@patch("builtins.open", side_effect=Exception("Mock write error"))
+def test_blueapi_session_write_cache_error(
+    mock_open: MagicMock,
+    mock_client_class: MagicMock,
+    tmp_path: Path,
+) -> None:
+
+    config = ApplicationConfig()
+    session = BlueAPISession(config=config, instrument_session="err-session")
+    session.data["123"] = {"motor": [10]}
+
+    with patch("click.echo") as mock_echo:
+        session._save_scan_to_cache("123")
+        mock_echo.assert_called_once_with(
+            "Warning: Could not write to scan cache: Mock write error"
+        )
+
+
+@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+@patch("builtins.open")
+def test_blueapi_session_save_cache_missing_scan_id(
+    mock_open: MagicMock,
+    mock_client_class: MagicMock,
+) -> None:
+    config = ApplicationConfig()
+    session = BlueAPISession(config=config, instrument_session="test-session")
+    session._save_scan_to_cache("missing-scan-id")
+    # Verify it does nothing by asserting open() is never called
+    mock_open.assert_not_called()

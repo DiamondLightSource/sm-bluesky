@@ -11,19 +11,6 @@ from sm_bluesky import __version__
 from sm_bluesky.common.cli import cli
 
 
-@pytest.fixture(autouse=True)
-def mock_cache_dir(tmp_path: Path) -> Generator[None, None, None]:
-    def _expanduser(path: str) -> str:
-        if path == "~":
-            return str(tmp_path)
-        if path.startswith("~/"):
-            return str(tmp_path / path[2:])
-        return path
-
-    with patch("sm_bluesky.common.cli.os.path.expanduser", side_effect=_expanduser):
-        yield
-
-
 @pytest.fixture
 def mock_sh_generator() -> Generator[MagicMock, None, None]:
     with patch("sm_bluesky.common.servers.GeneratorServerShanghaiTech") as mock_server:
@@ -478,4 +465,21 @@ def test_cli_client_handles_corrupt_cache(
 
     mock_blueapi_session.assert_called_once_with(
         config=mock_load_config.return_value, instrument_session=None
+    )
+
+
+@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.cli.load_config")
+@patch("builtins.open", side_effect=Exception("Mock permission error"))
+def test_cli_client_cannot_save_cache(
+    mock_open: MagicMock,
+    mock_load_config: MagicMock,
+    mock_blueapi_session: MagicMock,
+    cli_runner: CliRunner,
+    tmp_path: Path,
+) -> None:
+    result = cli_runner.invoke(cli, ["client", "-b", "i10", "-s", "new-session"])
+    assert result.exit_code == 0
+    assert (
+        "Warning: Could not save session cache: Mock permission error" in result.output
     )
