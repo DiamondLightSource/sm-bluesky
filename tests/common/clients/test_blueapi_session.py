@@ -3,6 +3,7 @@ from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import click
 import pytest
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
@@ -219,19 +220,25 @@ def test_blueapi_session_scan_caching(
 
     callback = mock_client.add_callback.call_args[0][0]
 
-    callback(
-        DataEvent(
-            name="start",
-            doc={"scan_id": 888, "uid": "uid1", "time": 0.0},
-            task_id="task1",
-        )
-    )
-    assert session1.data["888"] == {}
-    assert session1.metadata["888"] == {
+    expected_det_path = str(tmp_path / "p99-888-andor2_det.h5")
+    start_doc = {
         "scan_id": 888,
         "uid": "uid1",
         "time": 0.0,
+        "instrument": "p99",
+        "data_session_directory": str(tmp_path),
+        "detector_file_template": "{instrument}-{scan_id}-{device_name}",
+        "detectors": ["andor2_det"],
     }
+    callback(
+        DataEvent(
+            name="start",
+            doc=start_doc,
+            task_id="task1",
+        )
+    )
+    assert session1.data["888"] == {"andor2_det": expected_det_path}
+    assert session1.metadata["888"] == start_doc
 
     callback(
         DataEvent(
@@ -241,6 +248,7 @@ def test_blueapi_session_scan_caching(
         )
     )
     assert session1.data["888"]["motor"] == [10]
+    assert session1.data["888"]["andor2_det"] == expected_det_path
 
     callback(
         DataEvent(
@@ -253,14 +261,15 @@ def test_blueapi_session_scan_caching(
     assert cache_file.exists()
     assert json.loads(cache_file.read_text().strip()) == {
         "888": {
-            "data": {"motor": [10]},
-            "meta": {"scan_id": 888, "uid": "uid1", "time": 0.0},
+            "data": {"motor": [10], "andor2_det": expected_det_path},
+            "meta": start_doc,
         }
     }
 
     session2 = BlueAPISession(config=config, instrument_session="test-session")
     assert "888" in session2.data
     assert session2.data["888"]["motor"] == [10]
+    assert session2.data["888"]["andor2_det"] == expected_det_path
     assert session2.metadata["888"]["scan_id"] == 888
 
     with open(cache_file, "a") as f:
@@ -381,3 +390,81 @@ def test_blueapi_session_get_detector_filepath_edge_cases(
     assert (
         session.get_detector_filepath("andor2_det", scan_id="corrupt_template") is None
     )
+
+
+def test_blueapi_session_start_and_stop_prints_detector_filepath(
+    session: BlueAPISession,
+    mock_blueapi_client: MagicMock,
+    tmp_path: Path,
+) -> None:
+    callback = mock_blueapi_client.from_config.return_value.add_callback.call_args[0][0]
+    det_file = tmp_path / "p99-180-andor2_det.h5"
+    det_file.touch()
+
+    start_doc = {
+        "scan_id": 180,
+        "uid": "test-uid",
+        "time": 8888888,
+        "instrument": "p99",
+        "data_session_directory": str(tmp_path),
+        "detector_file_template": "{instrument}-{scan_id}-{device_name}",
+        "detectors": ["andor2_det"],
+    }
+
+    styled_path = click.style(str(det_file), fg="cyan")
+    styled_det = click.style("andor2_det", fg="cyan")
+
+    with patch("click.echo") as mock_echo:
+        callback(DataEvent(name="start", doc=start_doc, task_id="task1"))
+        mock_echo.assert_any_call(
+            "1970-04-13 21:08:08 - Run started (scan_id=180, uid=test-uid)"
+        )
+        mock_echo.assert_any_call(f"  Detector file (andor2_det): {styled_path}")
+
+        callback(
+            DataEvent(
+                name="event",
+                doc={
+                    "seq_num": 1,
+                    "data": {"sample_stage-x": -0.75, "scalar_det": 42},
+                    "time": 8888888,
+                },
+                task_id="task1",
+            )
+        )
+        mock_echo.assert_any_call(
+            "1970-04-13 21:08:08 - Point 1: sample_stage-x=-0.75, scalar_det=42,"
+            f" {styled_det}"
+        )
+
+        callback(
+            DataEvent(
+                name="event",
+                doc={
+                    "seq_num": 2,
+                    "data": {"sample_stage-x": -0.5, "scalar_det": 43},
+                    "time": 8888889,
+                },
+                task_id="task1",
+            )
+        )
+        mock_echo.assert_any_call(
+            "1970-04-13 21:08:09 - Point 2: sample_stage-x=-0.5, scalar_det=43,"
+            f" {styled_det}"
+        )
+
+        callback(
+            DataEvent(
+                name="stop",
+                doc={"exit_status": "success", "time": 8888889, "uid": "test-uid"},
+                task_id="task1",
+            )
+        )
+        mock_echo.assert_any_call(
+            "1970-04-13 21:08:09 - Run complete (scan_id=180, uid: test-uid): success"
+        )
+        mock_echo.assert_any_call(f"  Detector file (andor2_det): {styled_path}")
+        assert session.current_detector_filepaths == {}
+        assert session.data["180"]["andor2_det"] == str(det_file)
+        assert session.data["180"]["sample_stage-x"] == [-0.75, -0.5]
+        assert session.data["180"]["scalar_det"] == [42, 43]

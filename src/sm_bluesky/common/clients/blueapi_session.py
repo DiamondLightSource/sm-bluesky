@@ -17,9 +17,10 @@ class BlueAPISession:
         self, config: ApplicationConfig, instrument_session: str | None = None
     ):
         self.config: ApplicationConfig = config
-        self.data: dict[str, dict[str, list[Any]]] = {}
+        self.data: dict[str, dict[str, Any]] = {}
         self.metadata: dict[str, dict[str, Any]] = {}
         self.current_scan_id: Any | None = None
+        self.current_detector_filepaths: dict[str, str] = {}
         self._active_plot_windows: list[InteractivePlotWindow] = []
         click.echo("Connecting to BlueAPI service...")
         self.bc = BlueapiClient.from_config(self.config)
@@ -188,6 +189,24 @@ class BlueAPISession:
         self.print_plans()
         self.print_devices()
 
+    def _resolve_detector_filepaths(self, scan_id: str | int | None) -> dict[str, str]:
+        """Resolve and return detector file paths for the scan."""
+        if scan_id is None:
+            return {}
+        paths = {}
+        start_doc = self.metadata.get(str(scan_id), {})
+        for det in start_doc.get("detectors", []):
+            filepath = self.get_detector_filepath(det, scan_id)
+            if filepath:
+                paths[det] = filepath
+        return paths
+
+    def _print_detector_filepaths(self) -> None:
+        """Print the cached file paths for detectors in the current scan."""
+        for det, filepath in self.current_detector_filepaths.items():
+            styled_path = click.style(str(filepath), fg="cyan")
+            click.echo(f"  Detector file ({det}): {styled_path}")
+
     def _install_callbacks(self) -> None:
         """Install a callback to store the data events locally"""
 
@@ -203,11 +222,17 @@ class BlueAPISession:
                         self.current_scan_id = scan_id_str
                         self.data[scan_id_str] = {}
                         self.metadata[scan_id_str] = dict(start_doc)
+                        self.current_detector_filepaths = (
+                            self._resolve_detector_filepaths(scan_id_str)
+                        )
+                        for det, filepath in self.current_detector_filepaths.items():
+                            self.data[scan_id_str][det] = filepath
 
                     formatted_time = self._format_time(time) if time is not None else ""
                     click.echo(
                         f"{formatted_time} - Run started (scan_id={scan_id}, uid={uid})"
                     )
+                    self._print_detector_filepaths()
 
                 case DataEvent(
                     name="stop",
@@ -222,9 +247,11 @@ class BlueAPISession:
                         f" Run complete (scan_id={self.current_scan_id}, "
                         f"uid: {uid}): {status}"
                     )
+                    self._print_detector_filepaths()
                     if self.current_scan_id is not None:
                         self._save_scan_to_cache(str(self.current_scan_id))
                     self.current_scan_id = None
+                    self.current_detector_filepaths = {}
 
                 case DataEvent(
                     name="event",
@@ -236,11 +263,24 @@ class BlueAPISession:
                     scan_data = self.data[self.current_scan_id]
 
                     for device, value in event_data.items():
-                        scan_data.setdefault(device, []).append(value)
+                        if device not in scan_data or not isinstance(
+                            scan_data[device], list
+                        ):
+                            scan_data[device] = []
+                        scan_data[device].append(value)
 
-                    values = ", ".join(
+                    start_doc = self.metadata.get(self.current_scan_id, {})
+                    detectors = start_doc.get("detectors", [])
+
+                    event_items = [
                         f"{name}={value}" for name, value in event_data.items()
-                    )
+                    ]
+                    for det in detectors:
+                        if det not in event_data:
+                            styled_det = click.style(str(det), fg="cyan")
+                            event_items.append(styled_det)
+
+                    values = ", ".join(event_items)
                     click.echo(f"{self._format_time(time)} - Point {point}: {values}")
 
         callback_id = self.bc.add_callback(feedback)

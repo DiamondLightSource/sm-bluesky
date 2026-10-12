@@ -216,3 +216,39 @@ def test_draw_plot_x_axis_fallback(window):
     with patch.object(window.ax, "set_xlabel") as mock_xlabel:
         window.draw_plot()
         mock_xlabel.assert_called_with("Point number")
+
+
+def test_interactive_plot_with_external_detector_selection():
+    plt.close("all")
+    data = {
+        "189": {
+            "sample_stage-x": [-0.5, 0.0, 0.5],
+            "andor2_det": "/dls/p99/data/2026/cm44186-3/p99-189-andor2_det.h5",
+        }
+    }
+    win = InteractivePlotWindow(data, initial_scan_id="189")
+
+    active_fields = win.get_active_fields()
+    x_fields = win.get_x_fields()
+    assert "andor2_det" in active_fields
+    assert "sample_stage-x" in active_fields
+    assert "andor2_det" not in x_fields
+    assert "sample_stage-x" in x_fields
+
+    assert win._get_scan_num_points(data["189"]) == 3
+
+    win.active_y_states["sample_stage-x"] = True
+    win.active_y_states["andor2_det"] = False
+    win.draw_plot()
+    assert win.ax.get_title() == "Nearly Live Plot"
+    assert len(win.ax.texts) == 0
+
+    win.active_y_states["andor2_det"] = True
+    win.draw_plot()
+    assert "Nearly Live Plot (andor2_det)" in win.ax.get_title()
+    assert len(win.ax.texts) == 1
+    card_text = win.ax.texts[0].get_text()
+    assert "[ DETECTOR FILE PATH ]" in card_text
+    assert "Scan 189 (andor2_det):" in card_text
+    assert "p99-189-andor2_det.h5" in card_text
+    assert win.ax.texts[0].get_color() == "#00ffff"
