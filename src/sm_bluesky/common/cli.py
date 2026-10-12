@@ -1,3 +1,4 @@
+import json
 import os
 from collections.abc import Sequence
 from pathlib import Path
@@ -263,8 +264,29 @@ def blueapi_client(
         beamline=beamline,
     )
 
+    cache_dir = os.path.expanduser("~/.sm-bluesky/")
+    os.makedirs(cache_dir, exist_ok=True)
+    session_config_path = os.path.join(cache_dir, "session_config.json")
+
     if dummy:
         session = "dummy"
+
+    if session:
+        try:
+            with open(session_config_path, "w") as f:
+                json.dump({"last_session": session}, f)
+        except Exception as e:
+            click.echo(f"Warning: Could not save session cache: {e}")
+    else:
+        if os.path.exists(session_config_path):
+            try:
+                with open(session_config_path) as f:
+                    config_data = json.load(f)
+                    session = config_data.get("last_session")
+                    if session:
+                        click.echo(f"Restoring last used session: {session}")
+            except Exception as e:
+                click.echo(f"Warning: Could not read session cache: {e}")
 
     bs_session = BlueAPISession(
         config=app_config,
