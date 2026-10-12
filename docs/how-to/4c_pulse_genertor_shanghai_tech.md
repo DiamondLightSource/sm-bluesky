@@ -39,6 +39,7 @@ The server follows a **Request-Response** model. Every command sent by a client 
 | `get_delay` | None | Queries the current delay from hardware. | `get_delay\n` |
 | `reset_serial_buffer`| None | Clears the hardware's internal I/O buffers. | `reset_serial_buffer\n` |
 | `pass_command` | `string` | Sends a raw AT command to the device. | `pass_command\tAT+VER\n` |
+| `command_list` | None | Return a list of available commands. |
 | `shutdown` | None | Safely stops the server and releases hardware. | `shutdown\n` |
 
 ---

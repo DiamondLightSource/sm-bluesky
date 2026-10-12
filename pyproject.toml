@@ -10,6 +10,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 description = "Bluesky code for Diamond's surface and magnetic materials beamline."
 dependencies = [
@@ -18,10 +19,11 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal",
+    "dls-dodal==3.0.3",
     "ophyd-async[sim]",
     "scanspec",
     "blueapi",
+    "ipython",
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
@@ -30,10 +32,12 @@ requires-python = ">=3.11"
 
 
 [project.optional-dependencies]
-server = ["pyserial"]
+testing = ["jupyter", "matplotlib", "numpy", "pyepics"]
+server = ["pyserial", "zhinst-core"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",
+    "sm_bluesky[testing]",
     "copier",
     "myst-parser",
     "pre-commit",
@@ -49,18 +53,11 @@ dev = [
     "types-mock",
     "pytest-asyncio",
     # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
-    "chardet==7.4.3",
-
-    #usefull stuff for testing
-    "jupyter",
-    "ipython",
-    "matplotlib",
-    "numpy",
-    "pyepics",
+    "chardet==7.6.0",
 ]
 
 [project.scripts]
-sm-bluesky = "sm_bluesky.__main__:main"
+sm-bluesky = "sm_bluesky.common.cli:cli"
 
 [project.urls]
 GitHub = "https://github.com/DiamondLightSource/sm-bluesky"
@@ -178,6 +175,8 @@ commands = [
     [
         "sphinx-autobuild",
         "--show-traceback",
+        "--port",
+        "0",
         "--watch",
         "README.md",
         "docs",

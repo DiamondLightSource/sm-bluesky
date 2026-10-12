@@ -4,8 +4,8 @@ from unittest.mock import ANY
 from dodal.common.data_util import ModelLoader, ModelLoaderConfig, json_model_loader
 from dodal.devices.beamlines import b07, b07_shared, i05_shared, i09
 from dodal.devices.electron_analyser.base import (
-    GenericAnalyserDriverIO,
-    GenericRegion,
+    AbstractAnalyserDriverIO,
+    BaseRegion,
 )
 from dodal.devices.electron_analyser.mbs import MbsSequence
 from dodal.devices.electron_analyser.specs import AcquisitionMode as SpecsAcqusitionMode
@@ -42,8 +42,8 @@ load_i09_vgscienta_test_seq = ModelLoader[I09VGScientaSequence](
 
 
 def expected_analyser_config(
-    drv: GenericAnalyserDriverIO,
-    epics_region: GenericRegion,
+    drv: AbstractAnalyserDriverIO,
+    epics_region: BaseRegion,
 ) -> dict[str, Any]:
     if isinstance(drv, VGScientaAnalyserDriverIO) and isinstance(
         epics_region, VGScientaRegion
