@@ -1,6 +1,7 @@
 import json
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import click
@@ -372,24 +373,65 @@ def test_blueapi_session_get_detector_filepath_success(
     )
 
 
+@pytest.mark.parametrize(
+    "scan_id, metadata",
+    [
+        (None, {}),
+        ("bad_scan", {"bad_scan": {"instrument": "p99"}}),
+        ("nonexistent", {}),
+        (
+            "corrupt_template",
+            {
+                "corrupt_template": {
+                    "instrument": "p99",
+                    "data_session_directory": "/data",
+                    "detector_file_template": "{random stuff",
+                }
+            },
+        ),
+    ],
+)
 def test_blueapi_session_get_detector_filepath_edge_cases(
     session: BlueAPISession,
+    scan_id: str | None,
+    metadata: dict[str, Any],
 ) -> None:
-    assert session.get_detector_filepath("andor2_det") is None
+    session.metadata = metadata
+    assert session.get_detector_filepath("andor2_det", scan_id=scan_id) is None
 
-    session.metadata["bad_scan"] = {"instrument": "p99"}
-    assert session.get_detector_filepath("andor2_det", scan_id="bad_scan") is None
 
-    assert session.get_detector_filepath("andor2_det", scan_id="nonexistent") is None
-
-    session.metadata["corrupt_template"] = {
+@pytest.mark.parametrize(
+    "scan_id, with_detectors, expected_found",
+    [
+        (None, True, False),
+        (123, True, False),
+        ("123", True, False),
+        (180, False, False),
+        ("180", False, False),
+        (180, True, True),
+        ("180", True, True),
+    ],
+)
+def test_blueapi_session_resolve_detector_filepaths(
+    session: BlueAPISession,
+    scan_id: str | int | None,
+    with_detectors: bool,
+    expected_found: bool,
+) -> None:
+    session.metadata["180"] = {
         "instrument": "p99",
-        "data_session_directory": "/data",
-        "detector_file_template": "{random stuff",
+        "data_session_directory": "/dls/p99/data/2026/cm44186-3",
+        "detector_file_template": "{instrument}-{scan_id}-{device_name}",
     }
-    assert (
-        session.get_detector_filepath("andor2_det", scan_id="corrupt_template") is None
+    if with_detectors:
+        session.metadata["180"]["detectors"] = ["andor2_det"]
+
+    expected = (
+        {"andor2_det": "/dls/p99/data/2026/cm44186-3/p99-180-andor2_det.h5"}
+        if expected_found
+        else {}
     )
+    assert session._resolve_detector_filepaths(scan_id) == expected
 
 
 def test_blueapi_session_start_and_stop_prints_detector_filepath(

@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import patch
 
 import matplotlib
@@ -252,3 +253,18 @@ def test_interactive_plot_with_external_detector_selection():
     assert "Scan 189 (andor2_det):" in card_text
     assert "p99-189-andor2_det.h5" in card_text
     assert win.ax.texts[0].get_color() == "#00ffff"
+
+
+@pytest.mark.parametrize(
+    "s_data, expected_points",
+    [
+        ({}, 0),
+        ({"andor2_det": "/dls/path.h5"}, 0),
+        ({"labels": ["a", "b"]}, 0),
+        ({"empty": []}, 0),
+        ({"motor": [1, 2, 3]}, 3),
+        ({"andor2_det": "/dls/path.h5", "motor": [0.1, 0.2]}, 2),
+    ],
+)
+def test_get_scan_num_points(s_data: dict[str, Any], expected_points: int) -> None:
+    assert InteractivePlotWindow._get_scan_num_points(s_data) == expected_points
