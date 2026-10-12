@@ -18,6 +18,7 @@ class BlueAPISession:
     ):
         self.config: ApplicationConfig = config
         self.data: dict[str, dict[str, list[Any]]] = {}
+        self.metadata: dict[str, dict[str, Any]] = {}
         self.current_scan_id: Any | None = None
         self._active_plot_windows: list[InteractivePlotWindow] = []
         click.echo("Connecting to BlueAPI service...")
@@ -56,7 +57,16 @@ class BlueAPISession:
             with open(cache_file) as f:
                 for line in f:
                     data_chunk = json.loads(line)
-                    self.data.update(data_chunk)
+                    for s_id, s_data in data_chunk.items():
+                        if (
+                            isinstance(s_data, dict)
+                            and "data" in s_data
+                            and "meta" in s_data
+                        ):
+                            self.data[s_id] = s_data["data"]
+                            self.metadata[s_id] = s_data["meta"]
+                        else:
+                            self.data[s_id] = s_data
             if self.data:
                 click.echo(f"Loaded {len(self.data)} previous scans from cache.")
         except Exception as e:
@@ -69,7 +79,13 @@ class BlueAPISession:
 
         try:
             with open(cache_file, "a") as f:
-                line = json.dumps({str(scan_id): self.data[scan_id]})
+                scan_data = {
+                    str(scan_id): {
+                        "data": self.data[scan_id],
+                        "meta": self.metadata.get(scan_id, {}),
+                    }
+                }
+                line = json.dumps(scan_data, default=str)
                 f.write(line + "\n")
         except Exception as e:
             click.echo(f"Warning: Could not write to scan cache: {e}")
@@ -105,9 +121,44 @@ class BlueAPISession:
                 "dev": self.bc.devices,
                 "show_devices": self.print_devices,
                 "scan_data": self.data,
+                "metadata": self.metadata,
+                "get_detector_filepath": self.get_detector_filepath,
                 "plot": self.plot,
             },
         )
+
+    def get_detector_filepath(
+        self, device_name: str, scan_id: Any | None = None
+    ) -> str | None:
+        """Reconstruct the data file path for an area detector for a given scan."""
+        s_id = (
+            str(scan_id)
+            if scan_id is not None
+            else (
+                self.current_scan_id
+                or (next(reversed(self.data)) if self.data else None)
+            )
+        )
+        if not s_id:
+            return None
+
+        start_doc = self.metadata.get(s_id, {})
+        directory = start_doc.get("data_session_directory")
+        template = start_doc.get("detector_file_template")
+        instrument = start_doc.get("instrument")
+
+        if not (directory and template and instrument):
+            return None
+
+        try:
+            filename = template.format(
+                instrument=instrument,
+                scan_id=s_id,
+                device_name=device_name,
+            )
+            return os.path.join(directory, f"{filename}.h5")
+        except Exception:
+            return None
 
     def plot(self, scan_id: Any | None = None) -> None:
         """Open an interactive plot window for multiple scans and axes."""
@@ -141,18 +192,21 @@ class BlueAPISession:
         """Install a callback to store the data events locally"""
 
         def feedback(event: AnyEvent) -> None:
-
             match event:
-                case DataEvent(
-                    name="start", doc={"scan_id": scan_id, "uid": uid, "time": time}
-                ):
-                    scan_id_str = str(scan_id)
-                    self.current_scan_id = scan_id_str
-                    self.data[scan_id_str] = {}
+                case DataEvent(name="start", doc=start_doc):
+                    scan_id = start_doc.get("scan_id")
+                    uid = start_doc.get("uid")
+                    time = start_doc.get("time")
 
+                    if scan_id is not None:
+                        scan_id_str = str(scan_id)
+                        self.current_scan_id = scan_id_str
+                        self.data[scan_id_str] = {}
+                        self.metadata[scan_id_str] = dict(start_doc)
+
+                    formatted_time = self._format_time(time) if time is not None else ""
                     click.echo(
-                        f"{self._format_time(time)} -"
-                        f" Run started (scan_id={scan_id}, uid={uid})"
+                        f"{formatted_time} - Run started (scan_id={scan_id}, uid={uid})"
                     )
 
                 case DataEvent(
