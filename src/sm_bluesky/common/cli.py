@@ -254,8 +254,10 @@ def blueapi_client(
     )
 
     if not beamline and not config:
+        click.echo(click.get_current_context().get_help())
+
         click.echo(
-            "Error: Please provide either a beamline name (-b) or a config file (-c)."
+            "Error: Please provide either a beamline name (-b) or a config file (-c).\n"
         )
         return
 
