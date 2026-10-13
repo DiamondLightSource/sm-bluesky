@@ -296,6 +296,8 @@ def test_cli_client_missing_args(cli_runner: CliRunner) -> None:
         "Error: Please provide either a beamline name (-b) or a config file (-c)."
         in result.output
     )
+    assert "Usage: cli client" in result.output
+    assert "--beamline" in result.output
 
 
 @patch("sm_bluesky.common.clients.BlueAPISession")

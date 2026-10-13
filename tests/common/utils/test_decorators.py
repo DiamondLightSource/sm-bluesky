@@ -54,6 +54,22 @@ async def test_add_meta_success_with_meta(
     assert run_engine_documents["start"][0]["plan_name"] == "count"
 
 
+async def test_add_meta_run_time_md_overrides_defaults(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_stage_step: SimStage,
+) -> None:
+    count_meta = add_default_metadata(count, DEFAULT_METADATA)
+    override = {"detector_dist": {"value": 25.5, "unit": "mm"}}
+
+    run_engine(count_meta([sim_stage_step.x], md=override))
+
+    start = run_engine_documents["start"][0]
+    assert start["detector_dist"] == {"value": 25.5, "unit": "mm"}
+    assert start["energy"] == DEFAULT_METADATA["energy"]
+    assert DEFAULT_METADATA["detector_dist"] == {"value": 88, "unit": "mm"}
+
+
 async def test_add_meta_success_with_no_extra_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],

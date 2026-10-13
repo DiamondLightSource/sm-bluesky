@@ -12,11 +12,15 @@ def add_default_metadata(
     func: TCallable, extra_metadata: dict[str, Any] | None = None
 ) -> TCallable:
     """
-    Decorator to add or update default metadata in the 'md' keyword argument.
+    Decorator to add default metadata to the 'md' keyword argument.
 
-    If 'md' is not provided, it will be set to extra_metadata.
-    If 'md' is provided and not None, it will be updated with extra_metadata.
-    If 'md' is provided and is None, it will be set to extra_metadata.
+    The defaults can be overridden at run time: any key supplied in 'md' takes
+    precedence over the same key in extra_metadata.
+
+    If 'md' is not provided, it will be set to a copy of extra_metadata.
+    If 'md' is provided and not None, extra_metadata is used for the keys
+    that 'md' does not define.
+    If 'md' is provided and is None, it will be set to a copy of extra_metadata.
     """
 
     @wraps(func)
@@ -27,9 +31,9 @@ def add_default_metadata(
         md = kwargs.get("md")
         if extra_metadata:
             if md is None:
-                kwargs["md"] = extra_metadata
+                kwargs["md"] = dict(extra_metadata)
             elif isinstance(md, dict):
-                kwargs["md"] = {**md, **extra_metadata}
+                kwargs["md"] = {**extra_metadata, **md}
             else:
                 raise ValueError("md is reserved for meta data.")
         elif md is None:
