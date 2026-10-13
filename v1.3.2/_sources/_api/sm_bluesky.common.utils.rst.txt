@@ -1,0 +1,25 @@
+``sm_bluesky.common.utils``
+===========================
+        
+        
+        
+
+.. automodule:: sm_bluesky.common.utils
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        add_default_metadata
+        add_extra_names_to_meta
+        auto_type_cast
+    
+    
