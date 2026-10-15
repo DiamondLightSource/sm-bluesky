@@ -1,6 +1,17 @@
+from collections.abc import Callable
 from typing import Any
 
 import click
+
+from sm_bluesky.common.math_functions.grid_plotting import (
+    extract_xyz,
+    grid_heatmap,
+)
+
+MODE_1D = "1D Line"
+MODE_2D = "2D Grid"
+MODE_CONTOUR = "2D Contour"
+NO_FIELDS = "(no data)"
 
 
 class InteractivePlotWindow:
@@ -37,16 +48,26 @@ class InteractivePlotWindow:
         self.active_y_states: dict[str, bool] = {}
         self.last_seen_points: dict[Any, int] = {}
 
+        self.mode: str = MODE_1D
+        self.x_field: str | None = None
+        self.y_field: str | None = None
+        self.z_field: str | None = None
+
         self.widgets: dict[str, Any] = {}
 
         self.fig, self.ax = self.plt.subplots(figsize=(10, 6))
         self.fig.subplots_adjust(left=0.08, right=0.72, top=0.95, bottom=0.1)
 
-        self.ax_scan_txt = self.plt.axes((0.76, 0.91, 0.22, 0.04))
-        self.ax_scan = self.plt.axes((0.76, 0.62, 0.22, 0.25))
-        self.ax_scan_btn = self.plt.axes((0.76, 0.58, 0.22, 0.03))
-        self.ax_x = self.plt.axes((0.76, 0.33, 0.22, 0.21))
-        self.ax_y = self.plt.axes((0.76, 0.05, 0.22, 0.23))
+        self.ax_scan_txt = self.plt.axes((0.76, 0.915, 0.21, 0.035))
+        self.ax_scan = self.plt.axes((0.76, 0.720, 0.21, 0.155))
+        self.ax_scan_btn = self.plt.axes((0.76, 0.680, 0.21, 0.032))
+        self.ax_mode = self.plt.axes((0.76, 0.560, 0.21, 0.085))
+        self.ax_x = self.plt.axes((0.76, 0.300, 0.21, 0.210))
+        self.ax_y = self.plt.axes((0.76, 0.060, 0.21, 0.190))
+        self.ax_z = self.plt.axes((0.76, 0.060, 0.21, 0.120))
+        self.ax_cbar = self.plt.axes((0.670, 0.10, 0.020, 0.83))
+        self.ax_z.set_visible(False)
+        self.ax_cbar.set_visible(False)
 
         # Text box for adding scan
         self.ax_scan_txt.set_title("Add Scan ID", fontsize=10, fontweight="bold")
@@ -56,6 +77,13 @@ class InteractivePlotWindow:
         # Unselect scan
         self.widgets["unselect_btn"] = self.Button(self.ax_scan_btn, "Unselect All")
         self.widgets["unselect_btn"].on_clicked(self.unselect_all)
+
+        # Plot mode
+        self.ax_mode.set_title("Plot Mode", fontsize=10, fontweight="bold")
+        self.widgets["mode_radio"] = self.RadioButtons(
+            self.ax_mode, [MODE_1D, MODE_2D, MODE_CONTOUR], active=0
+        )
+        self.widgets["mode_radio"].on_clicked(self.on_mode_change)
 
         self.timer = self.fig.canvas.new_timer(interval=1000)
         self.timer.add_callback(self.update_plot)
@@ -114,10 +142,51 @@ class InteractivePlotWindow:
         visible.sort(key=lambda s: self.scans.index(s))
         return visible
 
+    def get_2d_scan(self) -> Any | None:
+        if not self.active_scans:
+            return None
+        n_scans = len(self.scans)
+        return max(
+            self.active_scans,
+            key=lambda s: self.scans.index(s) if s in self.scans else n_scans,
+        )
+
+    def get_2d_fields(self) -> list[str]:
+        s_id = self.get_2d_scan()
+        if s_id is None:
+            return []
+        return list(self.data_source[s_id].keys())
+
+    def _clear_widgets(self, *names: str) -> None:
+        for name in names:
+            widget = self.widgets.pop(name, None)
+            disconnect = getattr(widget, "disconnect_events", None)
+            if disconnect is not None:
+                disconnect()
+
+    def _apply_layout(self) -> None:
+        if self.mode in (MODE_2D, MODE_CONTOUR):
+            self.ax.set_position((0.09, 0.10, 0.56, 0.83))
+            self.ax_cbar.set_position((0.670, 0.10, 0.020, 0.83))
+            self.ax_cbar.set_visible(True)
+            self.ax_x.set_position((0.76, 0.390, 0.21, 0.120))
+            self.ax_y.set_position((0.76, 0.225, 0.21, 0.120))
+            self.ax_z.set_position((0.76, 0.060, 0.21, 0.120))
+            self.ax_z.set_visible(True)
+        else:
+            self.ax.set_position((0.09, 0.10, 0.63, 0.83))
+            self.ax_cbar.cla()
+            self.ax_cbar.set_visible(False)
+            self.ax_x.set_position((0.76, 0.300, 0.21, 0.210))
+            self.ax_y.set_position((0.76, 0.060, 0.21, 0.190))
+            self.ax_z.cla()
+            self.ax_z.set_visible(False)
+
     def build_ui(self) -> None:
         self.ax_scan.cla()
         self.ax_x.cla()
         self.ax_y.cla()
+        self.ax_z.cla()
 
         vis_scans = self.get_visible_scans()
         scan_labels = [str(s) for s in vis_scans]
@@ -129,6 +198,17 @@ class InteractivePlotWindow:
             actives=[(s in self.active_scans) for s in vis_scans],
         )
 
+        self._apply_layout()
+        if self.mode in (MODE_2D, MODE_CONTOUR):
+            self._build_controls_2d()
+        else:
+            self._build_controls_1d()
+
+        self.widgets["scan_check"].on_clicked(self.on_scan_toggle)
+
+    def _build_controls_1d(self) -> None:
+        self._clear_widgets("radio_y", "radio_z")
+
         self.ax_x.set_title("X Axis", fontsize=10, fontweight="bold")
         fields = self.get_active_fields()
         x_options = ["Point number"] + fields
@@ -136,6 +216,8 @@ class InteractivePlotWindow:
         old_x = None
         if "radio_x" in self.widgets:
             old_x = self.widgets["radio_x"].value_selected
+        if old_x is None:
+            old_x = self.x_field
 
         active_x_idx = 0
         if old_x in x_options:
@@ -163,9 +245,73 @@ class InteractivePlotWindow:
 
         self.widgets["radio_x"].on_clicked(self.on_x_change)
         self.widgets["check_y"].on_clicked(self.on_y_toggle)
-        self.widgets["scan_check"].on_clicked(self.on_scan_toggle)
+
+    def _resolve_2d_fields(self, fields: list[str]) -> None:
+        if not fields:
+            self.x_field = self.y_field = self.z_field = None
+            return
+
+        candidates = [f for f in fields if f != "Point number"] or fields
+        defaults = (
+            candidates[0],
+            candidates[1] if len(candidates) > 1 else candidates[0],
+            candidates[2] if len(candidates) > 2 else candidates[-1],
+        )
+        if self.x_field not in fields:
+            self.x_field = defaults[0]
+        if self.y_field not in fields:
+            self.y_field = defaults[1]
+        if self.z_field not in fields:
+            self.z_field = defaults[2]
+
+    def _build_controls_2d(self) -> None:
+        self._clear_widgets("check_y")
+
+        fields = self.get_2d_fields()
+        self._resolve_2d_fields(fields)
+        options = fields or [NO_FIELDS]
+
+        def active_idx(selected: str | None) -> int:
+            return options.index(selected) if selected in options else 0
+
+        self.ax_x.set_title("X", fontsize=10, fontweight="bold")
+        self.ax_y.set_title("Y", fontsize=10, fontweight="bold")
+        self.ax_z.set_title("Z", fontsize=10, fontweight="bold")
+
+        self.widgets["radio_x"] = self.RadioButtons(
+            self.ax_x, options, active=active_idx(self.x_field)
+        )
+        self.widgets["radio_y"] = self.RadioButtons(
+            self.ax_y, options, active=active_idx(self.y_field)
+        )
+        self.widgets["radio_z"] = self.RadioButtons(
+            self.ax_z, options, active=active_idx(self.z_field)
+        )
+
+        self.widgets["radio_x"].on_clicked(self.on_x_change)
+        self.widgets["radio_y"].on_clicked(self.on_y_change)
+        self.widgets["radio_z"].on_clicked(self.on_z_change)
+
+    def on_mode_change(self, label: str | None) -> None:
+        if label not in (MODE_1D, MODE_2D, MODE_CONTOUR) or label == self.mode:
+            return
+        self.mode = label
+        self.build_ui()
+        self.draw_plot()
 
     def on_x_change(self, label: str | None) -> None:
+        if self.mode in (MODE_2D, MODE_CONTOUR) and label not in (None, NO_FIELDS):
+            self.x_field = label
+        self.draw_plot()
+
+    def on_y_change(self, label: str | None) -> None:
+        if label not in (None, NO_FIELDS):
+            self.y_field = label
+        self.draw_plot()
+
+    def on_z_change(self, label: str | None) -> None:
+        if label not in (None, NO_FIELDS):
+            self.z_field = label
         self.draw_plot()
 
     def on_y_toggle(self, label: str | None) -> None:
@@ -189,6 +335,14 @@ class InteractivePlotWindow:
         self.draw_plot()
 
     def draw_plot(self) -> None:
+        if self.mode == MODE_2D:
+            self._draw_2d()
+        elif self.mode == MODE_CONTOUR:
+            self._draw_contour()
+        else:
+            self._draw_1d()
+
+    def _draw_1d(self) -> None:
         self.ax.cla()
         x_widget = self.widgets.get("radio_x")
         x_choice = x_widget.value_selected if x_widget else "Point number"
@@ -228,6 +382,65 @@ class InteractivePlotWindow:
         if plotted_any:
             self.ax.legend(loc="best")
         self.fig.canvas.draw_idle()
+
+    def _draw_2d_plot(
+        self,
+        render_fn: Callable[[list[float], list[float], list[float]], Any],
+    ) -> None:
+        self.ax.cla()
+        self.ax_cbar.cla()
+        self.ax_cbar.set_visible(False)
+
+        s_id = self.get_2d_scan()
+        if s_id is None:
+            self.ax.set_title(f"{self.mode}: no scan selected")
+            self.fig.canvas.draw_idle()
+            return
+
+        xs, ys, zs = extract_xyz(
+            self.data_source[s_id], self.x_field, self.y_field, self.z_field
+        )
+
+        self.ax.set_xlabel(self.x_field or "")
+        self.ax.set_ylabel(self.y_field or "")
+        if not xs:
+            self.ax.set_title(f"Scan {s_id}: waiting for data")
+            self.ax.grid(True)
+            self.fig.canvas.draw_idle()
+            return
+
+        mappable = render_fn(xs, ys, zs)
+
+        self.ax_cbar.set_visible(True)
+        colorbar = self.fig.colorbar(mappable, cax=self.ax_cbar)
+        colorbar.set_label(self.z_field or "")
+
+        self.ax.set_title(f"Scan {s_id}: {self.z_field}")
+        self.ax.grid(True)
+        self.fig.canvas.draw_idle()
+
+    def _render_heatmap(self, xs: list[float], ys: list[float], zs: list[float]) -> Any:
+        heatmap = grid_heatmap(xs, ys, zs)
+        if heatmap is not None:
+            x_edges, y_edges, grid = heatmap
+            return self.ax.pcolormesh(
+                x_edges, y_edges, grid, cmap="viridis", shading="flat"
+            )
+        return self.ax.scatter(xs, ys, c=zs, cmap="viridis")
+
+    def _render_contour(self, xs: list[float], ys: list[float], zs: list[float]) -> Any:
+        if len(xs) >= 3 and len({round(v, 6) for v in zs}) > 1:
+            try:
+                return self.ax.tricontourf(xs, ys, zs, cmap="viridis")
+            except Exception:
+                pass
+        return self.ax.scatter(xs, ys, c=zs, cmap="viridis")
+
+    def _draw_2d(self) -> None:
+        self._draw_2d_plot(self._render_heatmap)
+
+    def _draw_contour(self) -> None:
+        self._draw_2d_plot(self._render_contour)
 
     def update_plot(self) -> None:
         if not self.plt.fignum_exists(self.fig.number):
