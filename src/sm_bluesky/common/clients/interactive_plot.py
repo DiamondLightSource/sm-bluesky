@@ -180,6 +180,11 @@ class InteractivePlotWindow:
             self.ax_z.set_visible(False)
 
     def build_ui(self) -> None:
+        old_x = (
+            self.widgets["radio_x"].value_selected
+            if "radio_x" in self.widgets
+            else self.x_field
+        )
         self._clear_widgets(
             "scan_check", "check_log", "radio_x", "check_y", "radio_y", "radio_z"
         )
@@ -210,22 +215,14 @@ class InteractivePlotWindow:
         if self.mode in (MODE_2D, MODE_CONTOUR):
             self._build_controls_2d()
         else:
-            self._build_controls_1d()
+            self._build_controls_1d(old_x)
 
         self.widgets["scan_check"].on_clicked(self.on_scan_toggle)
 
-    def _build_controls_1d(self) -> None:
-        self._clear_widgets("radio_y", "radio_z")
-
+    def _build_controls_1d(self, old_x: str | None = None) -> None:
         self.ax_x.set_title("X Axis", fontsize=10, fontweight="bold")
         fields = self.get_active_fields()
         x_options = ["Point number"] + fields
-
-        old_x = None
-        if "radio_x" in self.widgets:
-            old_x = self.widgets["radio_x"].value_selected
-        if old_x is None:
-            old_x = self.x_field
 
         active_x_idx = 0
         if old_x in x_options:
@@ -273,7 +270,6 @@ class InteractivePlotWindow:
             self.z_field = defaults[2]
 
     def _build_controls_2d(self) -> None:
-        self._clear_widgets("check_y")
 
         fields = self.get_2d_fields()
         self._resolve_2d_fields(fields)
