@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 import click
+import matplotlib.pyplot as plt
 from blueapi.client import BlueapiClient
 from blueapi.client.event_bus import AnyEvent
 from blueapi.config import ApplicationConfig
@@ -114,14 +115,11 @@ class BlueAPISession:
         self._active_plot_windows = [
             win
             for win in self._active_plot_windows
-            if win.plt.fignum_exists(win.fig.number)
+            if plt.fignum_exists(win.fig.number)
         ]
 
-        try:
-            window = InteractivePlotWindow(self.data, scan_id)
-            self._active_plot_windows.append(window)
-        except ImportError:
-            pass
+        window = InteractivePlotWindow(self.data, scan_id)
+        self._active_plot_windows.append(window)
 
     def print_plans(self) -> None:
         click.echo("\nPlans available:")
