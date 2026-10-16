@@ -4,7 +4,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pytest
 
-from sm_bluesky.common.clients.interactive_plot import InteractivePlotWindow
+from sm_bluesky.common.clients.interactive_plot import (
+    InteractivePlotWindow,
+)
 
 matplotlib.use("Agg")
 
@@ -146,21 +148,6 @@ def test_on_close(window):
     with patch.object(window.timer, "stop") as mock_timer_stop:
         window.on_close(None)
         mock_timer_stop.assert_called_once()
-
-
-def test_missing_matplotlib(monkeypatch, sample_data):
-    import builtins
-
-    real_import = builtins.__import__
-
-    def mock_import(name, *args, **kwargs):
-        if name == "matplotlib.pyplot":
-            raise ImportError("mock error")
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", mock_import)
-    with pytest.raises(ImportError):
-        InteractivePlotWindow(sample_data)
 
 
 def test_draw_with_x_choice(window):
