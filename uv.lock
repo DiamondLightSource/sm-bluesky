@@ -6671,6 +6671,9 @@ dependencies = [
     { name = "bluesky" },
     { name = "dls-dodal" },
     { name = "ipython" },
+    { name = "matplotlib" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "ophyd-async", extra = ["sim"] },
     { name = "scanspec" },
 ]
@@ -6682,9 +6685,6 @@ server = [
 ]
 testing = [
     { name = "jupyter" },
-    { name = "matplotlib" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pyepics" },
 ]
 
@@ -6715,8 +6715,8 @@ requires-dist = [
     { name = "dls-dodal", specifier = "==3.0.4" },
     { name = "ipython" },
     { name = "jupyter", marker = "extra == 'testing'" },
-    { name = "matplotlib", marker = "extra == 'testing'" },
-    { name = "numpy", marker = "extra == 'testing'" },
+    { name = "matplotlib" },
+    { name = "numpy" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "pyepics", marker = "extra == 'testing'" },
     { name = "pyserial", marker = "extra == 'server'" },
