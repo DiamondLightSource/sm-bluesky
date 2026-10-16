@@ -3,7 +3,7 @@ from sm_bluesky.common.utils import add_default_metadata
 
 P99_DEFAULT_METADATA = {
     "energy": {"value": 1.8, "unit": "eV"},
-    "detector_dist": {"value": 88, "unit": "mm"},
+    "detector_dist": {"value": 25.5, "unit": "mm"},
     "pixel_size": {"value": 16, "unit": "µm"},
 }
 
