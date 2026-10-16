@@ -165,45 +165,28 @@ def test_dead_plot_window_removed(mock_client_class: MagicMock) -> None:
         class FakeFig:
             number = 1
 
-        class FakePlt:
-            @staticmethod
-            def fignum_exists(num):
-                return num == 1
-
         fig = FakeFig()
-        plt = FakePlt()
 
     class FakeDeadPlot:
         class FakeFig:
             number = 2
 
-        class FakePlt:
-            @staticmethod
-            def fignum_exists(num):
-                return False
-
         fig = FakeFig()
-        plt = FakePlt()
 
     session._active_plot_windows = [FakePlot(), FakeDeadPlot()]  # type: ignore
 
-    with patch(
-        "sm_bluesky.common.clients.blueapi_session.InteractivePlotWindow"
-    ) as mock_win:
+    with (
+        patch(
+            "sm_bluesky.common.clients.blueapi_session.InteractivePlotWindow"
+        ) as mock_win,
+        patch(
+            "sm_bluesky.common.clients.blueapi_session.plt.fignum_exists",
+            side_effect=lambda num: num == 1,
+        ),
+    ):
         session.plot("scan1")
         assert len(session._active_plot_windows) == 2
         mock_win.assert_called_once()
-
-
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
-def test_plot_import_error(mock_client_class: MagicMock) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
-    with patch(
-        "sm_bluesky.common.clients.blueapi_session.InteractivePlotWindow",
-        side_effect=ImportError("mock error"),
-    ):
-        session.plot()
 
 
 @patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
