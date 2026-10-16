@@ -431,6 +431,10 @@ def test_contour_draw_fallback_collinear(grid_data):
     assert win.ax_cbar.get_visible()
     assert isinstance(win.ax.collections[0], PathCollection)
 
+    win.on_log_toggle("Log Scale")
+    assert isinstance(win.ax.collections[0], PathCollection)
+    assert isinstance(win.ax.collections[0].norm, LogNorm)
+
 
 def test_contour_no_scan_selected(grid_data):
     plt.close("all")
@@ -522,6 +526,24 @@ def test_2d_log_scale_non_positive():
     assert win._get_2d_norm([0.0, -1.0, -2.0]) is None
     mappable = win.ax.collections[0]
     assert not isinstance(mappable.norm, LogNorm)
+
+
+def test_2d_log_scale_uniform_positive():
+    plt.close("all")
+    data = {
+        "grid": {
+            "x": [0, 1, 0, 1],
+            "y": [0, 0, 1, 1],
+            "det": [10.0, 10.0, 10.0, 10.0],
+        }
+    }
+    win = InteractivePlotWindow(data, initial_scan_id="grid")
+    win.on_mode_change(MODE_2D)
+    win.on_log_toggle("Log Scale")
+    norm = win.ax.collections[0].norm
+    assert isinstance(norm, LogNorm)
+    assert norm.vmin == pytest.approx(9.0)
+    assert norm.vmax == pytest.approx(11.0)
 
 
 def test_log_scale_persists_across_mode_changes(grid_data):
