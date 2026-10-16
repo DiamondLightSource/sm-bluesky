@@ -1,6 +1,10 @@
 import pytest
 
-from sm_bluesky.common.math_functions import cal_range_num, to_float
+from sm_bluesky.common.math_functions import (
+    cal_range_num,
+    step_size_to_step_num,
+    to_float,
+)
 
 
 @pytest.mark.parametrize(
@@ -28,6 +32,20 @@ def test_slit_cal_range_num(
     test_input: list[float], expected_output: tuple[float]
 ) -> None:
     assert cal_range_num(*test_input) == pytest.approx(expected_output, 0.01)
+
+
+@pytest.mark.parametrize(
+    "start, end, step_size, expected",
+    [
+        (0.0, 10.0, 1.0, 10),
+        (10.0, 0.0, 2.5, 4),
+        (-5.0, 5.0, 3.0, 3),
+    ],
+)
+def test_step_size_to_step_num(
+    start: float, end: float, step_size: float, expected: int
+) -> None:
+    assert step_size_to_step_num(start, end, step_size) == expected
 
 
 @pytest.mark.parametrize(
