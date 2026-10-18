@@ -53,7 +53,7 @@ dev = [
     "types-mock",
     "pytest-asyncio",
     # Temp pin to avoid requests raising exception. See https://github.com/psf/requests/issues/7219
-    "chardet==7.6.0",
+    "chardet==7.7.0",
 ]
 
 [project.scripts]
