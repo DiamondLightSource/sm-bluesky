@@ -1,8 +1,10 @@
 import json
 import os
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from functools import wraps
 from typing import Any
 
 import click
@@ -28,7 +30,7 @@ class BlueAPISession:
         self.bc.login()
 
         self._install_callbacks()
-        self._wrap_run_task()
+        self.bc.run_task = self._live_plot_during_task(self.bc.run_task)
         self.print_inventory()
 
         if instrument_session:
@@ -124,12 +126,11 @@ class BlueAPISession:
                 win.update_plot()
             win.fig.canvas.flush_events()
 
-    def _wrap_run_task(self) -> None:
-        orig_run_task = self.bc.run_task
-
-        def run_task_with_live_plot(*args: Any, **kwargs: Any) -> Any:
+    def _live_plot_during_task(self, func: Callable[..., Any]) -> Callable[..., Any]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             executor = ThreadPoolExecutor(max_workers=1)
-            future = executor.submit(orig_run_task, *args, **kwargs)
+            future = executor.submit(func, *args, **kwargs)
             try:
                 last_update = 0.0
                 while not future.done():
@@ -144,7 +145,7 @@ class BlueAPISession:
             finally:
                 executor.shutdown(wait=False, cancel_futures=True)
 
-        self.bc.run_task = run_task_with_live_plot  # type: ignore[method-assign]
+        return wrapper
 
     def plot(self, scan_id: Any | None = None) -> None:
         """Open an interactive plot window for multiple scans and axes."""
