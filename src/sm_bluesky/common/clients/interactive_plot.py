@@ -76,24 +76,9 @@ class InteractivePlotWindow:
         )
         self.widgets["mode_radio"].on_clicked(self.on_mode_change)
 
-        self.timer = self.fig.canvas.new_timer(interval=1000)
-        self.timer.add_callback(self.update_plot)
-
         self.build_ui()
         self.draw_plot()
-
-        self.fig.canvas.mpl_connect("close_event", self.on_close)
-
-        self.timer.start()
         plt.show(block=False)
-
-    def on_close(self, event: Any) -> None:
-        if hasattr(self, "timer"):
-            try:
-                self.timer.stop()
-                self.timer.remove_callback(self.update_plot)
-            except Exception:
-                pass
 
     def submit_scan(self, text: str) -> None:
         if not text or text.startswith("Not found:"):
