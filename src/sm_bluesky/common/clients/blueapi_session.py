@@ -1,5 +1,7 @@
 import json
 import os
+import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any
 
@@ -26,6 +28,7 @@ class BlueAPISession:
         self.bc.login()
 
         self._install_callbacks()
+        self._wrap_run_task()
         self.print_inventory()
 
         if instrument_session:
@@ -109,6 +112,39 @@ class BlueAPISession:
                 "plot": self.plot,
             },
         )
+
+    def _refresh_plots(self, update_data: bool = True) -> None:
+        self._active_plot_windows = [
+            win
+            for win in self._active_plot_windows
+            if plt.fignum_exists(win.fig.number)
+        ]
+        for win in self._active_plot_windows:
+            if update_data:
+                win.update_plot()
+            win.fig.canvas.flush_events()
+
+    def _wrap_run_task(self) -> None:
+        orig_run_task = self.bc.run_task
+
+        def run_task_with_live_plot(*args: Any, **kwargs: Any) -> Any:
+            executor = ThreadPoolExecutor(max_workers=1)
+            future = executor.submit(orig_run_task, *args, **kwargs)
+            try:
+                last_update = 0.0
+                while not future.done():
+                    now = time.monotonic()
+                    should_update = (now - last_update) >= 1.0
+                    if should_update:
+                        last_update = now
+                    self._refresh_plots(update_data=should_update)
+                    time.sleep(0.48)
+                self._refresh_plots(update_data=True)
+                return future.result()
+            finally:
+                executor.shutdown(wait=False, cancel_futures=True)
+
+        self.bc.run_task = run_task_with_live_plot  # type: ignore[method-assign]
 
     def plot(self, scan_id: Any | None = None) -> None:
         """Open an interactive plot window for multiple scans and axes."""
