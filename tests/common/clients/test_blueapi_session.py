@@ -1,4 +1,5 @@
 import json
+import threading
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -289,3 +290,56 @@ def test_blueapi_session_save_cache_missing_scan_id(
     session = BlueAPISession(config=config, instrument_session="test-session")
     session._save_scan_to_cache("missing-scan-id")
     mock_open.assert_not_called()
+
+
+@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+def test_run_task_updates_and_flushes_plots_during_scan(
+    mock_client_class: MagicMock,
+) -> None:
+
+    mock_client = mock_client_class.from_config.return_value
+    unblock_task = threading.Event()
+
+    def slow_task(*args, **kwargs):
+        unblock_task.wait(timeout=5.0)
+        return "task_done"
+
+    mock_client.run_task = slow_task
+    session = BlueAPISession(config=ApplicationConfig())
+
+    active_win = MagicMock()
+    active_win.fig.number = 1
+    dead_win = MagicMock()
+    dead_win.fig.number = 2
+    session._active_plot_windows = [active_win, dead_win]
+
+    monotonic_vals = iter([1.0, 1.2])
+    sleep_calls = 0
+
+    def fake_sleep(_: float) -> None:
+        nonlocal sleep_calls
+        sleep_calls += 1
+        if sleep_calls >= 2:
+            unblock_task.set()
+
+    with (
+        patch(
+            "sm_bluesky.common.clients.blueapi_session.plt.fignum_exists",
+            side_effect=lambda num: num == 1,
+        ),
+        patch(
+            "sm_bluesky.common.clients.blueapi_session.time.monotonic",
+            side_effect=lambda: next(monotonic_vals, 2.5),
+        ),
+        patch(
+            "sm_bluesky.common.clients.blueapi_session.time.sleep",
+            side_effect=fake_sleep,
+        ),
+    ):
+        result = session.bc.run_task(MagicMock())
+
+    assert result == "task_done"
+    assert session._active_plot_windows == [active_win]
+    assert active_win.update_plot.call_count >= 2
+    assert active_win.fig.canvas.flush_events.call_count >= 3
+    dead_win.update_plot.assert_not_called()
