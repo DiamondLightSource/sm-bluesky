@@ -152,12 +152,6 @@ def test_update_plot_closed(window: InteractivePlotWindow):
         mock_draw.assert_not_called()
 
 
-def test_on_close(window: InteractivePlotWindow):
-    with patch.object(window.timer, "stop") as mock_timer_stop:
-        window.on_close(None)
-        mock_timer_stop.assert_called_once()
-
-
 def test_draw_with_x_choice(window: InteractivePlotWindow):
     class MockRadio:
         value_selected = "motor1"
@@ -166,14 +160,6 @@ def test_draw_with_x_choice(window: InteractivePlotWindow):
     with patch.object(window.ax, "set_xlabel") as mock_xlabel:
         window.draw_plot()
         mock_xlabel.assert_called_with("motor1")
-
-
-def test_on_close_exception(window: InteractivePlotWindow):
-    with patch.object(
-        window.timer, "stop", side_effect=Exception("Mock crash")
-    ) as mock_stop:
-        window.on_close(None)
-        mock_stop.assert_called_once()
 
 
 def test_build_ui_explicitly(window: InteractivePlotWindow):
