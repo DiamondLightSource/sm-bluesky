@@ -139,7 +139,7 @@ class BlueAPISession:
                     if should_update:
                         last_update = now
                     self._refresh_plots(update_data=should_update)
-                    time.sleep(0.48)
+                    time.sleep(0.18)
                 self._refresh_plots(update_data=True)
                 return future.result()
             finally:
