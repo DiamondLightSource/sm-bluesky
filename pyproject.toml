@@ -23,8 +23,6 @@ dependencies = [
     "ophyd-async[sim]",
     "scanspec",
     "blueapi",
-    "ipython",
-    "matplotlib",
     "numpy",
 ]
 dynamic = ["version"]
@@ -35,11 +33,13 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 testing = ["jupyter", "pyepics"]
+client = ["ipython", "matplotlib"]
 server = ["pyserial", "zhinst-core"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",
     "sm_bluesky[testing]",
+    "sm_bluesky[client]",
     "copier",
     "myst-parser",
     "pre-commit",
