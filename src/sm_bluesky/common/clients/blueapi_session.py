@@ -182,12 +182,16 @@ class BlueAPISession:
                     name="start", doc={"scan_id": scan_id, "uid": uid, "time": time}
                 ):
                     scan_id_str = str(scan_id)
+                    idx = 1
+                    while scan_id_str in self.data:
+                        scan_id_str = f"{scan_id}_{idx}"
+                        idx += 1
                     self.current_scan_id = scan_id_str
                     self.data[scan_id_str] = {}
 
                     click.echo(
                         f"{self._format_time(time)} -"
-                        f" Run started (scan_id={scan_id}, uid={uid})"
+                        f" Run started (scan_id={scan_id_str}, uid={uid})"
                     )
 
                 case DataEvent(

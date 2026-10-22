@@ -83,7 +83,7 @@ class InteractivePlotWindow:
     def submit_scan(self, text: str) -> None:
         if not text or text.startswith("Not found:"):
             return
-        s_id = int(text) if text.isdigit() else text
+        s_id = text
         if s_id in self.data_source:
             self.active_scans.add(s_id)
             self.widgets["text_box"].set_val("")
