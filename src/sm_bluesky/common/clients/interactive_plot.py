@@ -6,7 +6,7 @@ import click
 class InteractivePlotWindow:
     def __init__(
         self,
-        data_source: dict[str, dict[str, list[Any]]],
+        data_source: dict[str, dict[str, Any]],
         initial_scan_id: Any | None = None,
     ):
         try:
@@ -97,10 +97,26 @@ class InteractivePlotWindow:
         self.build_ui()
         self.draw_plot()
 
+    @staticmethod
+    def _get_scan_num_points(s_data: dict[str, Any]) -> int:
+        for v in s_data.values():
+            if isinstance(v, list) and (not v or isinstance(v[0], (int, float))):
+                return len(v)
+        return 0
+
     def get_active_fields(self) -> list[str]:
         fields = set()
         for s_id in self.active_scans:
-            fields.update(self.data_source[s_id].keys())
+            fields.update(self.data_source.get(s_id, {}).keys())
+        return sorted(fields)
+
+    def get_x_fields(self) -> list[str]:
+        fields = set()
+        for s_id in self.active_scans:
+            s_data = self.data_source.get(s_id, {})
+            for k, v in s_data.items():
+                if isinstance(v, list) and (not v or isinstance(v[0], (int, float))):
+                    fields.add(k)
         return sorted(fields)
 
     def get_visible_scans(self) -> list[Any]:
@@ -130,8 +146,8 @@ class InteractivePlotWindow:
         )
 
         self.ax_x.set_title("X Axis", fontsize=10, fontweight="bold")
-        fields = self.get_active_fields()
-        x_options = ["Point number"] + fields
+        x_fields = self.get_x_fields()
+        x_options = ["Point number"] + x_fields
 
         old_x = None
         if "radio_x" in self.widgets:
@@ -146,8 +162,9 @@ class InteractivePlotWindow:
         )
 
         self.ax_y.set_title("Y Channels", fontsize=10, fontweight="bold")
+        y_fields = self.get_active_fields()
         new_active_y = {}
-        for i, f in enumerate(fields):
+        for i, f in enumerate(y_fields):
             if f in self.active_y_states:
                 new_active_y[f] = self.active_y_states[f]
             else:
@@ -157,8 +174,8 @@ class InteractivePlotWindow:
 
         self.widgets["check_y"] = self.CheckButtons(
             self.ax_y,
-            fields,
-            actives=[self.active_y_states[f] for f in fields] if fields else [],
+            y_fields,
+            actives=[self.active_y_states[f] for f in y_fields] if y_fields else [],
         )
 
         self.widgets["radio_x"].on_clicked(self.on_x_change)
@@ -190,40 +207,82 @@ class InteractivePlotWindow:
 
     def draw_plot(self) -> None:
         self.ax.cla()
+
         x_widget = self.widgets.get("radio_x")
         x_choice = x_widget.value_selected if x_widget else "Point number"
 
         if x_choice != "Point number":
             for s_id in self.active_scans:
-                if x_choice not in self.data_source[s_id]:
+                s_data = self.data_source.get(s_id, {})
+                if x_choice not in s_data or not isinstance(s_data[x_choice], list):
                     x_choice = "Point number"
                     break
 
         plotted_any = False
+        selected_detector_paths: list[tuple[Any, str, str]] = []
+
         for s_id in self.active_scans:
-            s_data = self.data_source[s_id]
+            s_data = self.data_source.get(s_id, {})
 
             if x_choice == "Point number" or x_choice not in s_data:
-                first_key = next(iter(s_data.keys())) if s_data else None
-                n_pts = len(s_data[first_key]) if first_key else 0
+                n_pts = self._get_scan_num_points(s_data)
                 x_vals = list(range(1, n_pts + 1))
             else:
-                x_vals = s_data[x_choice]
+                raw_x = s_data[x_choice]
+                x_vals = raw_x if isinstance(raw_x, list) else []
 
             for y_field, is_active in self.active_y_states.items():
                 if is_active and y_field in s_data:
-                    y_vals = s_data[y_field]
-                    min_len = min(len(x_vals), len(y_vals))
-                    self.ax.plot(
-                        x_vals[:min_len],
-                        y_vals[:min_len],
-                        marker="o",
-                        label=f"Scan {s_id}: {y_field}",
-                    )
-                    plotted_any = True
+                    val = s_data[y_field]
+                    if isinstance(val, list):
+                        min_len = min(len(x_vals), len(val))
+                        self.ax.plot(
+                            x_vals[:min_len],
+                            val[:min_len],
+                            marker="o",
+                            label=f"Scan {s_id}: {y_field}",
+                        )
+                        plotted_any = True
+                    elif isinstance(val, str):
+                        selected_detector_paths.append((s_id, y_field, val))
+
+        title = "Nearly Live Plot"
+        if selected_detector_paths:
+            det_names = ", ".join(
+                sorted({det for _, det, _ in selected_detector_paths})
+            )
+            title = f"Nearly Live Plot ({det_names})"
+        self.ax.set_title(title)
+
+        if selected_detector_paths:
+            card_lines = ["[ DETECTOR FILE PATH ]"]
+            for s_id, det, path in selected_detector_paths:
+                card_lines.append(f"Scan {s_id} ({det}):\n{path}")
+            card_text = "\n\n".join(card_lines)
+
+            y_pos = 0.5 if not plotted_any else 0.82
+            self.ax.text(
+                0.5,
+                y_pos,
+                card_text,
+                transform=self.ax.transAxes,
+                ha="center",
+                va="center" if not plotted_any else "top",
+                fontsize=10,
+                fontweight="bold",
+                family="monospace",
+                color="#00ffff",
+                bbox={
+                    "boxstyle": "round,pad=0.8,rounding_size=0.3",
+                    "facecolor": "#0f172a",
+                    "edgecolor": "#00e5ff",
+                    "linewidth": 2.5,
+                    "alpha": 0.92,
+                },
+                zorder=10,
+            )
 
         self.ax.set_xlabel(x_choice)
-        self.ax.set_title("Nearly Live Plot")
         self.ax.grid(True)
         if plotted_any:
             self.ax.legend(loc="best")
@@ -251,9 +310,8 @@ class InteractivePlotWindow:
 
         needs_redraw = added or fields_changed
         for s_id in self.active_scans:
-            s_data = self.data_source[s_id]
-            first_key = next(iter(s_data.keys())) if s_data else None
-            n_pts = len(s_data[first_key]) if first_key else 0
+            s_data = self.data_source.get(s_id, {})
+            n_pts = self._get_scan_num_points(s_data)
             if self.last_seen_points.get(s_id, 0) != n_pts:
                 self.last_seen_points[s_id] = n_pts
                 needs_redraw = True

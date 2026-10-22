@@ -1,13 +1,28 @@
 import json
+from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
+import click
 import pytest
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
 
 from sm_bluesky.common.cli import load_config
 from sm_bluesky.common.clients.blueapi_session import BlueAPISession
+
+
+@pytest.fixture
+def mock_blueapi_client() -> Generator[MagicMock, None, None]:
+    with patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient") as mock_cls:
+        yield mock_cls
+
+
+@pytest.fixture
+def session(mock_blueapi_client: MagicMock) -> BlueAPISession:
+    config = ApplicationConfig()
+    return BlueAPISession(config=config, instrument_session="test-session")
 
 
 def test_load_config_with_path(tmp_path: Path) -> None:
@@ -34,13 +49,14 @@ def test_load_config_without_args_raises_error() -> None:
         load_config()
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("sm_bluesky.common.clients.blueapi_session.click.echo")
 @patch("sm_bluesky.common.clients.blueapi_session.click.secho")
-def test_blueapi_session_initialization_with_instrument_session(
-    mock_secho: MagicMock, mock_echo: MagicMock, mock_client_class: MagicMock
+def test_blueapi_session_initialisation_with_instrument_session(
+    mock_secho: MagicMock,
+    mock_echo: MagicMock,
+    mock_blueapi_client: MagicMock,
 ) -> None:
-    mock_client = mock_client_class.from_config.return_value
+    mock_client = mock_blueapi_client.from_config.return_value
     mock_client.plans = [MagicMock(name="plan1")]
     mock_client.plans[0].name = "plan1"
     mock_client.devices = [MagicMock(name="dev1")]
@@ -50,7 +66,7 @@ def test_blueapi_session_initialization_with_instrument_session(
 
     BlueAPISession(config=config, instrument_session="my-session")
 
-    mock_client_class.from_config.assert_called_once_with(config)
+    mock_blueapi_client.from_config.assert_called_once_with(config)
     mock_client.login.assert_called_once()
     assert mock_client.instrument_session == "my-session"
 
@@ -58,10 +74,10 @@ def test_blueapi_session_initialization_with_instrument_session(
     mock_secho.assert_not_called()
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("sm_bluesky.common.clients.blueapi_session.click.secho")
-def test_blueapi_session_initialization_without_instrument_session(
-    mock_secho: MagicMock, mock_client_class: MagicMock
+def test_blueapi_session_initialisation_without_instrument_session(
+    mock_secho: MagicMock,
+    mock_blueapi_client: MagicMock,
 ) -> None:
     config = ApplicationConfig()
 
@@ -74,11 +90,8 @@ def test_blueapi_session_initialization_without_instrument_session(
     )
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("IPython.start_ipython")
-def test_start_shell(mock_start: MagicMock, mock_client_class: MagicMock) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
+def test_start_shell(mock_start: MagicMock, session: BlueAPISession) -> None:
     session.start_shell()
     mock_start.assert_called_once()
     kwargs = mock_start.call_args.kwargs
@@ -86,16 +99,18 @@ def test_start_shell(mock_start: MagicMock, mock_client_class: MagicMock) -> Non
     assert "pl" in kwargs["user_ns"]
     assert "dev" in kwargs["user_ns"]
     assert "scan_data" in kwargs["user_ns"]
+    assert "metadata" in kwargs["user_ns"]
+    assert "get_detector_filepath" in kwargs["user_ns"]
     assert kwargs["user_ns"]["bc"] is session.bc
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("sm_bluesky.common.clients.blueapi_session.click.echo")
-def test_callbacks_handling(mock_echo: MagicMock, mock_client_class: MagicMock) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
-
-    mock_client = mock_client_class.from_config.return_value
+def test_callbacks_handling(
+    mock_echo: MagicMock,
+    session: BlueAPISession,
+    mock_blueapi_client: MagicMock,
+) -> None:
+    mock_client = mock_blueapi_client.from_config.return_value
     mock_client.add_callback.assert_called_once()
     callback = mock_client.add_callback.call_args[0][0]
 
@@ -132,15 +147,13 @@ def test_callbacks_handling(mock_echo: MagicMock, mock_client_class: MagicMock) 
     )
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("sm_bluesky.common.clients.blueapi_session.click.echo")
 def test_callback_event_without_scan_id(
-    mock_echo: MagicMock, mock_client_class: MagicMock
+    mock_echo: MagicMock,
+    session: BlueAPISession,
+    mock_blueapi_client: MagicMock,
 ) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
-
-    mock_client = mock_client_class.from_config.return_value
+    mock_client = mock_blueapi_client.from_config.return_value
     callback = mock_client.add_callback.call_args[0][0]
     session.current_scan_id = None
 
@@ -156,11 +169,7 @@ def test_callback_event_without_scan_id(
     ]
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
-def test_dead_plot_window_removed(mock_client_class: MagicMock) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
-
+def test_dead_plot_window_removed(session: BlueAPISession) -> None:
     class FakePlot:
         class FakeFig:
             number = 1
@@ -195,10 +204,7 @@ def test_dead_plot_window_removed(mock_client_class: MagicMock) -> None:
         mock_win.assert_called_once()
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
-def test_plot_import_error(mock_client_class: MagicMock) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
+def test_plot_import_error(session: BlueAPISession) -> None:
     with patch(
         "sm_bluesky.common.clients.blueapi_session.InteractivePlotWindow",
         side_effect=ImportError("mock error"),
@@ -206,24 +212,34 @@ def test_plot_import_error(mock_client_class: MagicMock) -> None:
         session.plot()
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 def test_blueapi_session_scan_caching(
-    mock_client_class: MagicMock, tmp_path: Path
+    mock_blueapi_client: MagicMock, tmp_path: Path
 ) -> None:
-    mock_client = mock_client_class.from_config.return_value
+    mock_client = mock_blueapi_client.from_config.return_value
     config = ApplicationConfig()
     session1 = BlueAPISession(config=config, instrument_session="test-session")
 
     callback = mock_client.add_callback.call_args[0][0]
 
+    expected_det_path = str(tmp_path / "p99-888-andor2_det.h5")
+    start_doc = {
+        "scan_id": 888,
+        "uid": "uid1",
+        "time": 0.0,
+        "instrument": "p99",
+        "data_session_directory": str(tmp_path),
+        "detector_file_template": "{instrument}-{scan_id}-{device_name}",
+        "detectors": ["andor2_det"],
+    }
     callback(
         DataEvent(
             name="start",
-            doc={"scan_id": 888, "uid": "uid1", "time": 0.0},
+            doc=start_doc,
             task_id="task1",
         )
     )
-    assert session1.data["888"] == {}
+    assert session1.data["888"] == {"andor2_det": expected_det_path}
+    assert session1.metadata["888"] == start_doc
 
     callback(
         DataEvent(
@@ -233,6 +249,7 @@ def test_blueapi_session_scan_caching(
         )
     )
     assert session1.data["888"]["motor"] == [10]
+    assert session1.data["888"]["andor2_det"] == expected_det_path
 
     callback(
         DataEvent(
@@ -243,18 +260,30 @@ def test_blueapi_session_scan_caching(
     )
     cache_file = tmp_path / ".sm-bluesky" / "cache" / "test-session_scans.jsonl"
     assert cache_file.exists()
-    assert json.loads(cache_file.read_text().strip()) == {"888": {"motor": [10]}}
+    assert json.loads(cache_file.read_text().strip()) == {
+        "888": {
+            "data": {"motor": [10], "andor2_det": expected_det_path},
+            "meta": start_doc,
+        }
+    }
 
     session2 = BlueAPISession(config=config, instrument_session="test-session")
     assert "888" in session2.data
     assert session2.data["888"]["motor"] == [10]
+    assert session2.data["888"]["andor2_det"] == expected_det_path
+    assert session2.metadata["888"]["scan_id"] == 888
+
+    with open(cache_file, "a") as f:
+        f.write(json.dumps({"888": {"motor": [20]}}) + "\n")
+
+    session3 = BlueAPISession(config=config, instrument_session="test-session")
+    assert "888" in session3.data
+    assert session3.data["888"]["motor"] == [20]
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 def test_blueapi_session_corrupt_scan_cache(
-    mock_client_class: MagicMock, tmp_path: Path
+    mock_blueapi_client: MagicMock, tmp_path: Path
 ) -> None:
-
     cache_dir = tmp_path / ".sm-bluesky" / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_file = cache_dir / "bad-session_scans.jsonl"
@@ -265,9 +294,8 @@ def test_blueapi_session_corrupt_scan_cache(
     assert session.data == {}
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 def test_blueapi_session_no_instrument_session_cache_bypassed(
-    mock_client_class: MagicMock,
+    mock_blueapi_client: MagicMock,
 ) -> None:
     config = ApplicationConfig()
     session = BlueAPISession(config=config, instrument_session=None)
@@ -277,16 +305,11 @@ def test_blueapi_session_no_instrument_session_cache_bypassed(
     session._save_scan_to_cache("123")
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("builtins.open", side_effect=Exception("Mock write error"))
 def test_blueapi_session_write_cache_error(
     mock_open: MagicMock,
-    mock_client_class: MagicMock,
-    tmp_path: Path,
+    session: BlueAPISession,
 ) -> None:
-
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config, instrument_session="err-session")
     session.data["123"] = {"motor": [10]}
 
     with patch("click.echo") as mock_echo:
@@ -296,13 +319,194 @@ def test_blueapi_session_write_cache_error(
         )
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("builtins.open")
 def test_blueapi_session_save_cache_missing_scan_id(
     mock_open: MagicMock,
-    mock_client_class: MagicMock,
+    session: BlueAPISession,
 ) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config, instrument_session="test-session")
     session._save_scan_to_cache("missing-scan-id")
     mock_open.assert_not_called()
+
+
+def test_blueapi_session_metadata_capture(
+    session: BlueAPISession,
+    mock_blueapi_client: MagicMock,
+) -> None:
+    callback = mock_blueapi_client.from_config.return_value.add_callback.call_args[0][0]
+
+    start_doc = {
+        "scan_id": 180,
+        "uid": "test-uid",
+        "time": 8888888,
+        "instrument": "p99",
+        "data_session_directory": "/dls/p99/data/2026/cm44186-3",
+        "detector_file_template": "{instrument}-{scan_id}-{device_name}",
+    }
+    callback(DataEvent(name="start", doc=start_doc, task_id="task1"))
+
+    assert "180" in session.data
+    assert session.data["180"] == {}
+    assert "180" in session.metadata
+    assert session.metadata["180"] == start_doc
+
+
+def test_blueapi_session_get_detector_filepath_success(
+    session: BlueAPISession,
+) -> None:
+    session.metadata["180"] = {
+        "instrument": "p99",
+        "data_session_directory": "/dls/p99/data/2026/cm44186-3",
+        "detector_file_template": "{instrument}-{scan_id}-{device_name}",
+    }
+    session.current_scan_id = "180"
+
+    path = session.get_detector_filepath("andor2_det")
+    assert path == "/dls/p99/data/2026/cm44186-3/p99-180-andor2_det.h5"
+
+    assert (
+        session.get_detector_filepath("andor2_det", scan_id=180)
+        == "/dls/p99/data/2026/cm44186-3/p99-180-andor2_det.h5"
+    )
+    assert (
+        session.get_detector_filepath("andor2_det", scan_id="180")
+        == "/dls/p99/data/2026/cm44186-3/p99-180-andor2_det.h5"
+    )
+
+
+@pytest.mark.parametrize(
+    "scan_id, metadata",
+    [
+        (None, {}),
+        ("bad_scan", {"bad_scan": {"instrument": "p99"}}),
+        ("nonexistent", {}),
+        (
+            "corrupt_template",
+            {
+                "corrupt_template": {
+                    "instrument": "p99",
+                    "data_session_directory": "/data",
+                    "detector_file_template": "{random stuff",
+                }
+            },
+        ),
+    ],
+)
+def test_blueapi_session_get_detector_filepath_edge_cases(
+    session: BlueAPISession,
+    scan_id: str | None,
+    metadata: dict[str, Any],
+) -> None:
+    session.metadata = metadata
+    assert session.get_detector_filepath("andor2_det", scan_id=scan_id) is None
+
+
+@pytest.mark.parametrize(
+    "scan_id, with_detectors, expected_found",
+    [
+        (None, True, False),
+        (123, True, False),
+        ("123", True, False),
+        (180, False, False),
+        ("180", False, False),
+        (180, True, True),
+        ("180", True, True),
+    ],
+)
+def test_blueapi_session_resolve_detector_filepaths(
+    session: BlueAPISession,
+    scan_id: str | int | None,
+    with_detectors: bool,
+    expected_found: bool,
+) -> None:
+    session.metadata["180"] = {
+        "instrument": "p99",
+        "data_session_directory": "/dls/p99/data/2026/cm44186-3",
+        "detector_file_template": "{instrument}-{scan_id}-{device_name}",
+    }
+    if with_detectors:
+        session.metadata["180"]["detectors"] = ["andor2_det"]
+
+    expected = (
+        {"andor2_det": "/dls/p99/data/2026/cm44186-3/p99-180-andor2_det.h5"}
+        if expected_found
+        else {}
+    )
+    assert session._resolve_detector_filepaths(scan_id) == expected
+
+
+def test_blueapi_session_start_and_stop_prints_detector_filepath(
+    session: BlueAPISession,
+    mock_blueapi_client: MagicMock,
+    tmp_path: Path,
+) -> None:
+    callback = mock_blueapi_client.from_config.return_value.add_callback.call_args[0][0]
+    det_file = tmp_path / "p99-180-andor2_det.h5"
+    det_file.touch()
+
+    start_doc = {
+        "scan_id": 180,
+        "uid": "test-uid",
+        "time": 8888888,
+        "instrument": "p99",
+        "data_session_directory": str(tmp_path),
+        "detector_file_template": "{instrument}-{scan_id}-{device_name}",
+        "detectors": ["andor2_det"],
+    }
+
+    styled_path = click.style(str(det_file), fg="cyan")
+    styled_det = click.style("andor2_det", fg="cyan")
+
+    with patch("click.echo") as mock_echo:
+        callback(DataEvent(name="start", doc=start_doc, task_id="task1"))
+        mock_echo.assert_any_call(
+            "1970-04-13 21:08:08 - Run started (scan_id=180, uid=test-uid)"
+        )
+        mock_echo.assert_any_call(f"  Detector file (andor2_det): {styled_path}")
+
+        callback(
+            DataEvent(
+                name="event",
+                doc={
+                    "seq_num": 1,
+                    "data": {"sample_stage-x": -0.75, "scalar_det": 42},
+                    "time": 8888888,
+                },
+                task_id="task1",
+            )
+        )
+        mock_echo.assert_any_call(
+            "1970-04-13 21:08:08 - Point 1: sample_stage-x=-0.75, scalar_det=42,"
+            f" {styled_det}"
+        )
+
+        callback(
+            DataEvent(
+                name="event",
+                doc={
+                    "seq_num": 2,
+                    "data": {"sample_stage-x": -0.5, "scalar_det": 43},
+                    "time": 8888889,
+                },
+                task_id="task1",
+            )
+        )
+        mock_echo.assert_any_call(
+            "1970-04-13 21:08:09 - Point 2: sample_stage-x=-0.5, scalar_det=43,"
+            f" {styled_det}"
+        )
+
+        callback(
+            DataEvent(
+                name="stop",
+                doc={"exit_status": "success", "time": 8888889, "uid": "test-uid"},
+                task_id="task1",
+            )
+        )
+        mock_echo.assert_any_call(
+            "1970-04-13 21:08:09 - Run complete (scan_id=180, uid: test-uid): success"
+        )
+        mock_echo.assert_any_call(f"  Detector file (andor2_det): {styled_path}")
+        assert session.current_detector_filepaths == {}
+        assert session.data["180"]["andor2_det"] == str(det_file)
+        assert session.data["180"]["sample_stage-x"] == [-0.75, -0.5]
+        assert session.data["180"]["scalar_det"] == [42, 43]

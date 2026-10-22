@@ -327,7 +327,7 @@ def test_register_command_whitespace(invalid_name: bytes):
             pass
 
 
-def test_autodiscovery_on_initialization():
+def test_autodiscovery_on_initialisation():
     server = MockInstrument(host="127.0.0.1", port=9000)
 
     assert b"shutdown" in server._command_registry

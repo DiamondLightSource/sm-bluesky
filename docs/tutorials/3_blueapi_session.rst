@@ -55,6 +55,8 @@ Once the interactive IPython shell is running, you have access to:
 * ``show_plan()``: Prints a list of all plans available on the server.
 * ``show_devices()``: Prints a list of all devices available on the server.
 * ``scan_data``: A dictionary containing all collected event data from your scans.
+* ``metadata``: A dictionary containing the ``start`` documents (run metadata) for each scan.
+* ``get_detector_filepath(device_name, scan_id=None)``: Helper to resolve the HDF5 file path for an area detector.
 * ``plot(scan_id=None)``: Opens an interactive visualization window.
 
 Data Collection & Live Plotting
