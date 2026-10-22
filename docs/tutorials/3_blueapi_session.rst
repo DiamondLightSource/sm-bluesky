@@ -55,7 +55,7 @@ Once the interactive IPython shell is running, you have access to:
 * ``show_plan()``: Prints a list of all plans available on the server.
 * ``show_devices()``: Prints a list of all devices available on the server.
 * ``scan_data``: A dictionary containing all collected event data from your scans.
-* ``plot(scan_id=None)``: Opens an interactive visualization window.
+* ``plot(scan_id=None, cmap="viridis")``: Opens an interactive visualization window.
 
 Data Collection & Live Plotting
 -------------------------------
@@ -92,9 +92,17 @@ You can visualise this data in near real-time using the built-in interactive plo
     # Open the plotting window for the current data
     plot()
 
-.. note::
+    # Open the plotting window for a specific scan with a custom 2D colormap
+    plot(scan_id="123", cmap="plasma")
 
-    The interactive plot window allows you to select which scan to view and choose different axes for your X and Y data directly from the collected device outputs. It polls for new data in the background, keeping your plot updated as the scan progresses.
+The interactive plot window polls for new data in the background as a scan progresses and provides controls in the side panel for:
+
+* **Scan Selection:** Toggle recent scans or add a specific scan by ID.
+* **Plot Mode:**
+    * **1D Line:** Plot one or more Y channels against a selected X axis (or ``Point number``) across all active scans.
+    * **2D Grid:** Rebin 2D step or fast grid scans into a 2D heatmap (``X``, ``Y``, and colour ``Z``) with a colorbar, automatically falling back to a scatter plot for ungridded points.
+    * **2D Contour:** Render filled triangulated contours of ``(X, Y, Z)`` data with a colorbar (falling back to a scatter plot when points are collinear or fewer than three).
+* **Log Scale:** Toggle logarithmic scaling on the Y axis (in **1D Line** mode) or on the colour normalisation (in **2D Grid** and **2D Contour** modes).
 
 Session Caching & Variable Persistence
 --------------------------------------
