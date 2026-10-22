@@ -8,7 +8,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.tri import Triangulation
 from matplotlib.widgets import Button, CheckButtons, RadioButtons, TextBox
 
-from sm_bluesky.common.math_functions.grid_plotting import (
+from sm_bluesky.common.math.rebinning import (
     extract_xyz,
     grid_heatmap,
 )

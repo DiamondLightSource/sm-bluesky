@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from sm_bluesky.common.math_functions.grid_plotting import (
+from sm_bluesky.common.math.rebinning import (
     binned_axis,
     edges_from_centres,
     extract_xyz,

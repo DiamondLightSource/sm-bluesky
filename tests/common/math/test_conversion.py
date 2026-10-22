@@ -1,6 +1,6 @@
 import pytest
 
-from sm_bluesky.common.math_functions import (
+from sm_bluesky.common.math import (
     cal_range_num,
     step_size_to_step_num,
     to_float,
