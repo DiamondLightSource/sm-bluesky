@@ -9,11 +9,9 @@ from matplotlib.colors import LogNorm
 from matplotlib.tri import TriContourSet
 
 from sm_bluesky.common.clients.interactive_plot import (
-    MODE_1D,
-    MODE_2D,
-    MODE_CONTOUR,
     NO_FIELDS,
     InteractivePlotWindow,
+    PlotMode,
 )
 
 matplotlib.use("Agg")
@@ -220,12 +218,12 @@ def grid_data():
 def grid_window(grid_data):
     plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_2D)
+    win.on_mode_change(PlotMode.GRID_2D)
     return win
 
 
 def test_mode_defaults_to_1d(window: InteractivePlotWindow):
-    assert window.mode == MODE_1D
+    assert window.mode == PlotMode.LINE_1D
     assert "mode_radio" in window.widgets
     assert not window.ax_cbar.get_visible()
     assert not window.ax_z.get_visible()
@@ -233,7 +231,7 @@ def test_mode_defaults_to_1d(window: InteractivePlotWindow):
 
 def test_switch_to_2d_builds_2d_controls(grid_window: InteractivePlotWindow):
     win = grid_window
-    assert win.mode == MODE_2D
+    assert win.mode == PlotMode.GRID_2D
     assert "radio_x" in win.widgets
     assert "radio_y" in win.widgets
     assert "radio_z" in win.widgets
@@ -328,7 +326,7 @@ def test_2d_waiting_for_data(grid_data):
     plt.close("all")
     grid_data["grid"] = {"x_motor": [], "y_motor": [], "det": []}
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_2D)
+    win.on_mode_change(PlotMode.GRID_2D)
     assert len(win.ax.collections) == 0
     assert "waiting for data" in win.ax.get_title()
     assert not win.ax_cbar.get_visible()
@@ -361,8 +359,8 @@ def test_2d_redraw_reuses_single_colorbar_axes(grid_window: InteractivePlotWindo
 
 def test_switch_back_to_1d_restores_1d_controls(grid_window: InteractivePlotWindow):
     win = grid_window
-    win.on_mode_change(MODE_1D)
-    assert win.mode == MODE_1D
+    win.on_mode_change(PlotMode.LINE_1D)
+    assert win.mode == PlotMode.LINE_1D
     assert "check_y" in win.widgets
     assert "radio_y" not in win.widgets
     assert "radio_z" not in win.widgets
@@ -376,7 +374,7 @@ def test_on_mode_change_ignores_unknown_and_same_mode(
 ):
     win = grid_window
     with patch.object(win, "build_ui") as mock_build:
-        win.on_mode_change(MODE_2D)
+        win.on_mode_change(PlotMode.GRID_2D)
         win.on_mode_change("junk")
         win.on_mode_change(None)
         mock_build.assert_not_called()
@@ -391,15 +389,15 @@ def test_2d_single_field_scan_defaults(grid_data):
     plt.close("all")
     grid_data["grid"] = {"only": [1.0, 2.0]}
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_2D)
+    win.on_mode_change(PlotMode.GRID_2D)
     assert (win.x_field, win.y_field, win.z_field) == ("only", "only", "only")
 
 
 def test_switch_to_contour_builds_2d_controls(grid_data):
     plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_CONTOUR)
-    assert win.mode == MODE_CONTOUR
+    win.on_mode_change(PlotMode.CONTOUR_2D)
+    assert win.mode == PlotMode.CONTOUR_2D
     assert "radio_x" in win.widgets
     assert "radio_y" in win.widgets
     assert "radio_z" in win.widgets
@@ -411,7 +409,7 @@ def test_switch_to_contour_builds_2d_controls(grid_data):
 def test_contour_draw_with_colorbar(grid_data):
     plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_CONTOUR)
+    win.on_mode_change(PlotMode.CONTOUR_2D)
     assert win.ax_cbar.get_visible()
     assert win.ax.get_xlabel() == "x_motor"
     assert win.ax.get_ylabel() == "y_motor"
@@ -427,7 +425,7 @@ def test_contour_draw_fallback_collinear(grid_data):
         "det": [1.0, 2.0, 3.0],
     }
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_CONTOUR)
+    win.on_mode_change(PlotMode.CONTOUR_2D)
     assert win.ax_cbar.get_visible()
     assert isinstance(win.ax.collections[0], PathCollection)
 
@@ -439,7 +437,7 @@ def test_contour_draw_fallback_collinear(grid_data):
 def test_contour_no_scan_selected(grid_data):
     plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_CONTOUR)
+    win.on_mode_change(PlotMode.CONTOUR_2D)
     win.unselect_all(None)
     assert "no scan selected" in win.ax.get_title()
     assert len(win.ax.collections) == 0
@@ -449,7 +447,7 @@ def test_contour_waiting_for_data(grid_data):
     plt.close("all")
     grid_data["grid"] = {"x_motor": [], "y_motor": [], "det": []}
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_CONTOUR)
+    win.on_mode_change(PlotMode.CONTOUR_2D)
     assert "waiting for data" in win.ax.get_title()
     assert not win.ax_cbar.get_visible()
 
@@ -492,7 +490,7 @@ def test_1d_log_scale_non_positive():
 def test_2d_log_scale_heatmap(grid_data):
     plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_2D)
+    win.on_mode_change(PlotMode.GRID_2D)
     win.on_log_toggle("Log Scale")
     assert isinstance(win.ax.collections[0], QuadMesh)
     mappable = win.ax.collections[0]
@@ -503,7 +501,7 @@ def test_2d_log_scale_heatmap(grid_data):
 def test_2d_log_scale_contour(grid_data):
     plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(MODE_CONTOUR)
+    win.on_mode_change(PlotMode.CONTOUR_2D)
     win.on_log_toggle("Log Scale")
     assert isinstance(win.ax.collections[0], TriContourSet)
     mappable = win.ax.collections[0]
@@ -521,7 +519,7 @@ def test_2d_log_scale_non_positive():
         }
     }
     win = InteractivePlotWindow(data, initial_scan_id="grid")
-    win.on_mode_change(MODE_2D)
+    win.on_mode_change(PlotMode.GRID_2D)
     win.on_log_toggle("Log Scale")
     assert win._get_2d_norm([0.0, -1.0, -2.0]) is None
     mappable = win.ax.collections[0]
@@ -538,7 +536,7 @@ def test_2d_log_scale_uniform_positive():
         }
     }
     win = InteractivePlotWindow(data, initial_scan_id="grid")
-    win.on_mode_change(MODE_2D)
+    win.on_mode_change(PlotMode.GRID_2D)
     win.on_log_toggle("Log Scale")
     norm = win.ax.collections[0].norm
     assert isinstance(norm, LogNorm)
@@ -551,10 +549,10 @@ def test_log_scale_persists_across_mode_changes(grid_data):
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
     win.on_log_toggle("Log Scale")
     assert win.log_scale is True
-    win.on_mode_change(MODE_2D)
+    win.on_mode_change(PlotMode.GRID_2D)
     assert win.log_scale is True
     assert isinstance(win.ax.collections[0].norm, LogNorm)
-    win.on_mode_change(MODE_1D)
+    win.on_mode_change(PlotMode.LINE_1D)
     assert win.log_scale is True
     assert win.ax.get_yscale() == "log"
 
@@ -569,7 +567,7 @@ def test_2d_log_scale_contour_single_decade():
         }
     }
     win = InteractivePlotWindow(data, initial_scan_id="scan")
-    win.on_mode_change(MODE_CONTOUR)
+    win.on_mode_change(PlotMode.CONTOUR_2D)
     win.on_log_toggle("Log Scale")
     assert win.log_scale is True
     assert isinstance(win.ax.collections[0], TriContourSet)
@@ -588,7 +586,7 @@ def test_2d_contour_large_z_overflow():
         }
     }
     win = InteractivePlotWindow(data, initial_scan_id="scan")
-    win.on_mode_change(MODE_CONTOUR)
+    win.on_mode_change(PlotMode.CONTOUR_2D)
     assert isinstance(win.ax.collections[0], TriContourSet)
 
     win.on_log_toggle("Log Scale")
