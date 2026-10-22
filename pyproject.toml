@@ -22,7 +22,6 @@ dependencies = [
     "dls-dodal==3.0.4",
     "ophyd-async[sim]",
     "scanspec",
-    "blueapi",
     "numpy",
 ]
 dynamic = ["version"]
@@ -33,8 +32,8 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 testing = ["jupyter", "pyepics"]
-client = ["ipython", "matplotlib"]
-server = ["pyserial", "zhinst-core"]
+client = ["ipython", "matplotlib", "blueapi"]
+server = ["pyserial", "zhinst-core", "blueapi"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",

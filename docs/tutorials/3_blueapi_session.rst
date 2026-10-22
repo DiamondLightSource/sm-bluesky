@@ -32,7 +32,7 @@ You can also embed the session directly into your own Python scripts or Jupyter 
 
 .. code-block:: python
 
-    from sm_bluesky.common.clients import BlueAPISession
+    from sm_bluesky.common.clients.blueapi_session import BlueAPISession
     from sm_bluesky.common.cli import load_config
 
     # Load configuration for a specific beamline
