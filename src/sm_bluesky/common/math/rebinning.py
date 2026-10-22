@@ -1,4 +1,4 @@
-"""Math functions for plotting"""
+"""Math functions for rebinning"""
 
 from collections import Counter
 from typing import Any
