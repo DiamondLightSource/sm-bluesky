@@ -10,7 +10,7 @@ from blueapi.client.event_bus import AnyEvent
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
 
-from .interactive_plot import InteractivePlotWindow
+from .interactive_plot import DEFAULT_CMAP, InteractivePlotWindow
 
 
 class BlueAPISession:
@@ -110,7 +110,7 @@ class BlueAPISession:
             },
         )
 
-    def plot(self, scan_id: Any | None = None) -> None:
+    def plot(self, scan_id: Any | None = None, cmap: str = DEFAULT_CMAP) -> None:
         """Open an interactive plot window for multiple scans and axes."""
         self._active_plot_windows = [
             win
@@ -118,7 +118,7 @@ class BlueAPISession:
             if plt.fignum_exists(win.fig.number)
         ]
 
-        window = InteractivePlotWindow(self.data, scan_id)
+        window = InteractivePlotWindow(self.data, scan_id, cmap=cmap)
         self._active_plot_windows.append(window)
 
     def print_plans(self) -> None:

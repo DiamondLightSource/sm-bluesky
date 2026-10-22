@@ -591,3 +591,24 @@ def test_2d_contour_large_z_overflow():
 
     win.on_log_toggle("Log Scale")
     assert isinstance(win.ax.collections[0], TriContourSet)
+
+
+def test_custom_cmap(grid_data):
+    plt.close("all")
+    win = InteractivePlotWindow(grid_data, initial_scan_id="grid", cmap="plasma")
+    win.on_mode_change(PlotMode.GRID_2D)
+    assert win.cmap == "plasma"
+    assert win.ax.collections[0].get_cmap().name == "plasma"
+
+
+def test_invalid_cmap_fallback(grid_data):
+    plt.close("all")
+    with patch("click.secho") as mock_secho:
+        win_bad = InteractivePlotWindow(
+            grid_data, initial_scan_id="grid", cmap="not_a_colormap"
+        )
+        assert win_bad.cmap == "viridis"
+        mock_secho.assert_called_once_with(
+            "Unknown colormap 'not_a_colormap', falling back to 'viridis'.",
+            fg="yellow",
+        )

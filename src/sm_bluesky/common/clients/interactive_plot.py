@@ -5,6 +5,7 @@ from typing import Any
 import click
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import colormaps
 from matplotlib.colors import LogNorm
 from matplotlib.tri import Triangulation
 from matplotlib.widgets import Button, CheckButtons, RadioButtons, TextBox
@@ -21,6 +22,7 @@ class PlotMode(StrEnum):
     CONTOUR_2D = "2D Contour"
 
 
+DEFAULT_CMAP = "viridis"
 NO_FIELDS = "(no data)"
 
 
@@ -29,6 +31,7 @@ class InteractivePlotWindow:
         self,
         data_source: dict[str, dict[str, list[Any]]],
         initial_scan_id: Any | None = None,
+        cmap: str = DEFAULT_CMAP,
     ):
         self.data_source = data_source
         self.scans = list(self.data_source.keys())
@@ -38,6 +41,14 @@ class InteractivePlotWindow:
             self.active_scans.add(initial_scan_id)
         elif self.scans:
             self.active_scans.add(self.scans[-1])
+
+        if cmap not in colormaps:
+            click.secho(
+                f"Unknown colormap '{cmap}', falling back to '{DEFAULT_CMAP}'.",
+                fg="yellow",
+            )
+            cmap = DEFAULT_CMAP
+        self.cmap: str = cmap
 
         self.active_y_states: dict[str, bool] = {}
         self.last_seen_points: dict[Any, int] = {}
@@ -473,9 +484,9 @@ class InteractivePlotWindow:
         if heatmap is not None:
             x_edges, y_edges, grid = heatmap
             return self.ax.pcolormesh(
-                x_edges, y_edges, grid, cmap="viridis", shading="flat", norm=norm
+                x_edges, y_edges, grid, cmap=self.cmap, shading="flat", norm=norm
             )
-        return self.ax.scatter(xs, ys, c=zs, cmap="viridis", norm=norm)
+        return self.ax.scatter(xs, ys, c=zs, cmap=self.cmap, norm=norm)
 
     def _render_contour(
         self, xs: list[float], ys: list[float], zs: list[float], norm: Any = None
@@ -488,17 +499,17 @@ class InteractivePlotWindow:
                     tri = Triangulation(cx, cy)
                     levels = np.geomspace(norm.vmin, norm.vmax, 15)
                     return self.ax.tricontourf(
-                        tri, cz, levels=levels, cmap="viridis", norm=norm
+                        tri, cz, levels=levels, cmap=self.cmap, norm=norm
                     )
                 except Exception:
                     pass
         elif len(xs) >= 3 and len({round(v, 6) for v in zs}) > 1:
             try:
                 tri = Triangulation(xs, ys)
-                return self.ax.tricontourf(tri, zs, cmap="viridis")
+                return self.ax.tricontourf(tri, zs, cmap=self.cmap)
             except Exception:
                 pass
-        return self.ax.scatter(xs, ys, c=zs, cmap="viridis", norm=norm)
+        return self.ax.scatter(xs, ys, c=zs, cmap=self.cmap, norm=norm)
 
     def _draw_2d(self) -> None:
         self._draw_2d_plot(self._render_heatmap)
