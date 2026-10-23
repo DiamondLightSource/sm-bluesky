@@ -112,7 +112,7 @@ def direct_beam_polan(
     group: Hashable | None = None,
     pa_stage: PaStage = inject("pa_stage"),
 ) -> MsgGenerator:
-    """Move polarization analyzer out of the way of the beam.
+    """Move polarisation analyzer out of the way of the beam.
 
     Parameters
     ----------
