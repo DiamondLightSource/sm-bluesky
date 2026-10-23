@@ -11,7 +11,7 @@ from dodal.devices.single_trigger_detector import SingleTriggerDetector
 from ophyd_async.epics.adandor import AndorDetector
 from ophyd_async.epics.motor import Motor
 
-from sm_bluesky.common.math_functions import step_size_to_step_num
+from sm_bluesky.common.math import step_size_to_step_num
 from sm_bluesky.common.plan_stubs import (
     check_within_limit,
     get_motor_positions,

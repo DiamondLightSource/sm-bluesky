@@ -6667,24 +6667,27 @@ wheels = [
 name = "sm-bluesky"
 source = { editable = "." }
 dependencies = [
-    { name = "blueapi" },
     { name = "bluesky" },
     { name = "dls-dodal" },
-    { name = "ipython" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "ophyd-async", extra = ["sim"] },
     { name = "scanspec" },
 ]
 
 [package.optional-dependencies]
+client = [
+    { name = "blueapi" },
+    { name = "ipython" },
+    { name = "matplotlib" },
+]
 server = [
+    { name = "blueapi" },
     { name = "pyserial" },
     { name = "zhinst-core" },
 ]
 testing = [
     { name = "jupyter" },
-    { name = "matplotlib" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pyepics" },
 ]
 
@@ -6700,7 +6703,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
-    { name = "sm-bluesky", extra = ["server", "testing"] },
+    { name = "sm-bluesky", extra = ["client", "server", "testing"] },
     { name = "sphinx-autobuild" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
@@ -6710,20 +6713,21 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "blueapi" },
+    { name = "blueapi", marker = "extra == 'client'" },
+    { name = "blueapi", marker = "extra == 'server'" },
     { name = "bluesky" },
     { name = "dls-dodal", specifier = "==3.0.5" },
-    { name = "ipython" },
+    { name = "ipython", marker = "extra == 'client'" },
     { name = "jupyter", marker = "extra == 'testing'" },
-    { name = "matplotlib", marker = "extra == 'testing'" },
-    { name = "numpy", marker = "extra == 'testing'" },
+    { name = "matplotlib", marker = "extra == 'client'" },
+    { name = "numpy" },
     { name = "ophyd-async", extras = ["sim"] },
     { name = "pyepics", marker = "extra == 'testing'" },
     { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },
     { name = "zhinst-core", marker = "extra == 'server'" },
 ]
-provides-extras = ["testing", "server"]
+provides-extras = ["testing", "client", "server"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -6737,6 +6741,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "sm-bluesky", extras = ["client"] },
     { name = "sm-bluesky", extras = ["server"] },
     { name = "sm-bluesky", extras = ["testing"] },
     { name = "sphinx-autobuild" },

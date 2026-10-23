@@ -300,7 +300,7 @@ def test_cli_client_missing_args(cli_runner: CliRunner) -> None:
     assert "--beamline" in result.output
 
 
-@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.blueapi_session.BlueAPISession")
 @patch("sm_bluesky.common.cli.load_config")
 def test_cli_client_with_beamline(
     mock_load_config: MagicMock, mock_blueapi_session: MagicMock, cli_runner: CliRunner
@@ -318,7 +318,7 @@ def test_cli_client_with_beamline(
     mock_instance.start_shell.assert_called_once()
 
 
-@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.blueapi_session.BlueAPISession")
 @patch("sm_bluesky.common.cli.load_config")
 def test_cli_client_with_config(
     mock_load_config: MagicMock, mock_blueapi_session: MagicMock, cli_runner: CliRunner
@@ -404,7 +404,7 @@ def test_cli_group_callback():
     start.callback()
 
 
-@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.blueapi_session.BlueAPISession")
 @patch("sm_bluesky.common.cli.load_config")
 def test_cli_client_with_dummy_flag(
     mock_load_config: MagicMock, mock_blueapi_session: MagicMock, cli_runner: CliRunner
@@ -422,7 +422,7 @@ def test_cli_client_with_dummy_flag(
     mock_instance.start_shell.assert_called_once()
 
 
-@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.blueapi_session.BlueAPISession")
 @patch("sm_bluesky.common.cli.load_config")
 def test_cli_client_saves_and_loads_session_cache(
     mock_load_config: MagicMock,
@@ -448,7 +448,7 @@ def test_cli_client_saves_and_loads_session_cache(
     )
 
 
-@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.blueapi_session.BlueAPISession")
 @patch("sm_bluesky.common.cli.load_config")
 def test_cli_client_handles_corrupt_cache(
     mock_load_config: MagicMock,
@@ -470,7 +470,7 @@ def test_cli_client_handles_corrupt_cache(
     )
 
 
-@patch("sm_bluesky.common.clients.BlueAPISession")
+@patch("sm_bluesky.common.clients.blueapi_session.BlueAPISession")
 @patch("sm_bluesky.common.cli.load_config")
 @patch("builtins.open", side_effect=Exception("Mock permission error"))
 def test_cli_client_cannot_save_cache(

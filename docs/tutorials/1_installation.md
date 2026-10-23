@@ -36,16 +36,27 @@ With the virtual environment activated, you can now install ``sm_bluesky`` using
 $ python3 -m pip install sm_bluesky
 ```
 
+To include optional dependencies for the interactive BlueAPI client (`ipython`, `matplotlib`, `blueapi`) or instrument servers (`pyserial`, `zhinst-core`, `blueapi`):
+
+```bash
+# Install with interactive client dependencies
+$ python3 -m pip install "sm_bluesky[client]"
+
+# Install with instrument server dependencies
+$ python3 -m pip install "sm_bluesky[server]"
+```
+
 To install the latest development version directly from GitHub:
 
 ```bash
 $ python3 -m pip install git+https://github.com/DiamondLightSource/sm-bluesky.git
 ```
-##Verifying the Installation
+
+## Verifying the Installation
 
 After installation, you can verify that `sm_bluesky` is installed correctly and check its version by running:
 
 ```bash
-$ sm_bluesky --version
+$ sm-bluesky --version
 ```
 This command should display the installed version number.

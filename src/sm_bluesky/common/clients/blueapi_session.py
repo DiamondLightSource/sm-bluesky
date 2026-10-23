@@ -4,12 +4,13 @@ from datetime import datetime
 from typing import Any
 
 import click
+import matplotlib.pyplot as plt
 from blueapi.client import BlueapiClient
 from blueapi.client.event_bus import AnyEvent
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
 
-from .interactive_plot import InteractivePlotWindow
+from .interactive_plot import DEFAULT_CMAP, InteractivePlotWindow
 
 
 class BlueAPISession:
@@ -109,19 +110,16 @@ class BlueAPISession:
             },
         )
 
-    def plot(self, scan_id: Any | None = None) -> None:
+    def plot(self, scan_id: Any | None = None, cmap: str = DEFAULT_CMAP) -> None:
         """Open an interactive plot window for multiple scans and axes."""
         self._active_plot_windows = [
             win
             for win in self._active_plot_windows
-            if win.plt.fignum_exists(win.fig.number)
+            if plt.fignum_exists(win.fig.number)
         ]
 
-        try:
-            window = InteractivePlotWindow(self.data, scan_id)
-            self._active_plot_windows.append(window)
-        except ImportError:
-            pass
+        window = InteractivePlotWindow(self.data, scan_id, cmap=cmap)
+        self._active_plot_windows.append(window)
 
     def print_plans(self) -> None:
         click.echo("\nPlans available:")
