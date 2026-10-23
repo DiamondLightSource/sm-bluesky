@@ -1,5 +1,5 @@
 from .conversion import cal_range_num, step_size_to_step_num, to_float
-from .grid_plotting import (
+from .rebinning import (
     binned_axis,
     edges_from_centres,
     extract_xyz,

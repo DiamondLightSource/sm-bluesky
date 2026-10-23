@@ -1,19 +1,17 @@
+from __future__ import annotations
+
 import json
 import os
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import click
-from blueapi.config import (
-    ApplicationConfig,
-    ConfigLoader,
-    HttpUrl,
-    RestConfig,
-    StompConfig,
-    TcpUrl,
-)
 
 from sm_bluesky import __version__
+
+if TYPE_CHECKING:
+    from blueapi.config import ApplicationConfig
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -249,10 +247,6 @@ def blueapi_client(
     beamline: str | None, config: Path | None, session: str | None, dummy: bool
 ) -> None:
     """Launch an interactive IPython BlueAPI client session."""
-    from sm_bluesky.common.clients import (
-        BlueAPISession,
-    )
-
     if not beamline and not config:
         click.echo(click.get_current_context().get_help())
 
@@ -260,6 +254,8 @@ def blueapi_client(
             "Error: Please provide either a beamline name (-b) or a config file (-c).\n"
         )
         return
+
+    from sm_bluesky.common.clients.blueapi_session import BlueAPISession
 
     app_config = load_config(
         config_path=config,
@@ -302,6 +298,14 @@ def load_config(
     beamline: str | None = None,
 ) -> ApplicationConfig:
     """Load configuration from file orCLI beamline flag"""
+    from blueapi.config import (
+        ApplicationConfig,
+        ConfigLoader,
+        HttpUrl,
+        RestConfig,
+        StompConfig,
+        TcpUrl,
+    )
 
     if config_path is not None:
         print(f"Loading configuration from file: {config_path}")

@@ -10,7 +10,7 @@ from ophyd_async.core import set_mock_value
 from ophyd_async.epics.adandor import AndorDetector
 from ophyd_async.testing import assert_emitted
 
-from sm_bluesky.common.math_functions import step_size_to_step_num
+from sm_bluesky.common.math import step_size_to_step_num
 from sm_bluesky.common.plans.grid_scan import (
     estimate_speed_steps,
     grid_fast_scan,

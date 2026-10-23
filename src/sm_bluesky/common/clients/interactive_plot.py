@@ -1,21 +1,28 @@
 from collections.abc import Callable
+from enum import StrEnum
 from typing import Any
 
 import click
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import colormaps
 from matplotlib.colors import LogNorm
 from matplotlib.tri import Triangulation
 from matplotlib.widgets import Button, CheckButtons, RadioButtons, TextBox
 
-from sm_bluesky.common.math_functions.grid_plotting import (
+from sm_bluesky.common.math.rebinning import (
     extract_xyz,
     grid_heatmap,
 )
 
-MODE_1D = "1D Line"
-MODE_2D = "2D Grid"
-MODE_CONTOUR = "2D Contour"
+
+class PlotMode(StrEnum):
+    LINE_1D = "1D Line"
+    GRID_2D = "2D Grid"
+    CONTOUR_2D = "2D Contour"
+
+
+DEFAULT_CMAP = "viridis"
 NO_FIELDS = "(no data)"
 
 
@@ -24,6 +31,7 @@ class InteractivePlotWindow:
         self,
         data_source: dict[str, dict[str, list[Any]]],
         initial_scan_id: Any | None = None,
+        cmap: str = DEFAULT_CMAP,
     ):
         self.data_source = data_source
         self.scans = list(self.data_source.keys())
@@ -34,10 +42,18 @@ class InteractivePlotWindow:
         elif self.scans:
             self.active_scans.add(self.scans[-1])
 
+        if cmap not in colormaps:
+            click.secho(
+                f"Unknown colormap '{cmap}', falling back to '{DEFAULT_CMAP}'.",
+                fg="yellow",
+            )
+            cmap = DEFAULT_CMAP
+        self.cmap: str = cmap
+
         self.active_y_states: dict[str, bool] = {}
         self.last_seen_points: dict[Any, int] = {}
 
-        self.mode: str = MODE_1D
+        self.mode: PlotMode = PlotMode.LINE_1D
         self.log_scale: bool = False
         self.x_field: str | None = None
         self.y_field: str | None = None
@@ -72,7 +88,7 @@ class InteractivePlotWindow:
         # Plot mode
         self.ax_mode.set_title("Plot Mode", fontsize=10, fontweight="bold")
         self.widgets["mode_radio"] = RadioButtons(
-            self.ax_mode, [MODE_1D, MODE_2D, MODE_CONTOUR], active=0
+            self.ax_mode, list(PlotMode), active=0
         )
         self.widgets["mode_radio"].on_clicked(self.on_mode_change)
 
@@ -147,7 +163,7 @@ class InteractivePlotWindow:
         self.ax_mode.set_position((0.76, 0.575, 0.21, 0.085))
         self.ax_log.set_position((0.76, 0.530, 0.21, 0.035))
 
-        if self.mode in (MODE_2D, MODE_CONTOUR):
+        if self.mode in (PlotMode.GRID_2D, PlotMode.CONTOUR_2D):
             self.ax.set_position((0.09, 0.10, 0.56, 0.83))
             self.ax_cbar.set_position((0.670, 0.10, 0.020, 0.83))
             self.ax_cbar.set_visible(True)
@@ -197,7 +213,7 @@ class InteractivePlotWindow:
         self.widgets["check_log"].on_clicked(self.on_log_toggle)
 
         self._apply_layout()
-        if self.mode in (MODE_2D, MODE_CONTOUR):
+        if self.mode in (PlotMode.GRID_2D, PlotMode.CONTOUR_2D):
             self._build_controls_2d()
         else:
             self._build_controls_1d(old_x)
@@ -282,9 +298,12 @@ class InteractivePlotWindow:
         self.widgets["radio_z"].on_clicked(self.on_z_change)
 
     def on_mode_change(self, label: str | None) -> None:
-        if label not in (MODE_1D, MODE_2D, MODE_CONTOUR) or label == self.mode:
+        if label is None or label == self.mode:
             return
-        self.mode = label
+        try:
+            self.mode = PlotMode(label)
+        except ValueError:
+            return
         self.build_ui()
         self.draw_plot()
 
@@ -294,7 +313,10 @@ class InteractivePlotWindow:
             self.draw_plot()
 
     def on_x_change(self, label: str | None) -> None:
-        if self.mode in (MODE_2D, MODE_CONTOUR) and label not in (None, NO_FIELDS):
+        if self.mode in (PlotMode.GRID_2D, PlotMode.CONTOUR_2D) and label not in (
+            None,
+            NO_FIELDS,
+        ):
             self.x_field = label
         self.draw_plot()
 
@@ -329,9 +351,9 @@ class InteractivePlotWindow:
         self.draw_plot()
 
     def draw_plot(self) -> None:
-        if self.mode == MODE_2D:
+        if self.mode == PlotMode.GRID_2D:
             self._draw_2d()
-        elif self.mode == MODE_CONTOUR:
+        elif self.mode == PlotMode.CONTOUR_2D:
             self._draw_contour()
         else:
             self._draw_1d()
@@ -447,9 +469,9 @@ class InteractivePlotWindow:
         if heatmap is not None:
             x_edges, y_edges, grid = heatmap
             return self.ax.pcolormesh(
-                x_edges, y_edges, grid, cmap="viridis", shading="flat", norm=norm
+                x_edges, y_edges, grid, cmap=self.cmap, shading="flat", norm=norm
             )
-        return self.ax.scatter(xs, ys, c=zs, cmap="viridis", norm=norm)
+        return self.ax.scatter(xs, ys, c=zs, cmap=self.cmap, norm=norm)
 
     def _render_contour(
         self, xs: list[float], ys: list[float], zs: list[float], norm: Any = None
@@ -462,17 +484,17 @@ class InteractivePlotWindow:
                     tri = Triangulation(cx, cy)
                     levels = np.geomspace(norm.vmin, norm.vmax, 15)
                     return self.ax.tricontourf(
-                        tri, cz, levels=levels, cmap="viridis", norm=norm
+                        tri, cz, levels=levels, cmap=self.cmap, norm=norm
                     )
                 except Exception:
                     pass
         elif len(xs) >= 3 and len({round(v, 6) for v in zs}) > 1:
             try:
                 tri = Triangulation(xs, ys)
-                return self.ax.tricontourf(tri, zs, cmap="viridis")
+                return self.ax.tricontourf(tri, zs, cmap=self.cmap)
             except Exception:
                 pass
-        return self.ax.scatter(xs, ys, c=zs, cmap="viridis", norm=norm)
+        return self.ax.scatter(xs, ys, c=zs, cmap=self.cmap, norm=norm)
 
     def _draw_2d(self) -> None:
         self._draw_2d_plot(self._render_heatmap)
