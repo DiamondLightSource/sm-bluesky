@@ -1,4 +1,14 @@
-from math import ceil, floor
+from math import ceil, floor, isfinite
+from typing import Any
+
+
+def to_float(value: Any) -> float | None:
+    """Convert to a finite float, or None if that is not possible."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if isfinite(number) else None
 
 
 def cal_range_num(cen: float, range: float, size: float) -> tuple[float, float, int]:

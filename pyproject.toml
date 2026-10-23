@@ -19,11 +19,10 @@ dependencies = [
     # it will be auto-pinned to the latest release version by the pre-release workflow
     #
     "bluesky",
-    "dls-dodal==3.0.3",
+    "dls-dodal==3.0.5",
     "ophyd-async[sim]",
     "scanspec",
-    "blueapi",
-    "ipython",
+    "numpy",
 ]
 dynamic = ["version"]
 license.file = "LICENSE"
@@ -32,12 +31,14 @@ requires-python = ">=3.11"
 
 
 [project.optional-dependencies]
-testing = ["jupyter", "matplotlib", "numpy", "pyepics"]
-server = ["pyserial", "zhinst-core"]
+testing = ["jupyter", "pyepics"]
+client = ["ipython", "matplotlib", "blueapi"]
+server = ["pyserial", "zhinst-core", "blueapi"]
 [dependency-groups]
 dev = [
     "sm_bluesky[server]",
     "sm_bluesky[testing]",
+    "sm_bluesky[client]",
     "copier",
     "myst-parser",
     "pre-commit",
