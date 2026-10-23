@@ -55,7 +55,7 @@ Once the interactive IPython shell is running, you have access to:
 * ``show_plan()``: Prints a list of all plans available on the server.
 * ``show_devices()``: Prints a list of all devices available on the server.
 * ``scan_data``: A dictionary containing all collected event data from your scans.
-* ``plot(scan_id=None, cmap="viridis")``: Opens an interactive visualization window.
+* ``plot(scan_id=None, cmap="viridis")``: Opens an interactive visualisation window.
 
 Data Collection & Live Plotting
 -------------------------------

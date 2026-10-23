@@ -1,4 +1,5 @@
 import json
+import threading
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -34,10 +35,20 @@ def test_load_config_without_args_raises_error() -> None:
         load_config()
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+@pytest.fixture
+def mock_client_class():
+    with patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient") as mock_cls:
+        yield mock_cls
+
+
+@pytest.fixture
+def session(mock_client_class: MagicMock) -> BlueAPISession:
+    return BlueAPISession(config=ApplicationConfig())
+
+
 @patch("sm_bluesky.common.clients.blueapi_session.click.echo")
 @patch("sm_bluesky.common.clients.blueapi_session.click.secho")
-def test_blueapi_session_initialization_with_instrument_session(
+def test_blueapi_session_initialisation_with_instrument_session(
     mock_secho: MagicMock, mock_echo: MagicMock, mock_client_class: MagicMock
 ) -> None:
     mock_client = mock_client_class.from_config.return_value
@@ -58,14 +69,11 @@ def test_blueapi_session_initialization_with_instrument_session(
     mock_secho.assert_not_called()
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("sm_bluesky.common.clients.blueapi_session.click.secho")
-def test_blueapi_session_initialization_without_instrument_session(
+def test_blueapi_session_initialisation_without_instrument_session(
     mock_secho: MagicMock, mock_client_class: MagicMock
 ) -> None:
-    config = ApplicationConfig()
-
-    BlueAPISession(config=config)
+    BlueAPISession(config=ApplicationConfig())
 
     mock_secho.assert_called_once_with(
         "\n[Notice] No instrument session set."
@@ -74,11 +82,8 @@ def test_blueapi_session_initialization_without_instrument_session(
     )
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("IPython.start_ipython")
-def test_start_shell(mock_start: MagicMock, mock_client_class: MagicMock) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
+def test_start_shell(mock_start: MagicMock, session: BlueAPISession) -> None:
     session.start_shell()
     mock_start.assert_called_once()
     kwargs = mock_start.call_args.kwargs
@@ -89,12 +94,10 @@ def test_start_shell(mock_start: MagicMock, mock_client_class: MagicMock) -> Non
     assert kwargs["user_ns"]["bc"] is session.bc
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("sm_bluesky.common.clients.blueapi_session.click.echo")
-def test_callbacks_handling(mock_echo: MagicMock, mock_client_class: MagicMock) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
-
+def test_callbacks_handling(
+    mock_echo: MagicMock, session: BlueAPISession, mock_client_class: MagicMock
+) -> None:
     mock_client = mock_client_class.from_config.return_value
     mock_client.add_callback.assert_called_once()
     callback = mock_client.add_callback.call_args[0][0]
@@ -132,14 +135,32 @@ def test_callbacks_handling(mock_echo: MagicMock, mock_client_class: MagicMock) 
     )
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
+@patch("sm_bluesky.common.clients.blueapi_session.click.echo")
+def test_callback_scan_id_collision(
+    mock_echo: MagicMock, session: BlueAPISession, mock_client_class: MagicMock
+) -> None:
+    mock_client = mock_client_class.from_config.return_value
+    callback = mock_client.add_callback.call_args[0][0]
+
+    for i, expected_id in enumerate(("scan1", "scan1_1", "scan1_2")):
+        callback(
+            DataEvent(
+                name="start",
+                doc={"scan_id": "scan1", "uid": f"uid{i}", "time": 0},
+                task_id=f"task{i}",
+            )
+        )
+        assert session.current_scan_id == expected_id
+        assert expected_id in session.data
+        mock_echo.assert_any_call(
+            f"1970-01-01 00:00:00 - Run started (scan_id={expected_id}, uid=uid{i})"
+        )
+
+
 @patch("sm_bluesky.common.clients.blueapi_session.click.echo")
 def test_callback_event_without_scan_id(
-    mock_echo: MagicMock, mock_client_class: MagicMock
+    mock_echo: MagicMock, session: BlueAPISession, mock_client_class: MagicMock
 ) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
-
     mock_client = mock_client_class.from_config.return_value
     callback = mock_client.add_callback.call_args[0][0]
     session.current_scan_id = None
@@ -156,11 +177,7 @@ def test_callback_event_without_scan_id(
     ]
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
-def test_dead_plot_window_removed(mock_client_class: MagicMock) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config)
-
+def test_dead_plot_window_removed(session: BlueAPISession) -> None:
     class FakePlot:
         class FakeFig:
             number = 1
@@ -189,7 +206,6 @@ def test_dead_plot_window_removed(mock_client_class: MagicMock) -> None:
         mock_win.assert_called_once()
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 def test_blueapi_session_scan_caching(
     mock_client_class: MagicMock, tmp_path: Path
 ) -> None:
@@ -233,7 +249,6 @@ def test_blueapi_session_scan_caching(
     assert session2.data["888"]["motor"] == [10]
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 def test_blueapi_session_corrupt_scan_cache(
     mock_client_class: MagicMock, tmp_path: Path
 ) -> None:
@@ -248,19 +263,15 @@ def test_blueapi_session_corrupt_scan_cache(
     assert session.data == {}
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 def test_blueapi_session_no_instrument_session_cache_bypassed(
-    mock_client_class: MagicMock,
+    session: BlueAPISession,
 ) -> None:
-    config = ApplicationConfig()
-    session = BlueAPISession(config=config, instrument_session=None)
     session.bc.instrument_session = None  # type: ignore
     assert session._get_cache_path() is None
     session._load_scan_cache()
     session._save_scan_to_cache("123")
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("builtins.open", side_effect=Exception("Mock write error"))
 def test_blueapi_session_write_cache_error(
     mock_open: MagicMock,
@@ -279,7 +290,6 @@ def test_blueapi_session_write_cache_error(
         )
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.BlueapiClient")
 @patch("builtins.open")
 def test_blueapi_session_save_cache_missing_scan_id(
     mock_open: MagicMock,
@@ -289,3 +299,55 @@ def test_blueapi_session_save_cache_missing_scan_id(
     session = BlueAPISession(config=config, instrument_session="test-session")
     session._save_scan_to_cache("missing-scan-id")
     mock_open.assert_not_called()
+
+
+def test_run_task_updates_and_flushes_plots_during_scan(
+    mock_client_class: MagicMock,
+) -> None:
+
+    mock_client = mock_client_class.from_config.return_value
+    unblock_task = threading.Event()
+
+    def slow_task(*args, **kwargs):
+        unblock_task.wait(timeout=5.0)
+        return "task_done"
+
+    mock_client.run_task = slow_task
+    session = BlueAPISession(config=ApplicationConfig())
+
+    active_win = MagicMock()
+    active_win.fig.number = 1
+    dead_win = MagicMock()
+    dead_win.fig.number = 2
+    session._active_plot_windows = [active_win, dead_win]
+
+    monotonic_vals = iter([1.0, 1.2])
+    sleep_calls = 0
+
+    def fake_sleep(_: float) -> None:
+        nonlocal sleep_calls
+        sleep_calls += 1
+        if sleep_calls >= 2:
+            unblock_task.set()
+
+    with (
+        patch(
+            "sm_bluesky.common.clients.blueapi_session.plt.fignum_exists",
+            side_effect=lambda num: num == 1,
+        ),
+        patch(
+            "sm_bluesky.common.clients.blueapi_session.time.monotonic",
+            side_effect=lambda: next(monotonic_vals, 2.5),
+        ),
+        patch(
+            "sm_bluesky.common.clients.blueapi_session.time.sleep",
+            side_effect=fake_sleep,
+        ),
+    ):
+        result = session.bc.run_task(MagicMock())
+
+    assert result == "task_done"
+    assert session._active_plot_windows == [active_win]
+    assert active_win.update_plot.call_count >= 2
+    assert active_win.fig.canvas.flush_events.call_count >= 3
+    dead_win.update_plot.assert_not_called()

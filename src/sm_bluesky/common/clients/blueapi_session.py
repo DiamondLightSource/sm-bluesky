@@ -1,6 +1,10 @@
 import json
 import os
+import time
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from functools import wraps
 from typing import Any
 
 import click
@@ -26,6 +30,7 @@ class BlueAPISession:
         self.bc.login()
 
         self._install_callbacks()
+        self.bc.run_task = self._live_plot_during_task(self.bc.run_task)
         self.print_inventory()
 
         if instrument_session:
@@ -110,6 +115,38 @@ class BlueAPISession:
             },
         )
 
+    def _refresh_plots(self, update_data: bool = True) -> None:
+        self._active_plot_windows = [
+            win
+            for win in self._active_plot_windows
+            if plt.fignum_exists(win.fig.number)
+        ]
+        for win in self._active_plot_windows:
+            if update_data:
+                win.update_plot()
+            win.fig.canvas.flush_events()
+
+    def _live_plot_during_task(self, func: Callable[..., Any]) -> Callable[..., Any]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            executor = ThreadPoolExecutor(max_workers=1)
+            future = executor.submit(func, *args, **kwargs)
+            try:
+                last_update = 0.0
+                while not future.done():
+                    now = time.monotonic()
+                    should_update = (now - last_update) >= 1.0
+                    if should_update:
+                        last_update = now
+                    self._refresh_plots(update_data=should_update)
+                    time.sleep(0.48)
+                self._refresh_plots(update_data=True)
+                return future.result()
+            finally:
+                executor.shutdown(wait=False, cancel_futures=True)
+
+        return wrapper
+
     def plot(self, scan_id: Any | None = None, cmap: str = DEFAULT_CMAP) -> None:
         """Open an interactive plot window for multiple scans and axes."""
         self._active_plot_windows = [
@@ -145,12 +182,16 @@ class BlueAPISession:
                     name="start", doc={"scan_id": scan_id, "uid": uid, "time": time}
                 ):
                     scan_id_str = str(scan_id)
+                    idx = 1
+                    while scan_id_str in self.data:
+                        scan_id_str = f"{scan_id}_{idx}"
+                        idx += 1
                     self.current_scan_id = scan_id_str
                     self.data[scan_id_str] = {}
 
                     click.echo(
                         f"{self._format_time(time)} -"
-                        f" Run started (scan_id={scan_id}, uid={uid})"
+                        f" Run started (scan_id={scan_id_str}, uid={uid})"
                     )
 
                 case DataEvent(
