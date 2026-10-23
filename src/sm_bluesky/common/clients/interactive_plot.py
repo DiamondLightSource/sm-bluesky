@@ -393,7 +393,7 @@ class InteractivePlotWindow:
                     plotted_any = True
 
         self.ax.set_xlabel(x_choice)
-        self.ax.set_title("Nearly Live Plot")
+        self.ax.set_title("Live Plot")
         self.ax.grid(True)
         if plotted_any:
             self.ax.legend(loc="best")
