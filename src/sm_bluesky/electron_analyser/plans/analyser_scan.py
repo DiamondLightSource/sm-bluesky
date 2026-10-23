@@ -61,7 +61,7 @@ def analysercount(
     )
     yield from contingency_wrapper(
         plan=count(
-            detectors,
+            [*detectors, analyser],
             num=num,
             delay=delay,
             per_shot=per_shot,
