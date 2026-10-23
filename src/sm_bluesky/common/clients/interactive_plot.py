@@ -17,6 +17,8 @@ from sm_bluesky.common.math.rebinning import (
 
 
 class PlotMode(StrEnum):
+    """Supported plotting modes for the interactive plot window."""
+
     LINE_1D = "1D Line"
     GRID_2D = "2D Grid"
     CONTOUR_2D = "2D Contour"
@@ -27,6 +29,23 @@ NO_FIELDS = "(no data)"
 
 
 class InteractivePlotWindow:
+    """Interactive Matplotlib window for live plotting of 1D and 2D scan data.
+
+    Provides UI controls to select active scans, switch between 1D line,
+    2D grid heatmap, and 2D contour plot modes, toggle logarithmic scaling,
+    and choose X/Y/Z data channels.
+
+    Parameters
+    ----------
+    data_source : dict[str, dict[str, list[Any]]]
+        Mapping of scan IDs to dictionaries of field names and their data lists.
+    initial_scan_id : Any | None, optional
+        Scan ID to select initially. If not found or None, defaults to the most
+        recent scan in ``data_source``.
+    cmap : str, optional
+        Matplotlib colormap name used for 2D plots. Defaults to ``"viridis"``.
+    """
+
     def __init__(
         self,
         data_source: dict[str, dict[str, list[Any]]],
@@ -97,6 +116,7 @@ class InteractivePlotWindow:
         plt.show(block=False)
 
     def submit_scan(self, text: str) -> None:
+        """Add a scan ID from the text box to the active scans and redraw."""
         if not text or text.startswith("Not found:"):
             return
         s_id = text
@@ -113,17 +133,20 @@ class InteractivePlotWindow:
             self.fig.canvas.draw_idle()
 
     def unselect_all(self, event: Any) -> None:
+        """Clear all active scan selections and redraw."""
         self.active_scans.clear()
         self.build_ui()
         self.draw_plot()
 
     def get_active_fields(self) -> list[str]:
+        """Return a sorted list of all data fields across active scans."""
         fields = set()
         for s_id in self.active_scans:
             fields.update(self.data_source[s_id].keys())
         return sorted(fields)
 
     def get_visible_scans(self) -> list[Any]:
+        """Return up to 10 active and most recent scan IDs in scan order."""
         max_items = 10
         visible = list(self.active_scans)
         for s in reversed(self.scans):
@@ -135,6 +158,7 @@ class InteractivePlotWindow:
         return visible
 
     def get_2d_scan(self) -> Any | None:
+        """Return the most recent active scan ID for 2D plotting, or None."""
         if not self.active_scans:
             return None
         n_scans = len(self.scans)
@@ -144,12 +168,14 @@ class InteractivePlotWindow:
         )
 
     def get_2d_fields(self) -> list[str]:
+        """Return the available field names for the current 2D scan."""
         s_id = self.get_2d_scan()
         if s_id is None:
             return []
         return list(self.data_source[s_id].keys())
 
     def _clear_widgets(self, *names: str) -> None:
+        """Remove and disconnect the specified Matplotlib widgets."""
         for name in names:
             widget = self.widgets.pop(name, None)
             disconnect = getattr(widget, "disconnect_events", None)
@@ -157,6 +183,7 @@ class InteractivePlotWindow:
                 disconnect()
 
     def _apply_layout(self) -> None:
+        """Position axes and toggle visibility of 2D controls by plot mode."""
         self.ax_scan_txt.set_position((0.76, 0.920, 0.21, 0.035))
         self.ax_scan.set_position((0.76, 0.735, 0.21, 0.145))
         self.ax_scan_btn.set_position((0.76, 0.695, 0.21, 0.030))
@@ -181,6 +208,7 @@ class InteractivePlotWindow:
             self.ax_z.set_visible(False)
 
     def build_ui(self) -> None:
+        """Rebuild interactive widgets for the current scans and plot mode."""
         old_x = (
             self.widgets["radio_x"].value_selected
             if "radio_x" in self.widgets
@@ -221,6 +249,7 @@ class InteractivePlotWindow:
         self.widgets["scan_check"].on_clicked(self.on_scan_toggle)
 
     def _build_controls_1d(self, old_x: str | None = None) -> None:
+        """Build X-axis radio buttons and Y-channel checkboxes for 1D mode."""
         self.ax_x.set_title("X Axis", fontsize=10, fontweight="bold")
         fields = self.get_active_fields()
         x_options = ["Point number"] + fields
@@ -253,6 +282,7 @@ class InteractivePlotWindow:
         self.widgets["check_y"].on_clicked(self.on_y_toggle)
 
     def _resolve_2d_fields(self, fields: list[str]) -> None:
+        """Set default X, Y, and Z fields for 2D plotting if unset or invalid."""
         if not fields:
             self.x_field = self.y_field = self.z_field = None
             return
@@ -271,7 +301,7 @@ class InteractivePlotWindow:
             self.z_field = defaults[2]
 
     def _build_controls_2d(self) -> None:
-
+        """Build X, Y, and Z radio buttons for 2D plotting modes."""
         fields = self.get_2d_fields()
         self._resolve_2d_fields(fields)
         options = fields or [NO_FIELDS]
@@ -298,6 +328,7 @@ class InteractivePlotWindow:
         self.widgets["radio_z"].on_clicked(self.on_z_change)
 
     def on_mode_change(self, label: str | None) -> None:
+        """Handle plot mode radio button selection changes."""
         if label is None or label == self.mode:
             return
         try:
@@ -308,11 +339,13 @@ class InteractivePlotWindow:
         self.draw_plot()
 
     def on_log_toggle(self, label: str | None) -> None:
+        """Toggle logarithmic scaling on or off and redraw the plot."""
         if label == "Log Scale":
             self.log_scale = not self.log_scale
             self.draw_plot()
 
     def on_x_change(self, label: str | None) -> None:
+        """Handle X-axis field selection changes and redraw the plot."""
         if self.mode in (PlotMode.GRID_2D, PlotMode.CONTOUR_2D) and label not in (
             None,
             NO_FIELDS,
@@ -321,21 +354,25 @@ class InteractivePlotWindow:
         self.draw_plot()
 
     def on_y_change(self, label: str | None) -> None:
+        """Handle Y-axis field selection changes in 2D mode and redraw."""
         if label not in (None, NO_FIELDS):
             self.y_field = label
         self.draw_plot()
 
     def on_z_change(self, label: str | None) -> None:
+        """Handle Z-axis field selection changes in 2D mode and redraw."""
         if label not in (None, NO_FIELDS):
             self.z_field = label
         self.draw_plot()
 
     def on_y_toggle(self, label: str | None) -> None:
+        """Toggle visibility of a Y channel in 1D mode and redraw."""
         if label is not None:
             self.active_y_states[label] = not self.active_y_states.get(label, False)
         self.draw_plot()
 
     def on_scan_toggle(self, label: str | None) -> None:
+        """Toggle whether a scan ID is active and update the UI and plot."""
         if label is None:
             return
 
@@ -351,6 +388,7 @@ class InteractivePlotWindow:
         self.draw_plot()
 
     def draw_plot(self) -> None:
+        """Render the plot according to the currently selected plot mode."""
         if self.mode == PlotMode.GRID_2D:
             self._draw_2d()
         elif self.mode == PlotMode.CONTOUR_2D:
@@ -359,6 +397,7 @@ class InteractivePlotWindow:
             self._draw_1d()
 
     def _draw_1d(self) -> None:
+        """Render 1D line plots for all active scans and selected Y channels."""
         self.ax.cla()
         x_widget = self.widgets.get("radio_x")
         x_choice = x_widget.value_selected if x_widget else "Point number"
@@ -413,6 +452,7 @@ class InteractivePlotWindow:
         self.fig.canvas.draw_idle()
 
     def _get_2d_norm(self, zs: list[float]) -> Any:
+        """Return a LogNorm for positive Z values if log scale is on, else None."""
         if not self.log_scale:
             return None
         positives = [v for v in zs if v > 0]
@@ -429,6 +469,7 @@ class InteractivePlotWindow:
         self,
         render_fn: Callable[[list[float], list[float], list[float], Any], Any],
     ) -> None:
+        """Prepare axes, extract XYZ data, and render a 2D plot with colorbar."""
         self.ax.cla()
         self.ax_cbar.cla()
         self.ax_cbar.set_visible(False)
@@ -465,6 +506,7 @@ class InteractivePlotWindow:
     def _render_heatmap(
         self, xs: list[float], ys: list[float], zs: list[float], norm: Any = None
     ) -> Any:
+        """Render 2D data as a gridded heatmap, falling back to scatter."""
         heatmap = grid_heatmap(xs, ys, zs)
         if heatmap is not None:
             x_edges, y_edges, grid = heatmap
@@ -476,6 +518,7 @@ class InteractivePlotWindow:
     def _render_contour(
         self, xs: list[float], ys: list[float], zs: list[float], norm: Any = None
     ) -> Any:
+        """Render 2D data as a filled contour plot, falling back to scatter."""
         if norm is not None:
             pos_pts = [(x, y, z) for x, y, z in zip(xs, ys, zs, strict=True) if z > 0]
             if len(pos_pts) >= 3 and len({round(p[2], 6) for p in pos_pts}) > 1:
@@ -497,12 +540,15 @@ class InteractivePlotWindow:
         return self.ax.scatter(xs, ys, c=zs, cmap=self.cmap, norm=norm)
 
     def _draw_2d(self) -> None:
+        """Draw the 2D grid heatmap plot."""
         self._draw_2d_plot(self._render_heatmap)
 
     def _draw_contour(self) -> None:
+        """Draw the 2D triangulated contour plot."""
         self._draw_2d_plot(self._render_contour)
 
     def update_plot(self) -> None:
+        """Check for new scans, fields, or points and refresh the UI and plot."""
         if not plt.fignum_exists(self.fig.number):
             return
 
