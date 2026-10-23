@@ -15,7 +15,7 @@
     
         cli
         clients
-        math_functions
+        math
         plan_stubs
         plans
         servers

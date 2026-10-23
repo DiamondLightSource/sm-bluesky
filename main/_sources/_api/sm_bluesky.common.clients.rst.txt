@@ -1,7 +1,6 @@
 ``sm_bluesky.common.clients``
 =============================
         
-        
 
 .. automodule:: sm_bluesky.common.clients
     :members:
@@ -18,6 +17,5 @@
         :nosignatures:
     
         InstrumentClient
-        BlueAPISession
     
     

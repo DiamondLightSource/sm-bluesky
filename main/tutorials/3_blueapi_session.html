@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Interactive BlueAPI Session &#8212; sm-bluesky 1.3.4.dev1+g6f8c1f298 documentation</title>
+    <title>Interactive BlueAPI Session &#8212; sm-bluesky 1.3.4.dev2+g7bcc9c1bc documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=b3e5903b"></script>
+    <script src="../_static/documentation_options.js?v=e10c1458"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -509,7 +509,7 @@ sm-bluesky<span class="w"> </span>client<span class="w"> </span>-c<span class="w
 <section id="programmatically">
 <h3>Programmatically<a class="headerlink" href="#programmatically" title="Link to this heading">#</a></h3>
 <p>You can also embed the session directly into your own Python scripts or Jupyter Notebooks:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.clients</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlueAPISession</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.clients.blueapi_session</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlueAPISession</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sm_bluesky.common.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
 
 <span class="c1"># Load configuration for a specific beamline</span>
@@ -534,7 +534,7 @@ sm-bluesky<span class="w"> </span>client<span class="w"> </span>-c<span class="w
 <li><p><code class="docutils literal notranslate"><span class="pre">show_plan()</span></code>: Prints a list of all plans available on the server.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">show_devices()</span></code>: Prints a list of all devices available on the server.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">scan_data</span></code>: A dictionary containing all collected event data from your scans.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot(scan_id=None)</span></code>: Opens an interactive visualization window.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">plot(scan_id=None,</span> <span class="pre">cmap=&quot;viridis&quot;)</span></code>: Opens an interactive visualization window.</p></li>
 </ul>
 </section>
 <section id="data-collection-live-plotting">
@@ -563,12 +563,25 @@ sm-bluesky<span class="w"> </span>client<span class="w"> </span>-c<span class="w
 <p>You can visualise this data in near real-time using the built-in interactive plot window. By default, the window will attempt to open automatically, but you can also summon it manually:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Open the plotting window for the current data</span>
 <span class="n">plot</span><span class="p">()</span>
+
+<span class="c1"># Open the plotting window for a specific scan with a custom 2D colormap</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">scan_id</span><span class="o">=</span><span class="s2">"123"</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"plasma"</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The interactive plot window allows you to select which scan to view and choose different axes for your X and Y data directly from the collected device outputs. It polls for new data in the background, keeping your plot updated as the scan progresses.</p>
-</div>
+<p>The interactive plot window polls for new data in the background as a scan progresses and provides controls in the side panel for:</p>
+<ul class="simple">
+<li><p><strong>Scan Selection:</strong> Toggle recent scans or add a specific scan by ID.</p></li>
+<li><dl class="simple">
+<dt><strong>Plot Mode:</strong></dt><dd><ul>
+<li><p><strong>1D Line:</strong> Plot one or more Y channels against a selected X axis (or <code class="docutils literal notranslate"><span class="pre">Point</span> <span class="pre">number</span></code>) across all active scans.</p></li>
+<li><p><strong>2D Grid:</strong> Rebin 2D step or fast grid scans into a 2D heatmap (<code class="docutils literal notranslate"><span class="pre">X</span></code>, <code class="docutils literal notranslate"><span class="pre">Y</span></code>, and colour <code class="docutils literal notranslate"><span class="pre">Z</span></code>) with a colorbar, automatically falling back to a scatter plot for ungridded points.</p></li>
+<li><p><strong>2D Contour:</strong> Render filled triangulated contours of <code class="docutils literal notranslate"><span class="pre">(X,</span> <span class="pre">Y,</span> <span class="pre">Z)</span></code> data with a colorbar (falling back to a scatter plot when points are collinear or fewer than three).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><strong>Log Scale:</strong> Toggle logarithmic scaling on the Y axis (in <strong>1D Line</strong> mode) or on the colour normalisation (in <strong>2D Grid</strong> and <strong>2D Contour</strong> modes).</p></li>
+</ul>
 </section>
 </section>
 <section id="session-caching-variable-persistence">
