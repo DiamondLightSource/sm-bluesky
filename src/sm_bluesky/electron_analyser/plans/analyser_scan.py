@@ -61,7 +61,7 @@ def analysercount(
     )
     yield from contingency_wrapper(
         plan=count(
-            [*detectors, analyser],
+            detectors,
             num=num,
             delay=delay,
             per_shot=per_shot,
@@ -76,11 +76,10 @@ def analyserscan(
     analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
     detectors: Sequence[Readable],
-    args: Sequence[Movable | float | int],
+    *args: Movable | float | int,
     num: int | None = None,
     shutter: GenericFastShutter | None = None,
     close_shutter_per_region: bool = False,
-    *,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
     """
@@ -132,11 +131,10 @@ def grid_analyserscan(
     analyser: ElectronAnalyserDetector,
     sequence: BaseSequence,
     detectors: Sequence[Readable],
-    args: Sequence[Movable | float | int],
+    *args: Movable | float | int,
     shutter: GenericFastShutter | None = None,
     close_shutter_per_region: bool = False,
     snake_axes: Iterable | bool | None = None,
-    *,
     md: CustomPlanMetadata | None = None,
 ) -> MsgGenerator:
     """
