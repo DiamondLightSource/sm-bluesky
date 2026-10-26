@@ -190,10 +190,15 @@ class BlueAPISession:
             click.secho(f"Error in script {script_path}: {e}", fg="red")
             return
 
+        ip = get_ipython()
+        if ip is None:
+            click.secho(
+                f"Error: Cannot execute script {script_path}: No active session found.",
+                fg="red",
+            )
+            return
         try:
-            ip = get_ipython()
-            if ip is not None:
-                ip.run_line_magic("run", f'-i "{script_path}"')
+            ip.run_line_magic("run", f'-i "{script_path}"')
 
         except Exception as e:
             click.secho(f"Error executing script {script_path}: {e}", fg="red")

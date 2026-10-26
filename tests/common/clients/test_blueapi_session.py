@@ -417,3 +417,18 @@ def test_run_script_runtime_error(
     mock_secho.assert_called_once_with(
         f"Error executing script {err_script.resolve()}: boom", fg="red"
     )
+
+
+def test_run_script_no_active_session(
+    mock_secho: MagicMock, session: BlueAPISession, tmp_path: Path
+) -> None:
+    script = tmp_path / "script.py"
+    script.write_text("x = 1\n")
+
+    with patch("IPython.core.getipython.get_ipython", return_value=None):
+        session.run(script)
+
+    mock_secho.assert_called_once_with(
+        f"Error: Cannot execute script {script.resolve()}: No active session found.",
+        fg="red",
+    )
