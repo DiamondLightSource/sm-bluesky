@@ -23,7 +23,7 @@ Use the ``sm-bluesky client`` command to start a session. You can specify a remo
 
 .. tip::
 
-    If you omit the ``-s`` flag, you will be prompted to provide an instrument session ID, or use ``-d`` for a dummy session.
+    If you omit the ``-s`` flag, the client will automatically restore your last used session (if cached). Otherwise, set ``bc.instrument_session = '<session_id>'`` in the shell before dispatching plans, or use ``-d`` to start a dummy session.
 
 Programmatically
 ^^^^^^^^^^^^^^^^
@@ -56,6 +56,46 @@ Once the interactive IPython shell is running, you have access to:
 * ``show_devices()``: Prints a list of all devices available on the server.
 * ``scan_data``: A dictionary containing all collected event data from your scans.
 * ``plot(scan_id=None, cmap="viridis")``: Opens an interactive visualisation window.
+* ``run(script)``: Executes a Python script inside the active session namespace (a shortcut for ``%run -i <script>``).
+
+Writing & Running Scan Scripts
+------------------------------
+
+To automate sequences of scans, loops, or custom logic, you can write a standard Python script that directly uses session objects (``pl``, ``dev``, ``bc``, ``scan_data``, ``plot``) and run it inside the session.
+
+Creating a Script
+^^^^^^^^^^^^^^^^^
+
+Create a ``.py`` file (for example, ``my_scans.py``) containing the plans and Python logic you want to execute:
+
+.. code-block:: python
+
+    # my_scans.py
+    from time import sleep
+
+    for num_points in range(2, 5):
+        print(f"Running count scan with {num_points} points...")
+        pl.count([dev.pgm.energy], num_points, 0.5)
+        sleep(1.0)
+
+    # Stack a step scan afterwards
+    pl.step_scan([dev.idd_gap], [[dev.pgm.energy, [200, 300, 10]]])
+
+Running the Script
+^^^^^^^^^^^^^^^^^^
+
+From inside the interactive ``BlueAPISession`` shell, pass the script path to ``run()``:
+
+.. code-block:: python
+
+    run("my_scans.py")
+
+    # Or using IPython's built-in magic with the -i flag:
+    %run -i my_scans.py
+
+.. note::
+
+    ``run("my_scans.py")`` validates the script's Python syntax and ``Ctrl+C`` interruption continue to work automatically during each scan.
 
 Data Collection & Live Plotting
 -------------------------------
@@ -77,10 +117,12 @@ Live data is stored in the ``scan_data`` dictionary, which is keyed first by the
     # - Axes & Ranges: [[dev.pgm.energy, [start=200, stop=300, step=1]]]
     pl.step_scan([dev.idd_gap], [[dev.pgm.energy, [200, 300, 1]]])
 
-    # Access the collected data for the last scan
-    print(scan_data[<last_scan_num>])
-    # You can also get the last scan number by getting the last item in the dictionary
-    last_scan_num = next(reversed(scan_data))
+    # Access the collected data for a specific scan ID
+    print(scan_data["1"])
+
+    # Or access data from the most recent scan
+    last_scan_id = next(reversed(scan_data))
+    print(scan_data[last_scan_id])
 
 Interactive Plotting
 ^^^^^^^^^^^^^^^^^^^^
@@ -98,6 +140,7 @@ You can visualise this data in near real-time using the built-in interactive plo
 The interactive plot window polls for new data in the background as a scan progresses and provides controls in the side panel for:
 
 * **Scan Selection:** Toggle recent scans or add a specific scan by ID.
+* **Channel Selection:** Choose the X axis and toggle multiple Y channels (in **1D Line** mode), or choose X, Y, and colour Z channels (in **2D** modes).
 * **Plot Mode:**
     * **1D Line:** Plot one or more Y channels against a selected X axis (or ``Point number``) across all active scans.
     * **2D Grid:** Rebin 2D step or fast grid scans into a 2D heatmap (``X``, ``Y``, and colour ``Z``) with a colorbar, automatically falling back to a scatter plot for ungridded points.
