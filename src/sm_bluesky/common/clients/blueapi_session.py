@@ -5,6 +5,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functools import wraps
+from pathlib import Path
 from typing import Any
 
 import click
@@ -112,6 +113,7 @@ class BlueAPISession:
                 "show_devices": self.print_devices,
                 "scan_data": self.data,
                 "plot": self.plot,
+                "run": self.run,
             },
         )
 
@@ -139,7 +141,7 @@ class BlueAPISession:
                     if should_update:
                         last_update = now
                     self._refresh_plots(update_data=should_update)
-                    time.sleep(0.48)
+                    time.sleep(0.18)
                 self._refresh_plots(update_data=True)
                 return future.result()
             finally:
@@ -171,6 +173,35 @@ class BlueAPISession:
     def print_inventory(self) -> None:
         self.print_plans()
         self.print_devices()
+
+    def run(self, script: str | Path) -> None:
+        """Execute a Python script inside the active session namespace."""
+        from IPython.core.getipython import get_ipython
+
+        script_path = Path(script).expanduser().resolve()
+        if not script_path.is_file():
+            click.secho(f"Error: Script not found: {script_path}", fg="red")
+            return
+
+        try:
+            source = script_path.read_text()
+            compile(source, str(script_path), "exec")
+        except Exception as e:
+            click.secho(f"Error in script {script_path}: {e}", fg="red")
+            return
+
+        ip = get_ipython()
+        if ip is None:
+            click.secho(
+                f"Error: Cannot execute script {script_path}: No active session found.",
+                fg="red",
+            )
+            return
+        try:
+            ip.run_line_magic("run", f'-i "{script_path}"')
+
+        except Exception as e:
+            click.secho(f"Error executing script {script_path}: {e}", fg="red")
 
     def _install_callbacks(self) -> None:
         """Install a callback to store the data events locally"""
