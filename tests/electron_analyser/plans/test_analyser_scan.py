@@ -214,7 +214,7 @@ async def test_analyserscan(
             sim_analyser,
             sequence,
             extra_detectors,
-            args,
+            *args,
             num=motor_iterations,
             shutter=shutter,
             close_shutter_per_region=close_shutter_between_region,
@@ -249,7 +249,9 @@ def test_analyserscan_on_failure_closes_shutter(
                 sim_analyser,
                 BaseSequence(),
                 [],
-                args=[SimMotor("motor1"), 1, 3],
+                SimMotor("motor1"),
+                1,
+                3,
                 shutter=shutter,
             )
         )
@@ -291,7 +293,7 @@ async def test_grid_analyserscan(
             sim_analyser,
             sequence,
             extra_detectors,
-            args,
+            *args,
             shutter=shutter,
             close_shutter_per_region=close_shutter_between_region,
         )
@@ -329,7 +331,10 @@ def test_grid_analyserscan_on_failure_closes_shutter(
                 sim_analyser,
                 BaseSequence(),
                 [],
-                args=[SimMotor("motor1"), 1, 3, 1],
+                SimMotor("motor1"),
+                1,
+                3,
+                1,
                 shutter=shutter,
             )
         )
