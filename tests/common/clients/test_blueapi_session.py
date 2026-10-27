@@ -42,14 +42,29 @@ def mock_client_class():
 
 
 @pytest.fixture
-def session(mock_client_class: MagicMock) -> BlueAPISession:
-    return BlueAPISession(config=ApplicationConfig())
+def mock_secho():
+    with patch("sm_bluesky.common.clients.blueapi_session.click.secho") as mock:
+        yield mock
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.click.echo")
-@patch("sm_bluesky.common.clients.blueapi_session.click.secho")
+@pytest.fixture
+def mock_echo():
+    with patch("sm_bluesky.common.clients.blueapi_session.click.echo") as mock:
+        yield mock
+
+
+@pytest.fixture
+def session(
+    mock_client_class: MagicMock, mock_secho: MagicMock, mock_echo: MagicMock
+) -> BlueAPISession:
+    session = BlueAPISession(config=ApplicationConfig())
+    mock_secho.reset_mock()
+    mock_echo.reset_mock()
+    return session
+
+
 def test_blueapi_session_initialisation_with_instrument_session(
-    mock_secho: MagicMock, mock_echo: MagicMock, mock_client_class: MagicMock
+    mock_echo: MagicMock, mock_secho: MagicMock, mock_client_class: MagicMock
 ) -> None:
     mock_client = mock_client_class.from_config.return_value
     mock_client.plans = [MagicMock(name="plan1")]
@@ -69,7 +84,6 @@ def test_blueapi_session_initialisation_with_instrument_session(
     mock_secho.assert_not_called()
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.click.secho")
 def test_blueapi_session_initialisation_without_instrument_session(
     mock_secho: MagicMock, mock_client_class: MagicMock
 ) -> None:
@@ -91,10 +105,11 @@ def test_start_shell(mock_start: MagicMock, session: BlueAPISession) -> None:
     assert "pl" in kwargs["user_ns"]
     assert "dev" in kwargs["user_ns"]
     assert "scan_data" in kwargs["user_ns"]
+    assert "run" in kwargs["user_ns"]
     assert kwargs["user_ns"]["bc"] is session.bc
+    assert kwargs["user_ns"]["run"] == session.run
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.click.echo")
 def test_callbacks_handling(
     mock_echo: MagicMock, session: BlueAPISession, mock_client_class: MagicMock
 ) -> None:
@@ -135,7 +150,6 @@ def test_callbacks_handling(
     )
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.click.echo")
 def test_callback_scan_id_collision(
     mock_echo: MagicMock, session: BlueAPISession, mock_client_class: MagicMock
 ) -> None:
@@ -157,7 +171,6 @@ def test_callback_scan_id_collision(
         )
 
 
-@patch("sm_bluesky.common.clients.blueapi_session.click.echo")
 def test_callback_event_without_scan_id(
     mock_echo: MagicMock, session: BlueAPISession, mock_client_class: MagicMock
 ) -> None:
@@ -351,3 +364,71 @@ def test_run_task_updates_and_flushes_plots_during_scan(
     assert active_win.update_plot.call_count >= 2
     assert active_win.fig.canvas.flush_events.call_count >= 3
     dead_win.update_plot.assert_not_called()
+
+
+def test_run_script_with_ipython(session: BlueAPISession, tmp_path: Path) -> None:
+    script = tmp_path / "my_scans.py"
+    script.write_text("x = 1\n")
+    mock_ip = MagicMock()
+
+    with patch(
+        "IPython.core.getipython.get_ipython",
+        return_value=mock_ip,
+    ):
+        session.run(script)
+
+    mock_ip.run_line_magic.assert_called_once_with("run", f'-i "{script.resolve()}"')
+
+
+def test_run_script_missing_file(
+    mock_secho: MagicMock, session: BlueAPISession, tmp_path: Path
+) -> None:
+    missing = tmp_path / "nonexistent.py"
+    session.run(missing)
+    mock_secho.assert_called_once_with(
+        f"Error: Script not found: {missing.resolve()}", fg="red"
+    )
+
+
+def test_run_script_syntax_error(
+    mock_secho: MagicMock, session: BlueAPISession, tmp_path: Path
+) -> None:
+    bad_script = tmp_path / "bad_syntax.py"
+    bad_script.write_text("def broken(:\nthis is the best script in the world")
+
+    session.run(bad_script)
+
+    assert mock_secho.call_count == 1
+    assert f"Error in script {bad_script.resolve()}:" in mock_secho.call_args.args[0]
+    assert mock_secho.call_args.kwargs == {"fg": "red"}
+
+
+def test_run_script_runtime_error(
+    mock_secho: MagicMock, session: BlueAPISession, tmp_path: Path
+) -> None:
+    err_script = tmp_path / "runtime_err.py"
+    err_script.write_text("x = 1\n")
+    mock_ip = MagicMock()
+    mock_ip.run_line_magic.side_effect = RuntimeError("boom")
+
+    with patch("IPython.core.getipython.get_ipython", return_value=mock_ip):
+        session.run(err_script)
+
+    mock_secho.assert_called_once_with(
+        f"Error executing script {err_script.resolve()}: boom", fg="red"
+    )
+
+
+def test_run_script_no_active_session(
+    mock_secho: MagicMock, session: BlueAPISession, tmp_path: Path
+) -> None:
+    script = tmp_path / "script.py"
+    script.write_text("x = 1\n")
+
+    with patch("IPython.core.getipython.get_ipython", return_value=None):
+        session.run(script)
+
+    mock_secho.assert_called_once_with(
+        f"Error: Cannot execute script {script.resolve()}: No active session found.",
+        fg="red",
+    )
