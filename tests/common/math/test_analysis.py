@@ -3,6 +3,7 @@ import pytest
 from lmfit.model import ModelResult
 
 from sm_bluesky.common.math.analysis import (
+    calculate_com,
     fit_gaussian,
 )
 
@@ -97,3 +98,59 @@ def test_fit_gaussian_dimension_mismatch_raises() -> None:
     """Mismatched x and y lengths must raise ValueError."""
     with pytest.raises(ValueError, match="x, y array must be same length"):
         fit_gaussian([1.0, 2.0, 3.0, 4.0], [1.0, 2.0, 3.0, 2.0, 3.0])
+
+
+def test_calculate_com_symmetric_peak() -> None:
+    """A symmetric Gaussian peak centered at 0.0 should have COM at 0.0."""
+    x = np.linspace(-5, 5, 101)
+    y = np.exp(-(x**2) / (2 * 1.0**2))
+    com = calculate_com(x, y)
+    assert com == pytest.approx(0.0, abs=1e-4)
+
+
+def test_calculate_com_shifted_peak() -> None:
+    """A shifted Gaussian peak centered at 7.5 should have COM near 7.5."""
+    x = np.linspace(0, 20, 201)
+    y = 10.0 * np.exp(-((x - 7.5) ** 2) / (2 * 1.5**2))
+    com = calculate_com(x, y)
+    assert com == pytest.approx(7.5, abs=0.05)
+
+
+def test_calculate_com_with_constant_background() -> None:
+    """Baseline subtraction should correctly isolate the peak COM."""
+    x = np.linspace(0, 10, 101)
+    y = 50.0 + 25.0 * np.exp(-((x - 4.0) ** 2) / (2 * 0.8**2))
+
+    com_subtracted = calculate_com(x, y, subtract_baseline=True)
+    assert com_subtracted == pytest.approx(4.0, abs=0.05)
+
+    com_raw = calculate_com(x, y, subtract_baseline=False)
+    assert abs(com_raw - 4.0) > abs(com_subtracted - 4.0)
+
+
+def test_calculate_com_uneven_spacing() -> None:
+    """COM calculation should handle non-uniformly spaced coordinates."""
+    x = np.array([0.0, 1.0, 2.0, 5.0, 10.0])
+    y = np.array([0.0, 10.0, 10.0, 0.0, 0.0])
+    com = calculate_com(x, y, subtract_baseline=True)
+    assert com == pytest.approx(1.5, abs=1e-4)
+
+
+def test_calculate_com_flat_data_raises() -> None:
+    """Uniform flat data has no distinct COM and should raise ValueError."""
+    x = np.linspace(0, 10, 20)
+    y = np.full_like(x, 5.0)
+    with pytest.raises(ValueError, match="Y is flat/Zero"):
+        calculate_com(x, y)
+
+
+def test_calculate_com_dimension_mismatch_raises() -> None:
+    """Mismatched x and y lengths must raise ValueError."""
+    with pytest.raises(ValueError, match="x, y array must be same length"):
+        calculate_com([1.0, 2.0, 3.0], [1.0, 2.0])
+
+
+def test_calculate_com_empty_raises() -> None:
+    """Empty inputs must raise ValueError."""
+    with pytest.raises(ValueError, match="At least 4 data points are needed"):
+        calculate_com([], [])
