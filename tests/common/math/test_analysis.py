@@ -155,7 +155,6 @@ def test_derivatives_polynomial(zero_crossing: float) -> None:
     assert isinstance(res, DerivativeResult)
     assert res.d1[1:-1] == pytest.approx(2 * (x[1:-1] + zero_crossing), abs=0.05)
     assert res.d2[2:-2] == pytest.approx(np.full_like(x[2:-2], 2.0), abs=0.05)
-    print(res.zero_crossings)
     assert any(
         zc == pytest.approx(-1 * zero_crossing, abs=0.15) for zc in res.zero_crossings
     )
