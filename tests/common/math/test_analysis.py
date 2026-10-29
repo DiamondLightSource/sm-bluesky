@@ -148,15 +148,15 @@ def test_calculate_com_empty_raises() -> None:
 @pytest.mark.parametrize("zero_crossing", [0, 3, -0.55])
 def test_derivatives_polynomial(zero_crossing: float) -> None:
     x = np.linspace(-5, 5, 101)
-    y = (x + zero_crossing) ** 2
+    y = (x - zero_crossing) ** 2
 
     res = calculate_derivatives(x, y)
 
     assert isinstance(res, DerivativeResult)
-    assert res.d1[1:-1] == pytest.approx(2 * (x[1:-1] + zero_crossing), abs=0.05)
+    assert res.d1[1:-1] == pytest.approx(2 * (x[1:-1] - zero_crossing), abs=0.05)
     assert res.d2[2:-2] == pytest.approx(np.full_like(x[2:-2], 2.0), abs=0.05)
     assert any(
-        zc == pytest.approx(-1 * zero_crossing, abs=0.15) for zc in res.zero_crossings
+        zc == pytest.approx(zero_crossing, abs=0.15) for zc in res.zero_crossings
     )
 
 

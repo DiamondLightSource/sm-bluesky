@@ -87,7 +87,6 @@ def fit_gaussian(
             amplitude=amp, center=center, sigma=sigma, intercept=intercept, slope=slope
         )
     output = model.fit(y, params=params, x=x)
-    print(output.fit_report())
     return output
 
 
