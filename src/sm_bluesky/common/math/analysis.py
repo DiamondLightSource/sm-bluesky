@@ -129,5 +129,4 @@ def calculate_derivatives(
         elif d1[i] * d1[i + 1] < 0:
             zero_crossings.append((x[i] + x[i + 1]) / 2.0)
 
-    print(zero_crossings)
     return DerivativeResult(d1=d1, d2=d2, zero_crossings=zero_crossings)
