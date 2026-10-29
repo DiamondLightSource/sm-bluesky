@@ -121,7 +121,6 @@ def calculate_derivatives(
     _check_xy_size(x, y)
     d1 = np.gradient(y, x, edge_order=1)
     d2 = np.gradient(d1, x, edge_order=2)
-    print(d1)
     zero_crossings = []
     for i, value in enumerate(d1[:-1]):
         if value == 0.0:
