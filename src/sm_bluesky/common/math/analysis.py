@@ -1,6 +1,7 @@
 """Data analysis and fitting routines for scan data."""
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 import numpy as np
 from lmfit.model import ModelResult
@@ -88,3 +89,45 @@ def fit_gaussian(
     output = model.fit(y, params=params, x=x)
     print(output.fit_report())
     return output
+
+
+@dataclass
+class DerivativeResult:
+    """Result of 1st and 2nd derivative calculations."""
+
+    d1: np.ndarray
+    d2: np.ndarray
+    zero_crossings: list[float]
+
+
+def calculate_derivatives(
+    x: Sequence[float] | np.ndarray,
+    y: Sequence[float] | np.ndarray,
+) -> DerivativeResult:
+    """Calculate 1st and 2nd derivatives of (x, y).
+
+    Parameters
+    ----------
+    x : Sequence[float] | np.ndarray
+        Independent variable array.
+    y : Sequence[float] | np.ndarray
+        Dependent variable array.
+
+    Returns
+    -------
+    DerivativeResult
+        Contains d1 (dy/dx), d2 (d^2y/dx^2) and d2 zero_crossings.
+    """
+    _check_xy_size(x, y)
+    d1 = np.gradient(y, x, edge_order=1)
+    d2 = np.gradient(d1, x, edge_order=2)
+    print(d1)
+    zero_crossings = []
+    for i, value in enumerate(d1[:-1]):
+        if value == 0.0:
+            zero_crossings.append(x[i])
+        elif d1[i] * d1[i + 1] < 0:
+            zero_crossings.append((x[i] + x[i + 1]) / 2.0)
+
+    print(zero_crossings)
+    return DerivativeResult(d1=d1, d2=d2, zero_crossings=zero_crossings)
