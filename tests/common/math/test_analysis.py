@@ -146,7 +146,6 @@ def test_calculate_com_empty_raises() -> None:
 
 
 def test_derivatives_polynomial() -> None:
-    """Verify 1st and 2nd derivatives of y = x^2 (d1 = 2x, d2 = 2)."""
     x = np.linspace(-5, 5, 101)
     y = x**2
 
@@ -159,7 +158,6 @@ def test_derivatives_polynomial() -> None:
 
 
 def test_derivatives_non_uniform_grid() -> None:
-    """Verify derivatives on a non-uniform grid for y = 3x + 1 (d1 = 3, d2 = 0)."""
     x = np.array([0.0, 1.0, 3.0, 7.0, 15.0, 30.0])
     y = 3.0 * x + 1.0
 
