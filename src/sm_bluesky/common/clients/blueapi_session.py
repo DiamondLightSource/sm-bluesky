@@ -296,7 +296,6 @@ class BlueAPISession:
                         f"uid: {uid}): {status}"
                     )
                     if self.current_scan_id is not None:
-                        self._save_scan_to_cache(str(self.current_scan_id))
                         if self.auto_analyse:
                             try:
                                 fit_res = self.fit_scan(self.current_scan_id)
@@ -318,6 +317,7 @@ class BlueAPISession:
 
                             except Exception as e:
                                 click.echo(f"Auto-fit failed: {e}")
+                        self._save_scan_to_cache(str(self.current_scan_id))
                     self.current_scan_id = None
 
                 case DataEvent(

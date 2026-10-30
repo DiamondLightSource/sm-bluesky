@@ -598,3 +598,31 @@ def test_invalid_cmap_fallback(grid_data):
             "Unknown colormap 'not_a_colormap', falling back to 'viridis'.",
             fg="yellow",
         )
+
+
+def test_analysis_fields_filtered_in_1d_and_2d():
+    plt.close("all")
+    data = {
+        "scan1": {
+            "pgm-energy": [1.0, 2.0, 3.0, 4.0],
+            "det1": [10.0, 50.0, 20.0, 5.0],
+            "fit": [11.0, 48.0, 21.0, 6.0],
+            "d1": [40.0, 5.0, -22.5, -15.0],
+            "d2": [-35.0, -31.25, -10.0, 7.5],
+            "centre": [2.2],
+            "com": [2.3],
+            "zero_crossing": [2.2],
+            "max_slope_x": [1.0],
+            "min_slope_x": [3.0],
+        }
+    }
+    win = InteractivePlotWindow(data, initial_scan_id="scan1")
+
+    active_fields = win.get_active_fields()
+    assert active_fields == ["det1", "pgm-energy", "fit", "d1", "d2"]
+    assert win.active_y_states["det1"] is True
+    assert win.active_y_states["fit"] is False
+
+    x_labels = [t.get_text() for t in win.widgets["radio_x"].labels]
+    assert x_labels == ["Point number", "det1", "pgm-energy"]
+    assert win.get_2d_fields() == ["pgm-energy", "det1"]

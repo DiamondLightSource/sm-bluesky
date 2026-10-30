@@ -26,6 +26,14 @@ class PlotMode(StrEnum):
 
 DEFAULT_CMAP = "viridis"
 NO_FIELDS = "(no data)"
+DERIVED_Y_FIELDS = ("fit", "d1", "d2")
+SCALAR_META_FIELDS = {
+    "centre",
+    "com",
+    "zero_crossing",
+    "max_slope_x",
+    "min_slope_x",
+}
 
 
 class InteractivePlotWindow:
@@ -143,7 +151,10 @@ class InteractivePlotWindow:
         fields = set()
         for s_id in self.active_scans:
             fields.update(self.data_source[s_id].keys())
-        return sorted(fields)
+        fields -= SCALAR_META_FIELDS
+        device_fields = sorted(fields - set(DERIVED_Y_FIELDS))
+        derived_fields = [f for f in DERIVED_Y_FIELDS if f in fields]
+        return device_fields + derived_fields
 
     def get_visible_scans(self) -> list[Any]:
         """Return up to 10 active and most recent scan IDs in scan order."""
@@ -172,7 +183,8 @@ class InteractivePlotWindow:
         s_id = self.get_2d_scan()
         if s_id is None:
             return []
-        return list(self.data_source[s_id].keys())
+        excluded = SCALAR_META_FIELDS | set(DERIVED_Y_FIELDS)
+        return [k for k in self.data_source[s_id].keys() if k not in excluded]
 
     def _clear_widgets(self, *names: str) -> None:
         """Remove and disconnect the specified Matplotlib widgets."""
@@ -252,7 +264,8 @@ class InteractivePlotWindow:
         """Build X-axis radio buttons and Y-channel checkboxes for 1D mode."""
         self.ax_x.set_title("X Axis", fontsize=10, fontweight="bold")
         fields = self.get_active_fields()
-        x_options = ["Point number"] + fields
+        x_fields = [f for f in fields if f not in DERIVED_Y_FIELDS]
+        x_options = ["Point number"] + x_fields
 
         active_x_idx = 0
         if old_x in x_options:
