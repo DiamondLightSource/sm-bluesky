@@ -40,7 +40,6 @@ def populated_session(session: BlueAPISession) -> BlueAPISession:
     x_data = [float(i) for i in range(1, 11)]
     y_data = [2.0, 5.0, 15.0, 45.0, 100.0, 45.0, 15.0, 5.0, 2.0, 1.0]
     session.data["scan_1"] = {
-        "Point number": list(range(1, 11)),
         "motor1": x_data,
         "det1": y_data,
     }

@@ -191,12 +191,14 @@ class BlueAPISession:
         if x and y:
             x_data, y_data = self.data[str(scan_id)][x], self.data[str(scan_id)][y]
         else:
-            scan = self.data[str(scan_id)]
-            if len(scan.keys()) > 2:
-                x_data, y_data = list(scan.values())[1:3]
+            vals = list(self.data[str(scan_id)].values())
+            if len(vals) >= 2:
+                x_data, y_data = vals[0], vals[1]
+            elif len(vals) == 1:
+                y_data = vals[0]
+                x_data = list(range(1, len(y_data) + 1))
             else:
-                x_data, y_data = list(scan.values())[0:2]
-
+                raise ValueError("Scan has no data")
         g_res = fit_gaussian(x_data, y_data, guess)
         com_res = calculate_com(x_data, y_data)
         df_res = calculate_derivatives(x_data, y_data)
