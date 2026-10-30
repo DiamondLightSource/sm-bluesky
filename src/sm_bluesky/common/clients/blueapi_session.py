@@ -43,6 +43,8 @@ class BlueAPISession:
         self.current_scan_id: Any | None = None
         self._active_plot_windows: list[InteractivePlotWindow] = []
         self.auto_analyse: bool = True
+        self.preferred_x: str | None = None
+        self.preferred_y: str | None = None
         click.echo("Connecting to BlueAPI service...")
         self.bc = BlueapiClient.from_config(self.config)
         self.bc.login()
@@ -132,6 +134,7 @@ class BlueAPISession:
                 "plot": self.plot,
                 "run": self.run,
                 "fit_scan": self.fit_scan,
+                "set_fit_axes": self.set_fit_axes,
             },
         )
 
@@ -178,6 +181,11 @@ class BlueAPISession:
         window = InteractivePlotWindow(self.data, scan_id, cmap=cmap)
         self._active_plot_windows.append(window)
 
+    def set_fit_axes(self, x: str | None = None, y: str | None = None) -> None:
+        """Set preferred X and Y channel names for fit_scan and auto-analysis."""
+        self.preferred_x = x
+        self.preferred_y = y
+
     def fit_scan(
         self,
         scan_id: Any | None = None,
@@ -188,17 +196,18 @@ class BlueAPISession:
         """Perform Gaussian fit and Centre of Mass calculation on scan data."""
         if scan_id is None:
             scan_id = next(reversed(self.data))
-        if x and y:
-            x_data, y_data = self.data[str(scan_id)][x], self.data[str(scan_id)][y]
+        scan = self.data[str(scan_id)]
+        x_col = x or (self.preferred_x if self.preferred_x in scan else None)
+        y_col = y or (self.preferred_y if self.preferred_y in scan else None)
+        vals = list(scan.values())
+        if len(vals) >= 2:
+            x_data = scan[x_col] if x_col else vals[0]
+            y_data = scan[y_col] if y_col else vals[1]
+        elif len(vals) == 1:
+            y_data = scan[y_col] if y_col else vals[0]
+            x_data = scan[x_col] if x_col else list(range(1, len(y_data) + 1))
         else:
-            vals = list(self.data[str(scan_id)].values())
-            if len(vals) >= 2:
-                x_data, y_data = vals[0], vals[1]
-            elif len(vals) == 1:
-                y_data = vals[0]
-                x_data = list(range(1, len(y_data) + 1))
-            else:
-                raise ValueError("Scan has no data")
+            raise ValueError("Scan has no data")
         g_res = fit_gaussian(x_data, y_data, guess)
         com_res = calculate_com(x_data, y_data)
         df_res = calculate_derivatives(x_data, y_data)

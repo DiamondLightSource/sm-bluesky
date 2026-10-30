@@ -89,6 +89,35 @@ def test_fit_scan_missing_scan_id_raises_or_warns(
         populated_session.fit_scan(scan_id="non_existent_999")
 
 
+def test_fit_scan_with_set_fit_axes(session: BlueAPISession) -> None:
+    x_data = [float(i) for i in range(1, 11)]
+    y_wrong = [1.0] * 10
+    y_peak = [2.0, 5.0, 15.0, 45.0, 100.0, 45.0, 15.0, 5.0, 2.0, 1.0]
+    session.data["scan_multi"] = {
+        "motor1": x_data,
+        "det_noise": y_wrong,
+        "det_roi": y_peak,
+    }
+    session.set_fit_axes(y="det_roi")
+    res = session.fit_scan(scan_id="scan_multi")
+    assert res.gaussian.best_values["center"] == pytest.approx(5.0, abs=0.2)
+
+
+def test_fit_scan_single_channel_falls_back_to_point_number(
+    session: BlueAPISession,
+) -> None:
+    y_peak = [2.0, 5.0, 15.0, 45.0, 100.0, 45.0, 15.0, 5.0, 2.0, 1.0]
+    session.data["scan_1ch"] = {"det1": y_peak}
+    res = session.fit_scan(scan_id="scan_1ch")
+    assert res.gaussian.best_values["center"] == pytest.approx(5.0, abs=0.2)
+
+
+def test_fit_scan_empty_scan_raises(session: BlueAPISession) -> None:
+    session.data["scan_empty"] = {}
+    with pytest.raises(ValueError, match="Scan has no data"):
+        session.fit_scan(scan_id="scan_empty")
+
+
 @patch("IPython.start_ipython")
 def test_start_shell_exports_analysis_utilities(
     mock_start: MagicMock, session: BlueAPISession
@@ -99,6 +128,8 @@ def test_start_shell_exports_analysis_utilities(
 
     assert "fit_scan" in user_ns
     assert user_ns["fit_scan"] == session.fit_scan
+    assert "set_fit_axes" in user_ns
+    assert user_ns["set_fit_axes"] == session.set_fit_axes
 
 
 def test_auto_analyse_disabled_by_default(session: BlueAPISession) -> None:
