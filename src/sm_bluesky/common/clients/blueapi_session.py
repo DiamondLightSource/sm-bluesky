@@ -294,6 +294,9 @@ class BlueAPISession:
                                 zc = fit_res.df.zero_crossings
                                 self.data[self.current_scan_id].update(
                                     {
+                                        "fit": fit_res.gaussian.best_fit.tolist(),
+                                        "d1": fit_res.df.d1.tolist(),
+                                        "d2": fit_res.df.d2.tolist(),
                                         "centre": [p_cen],
                                         "com": [com],
                                         "zero_crossing": zc,

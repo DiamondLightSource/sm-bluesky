@@ -158,3 +158,6 @@ def test_auto_analyse_triggers_on_scan_stop(
     assert session.data["auto_scan_1"]["zero_crossing"] == [4.0]
     assert session.data["auto_scan_1"]["max_slope_x"] == [2.0]
     assert session.data["auto_scan_1"]["min_slope_x"] == [6.0]
+    assert len(session.data["auto_scan_1"]["fit"]) == len(x_vals)
+    assert len(session.data["auto_scan_1"]["d1"]) == len(x_vals)
+    assert len(session.data["auto_scan_1"]["d2"]) == len(x_vals)
