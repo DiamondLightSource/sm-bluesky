@@ -3,6 +3,7 @@ import os
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
@@ -14,8 +15,23 @@ from blueapi.client import BlueapiClient
 from blueapi.client.event_bus import AnyEvent
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
+from lmfit.model import ModelResult
+
+from sm_bluesky.common.math import (
+    DerivativeResult,
+    calculate_com,
+    calculate_derivatives,
+    fit_gaussian,
+)
 
 from .interactive_plot import DEFAULT_CMAP, InteractivePlotWindow
+
+
+@dataclass
+class FitResult:
+    gaussian: ModelResult
+    com: float
+    df: DerivativeResult
 
 
 class BlueAPISession:
@@ -26,6 +42,7 @@ class BlueAPISession:
         self.data: dict[str, dict[str, list[Any]]] = {}
         self.current_scan_id: Any | None = None
         self._active_plot_windows: list[InteractivePlotWindow] = []
+        self.auto_analyze: bool = False
         click.echo("Connecting to BlueAPI service...")
         self.bc = BlueapiClient.from_config(self.config)
         self.bc.login()
@@ -114,6 +131,7 @@ class BlueAPISession:
                 "scan_data": self.data,
                 "plot": self.plot,
                 "run": self.run,
+                "fit_scan": self.fit_scan,
             },
         )
 
@@ -159,6 +177,34 @@ class BlueAPISession:
 
         window = InteractivePlotWindow(self.data, scan_id, cmap=cmap)
         self._active_plot_windows.append(window)
+
+    def fit_scan(
+        self,
+        scan_id: Any | None = None,
+        x: str | None = None,
+        y: str | None = None,
+        guess: Any | None = None,
+    ) -> FitResult:
+        """Perform Gaussian fit and Center of Mass calculation on scan data."""
+        if scan_id is None:
+            scan_id = next(reversed(self.data))
+        if x and y:
+            x_data, y_data = self.data[str(scan_id)][x], self.data[str(scan_id)][y]
+        else:
+            scan = self.data[str(scan_id)]
+            if len(scan.keys()) > 2:
+                x_data, y_data = list(scan.values())[1:3]
+            else:
+                x_data, y_data = list(scan.values())[0:2]
+
+        g_res = fit_gaussian(x_data, y_data, guess)
+        com_res = calculate_com(x_data, y_data)
+        df_res = calculate_derivatives(x_data, y_data)
+        click.echo(
+            f"Fit (scan {scan_id}): center={g_res.best_values['center']:.4f}, "
+            f"FWHM={g_res.params['fwhm'].value:.4f}, COM={com_res:.4f}"
+        )
+        return FitResult(gaussian=g_res, com=com_res, df=df_res)
 
     def print_plans(self) -> None:
         click.echo("\nPlans available:")
@@ -240,6 +286,20 @@ class BlueAPISession:
                     )
                     if self.current_scan_id is not None:
                         self._save_scan_to_cache(str(self.current_scan_id))
+                        if self.auto_analyze:
+                            try:
+                                fit_res = self.fit_scan(self.current_scan_id)
+                                p_cen = fit_res.gaussian.best_values["centre"]
+                                com = fit_res.com
+                                zc = fit_res.df.zero_crossings
+                                self.data[self.current_scan_id] = {
+                                    "centre": [p_cen],
+                                    "com": [com],
+                                    "zero_crossing": zc,
+                                }
+
+                            except Exception as e:
+                                click.echo(f"Auto-fit failed: {e}")
                     self.current_scan_id = None
 
                 case DataEvent(

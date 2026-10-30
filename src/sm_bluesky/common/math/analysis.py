@@ -6,13 +6,26 @@ from dataclasses import dataclass
 import numpy as np
 from lmfit.model import ModelResult
 from lmfit.models import GaussianModel, LinearModel
+from numpy.typing import NDArray
 
 
-def _check_xy_size(x: Sequence[float] | np.ndarray, y: Sequence[float] | np.ndarray):
+@dataclass
+class DerivativeResult:
+    """Result of 1st and 2nd derivative calculations."""
+
+    d1: NDArray[np.float64]
+    d2: NDArray[np.float64]
+    zero_crossings: list[float]
+
+
+def _get_xy_ndarray(
+    x: Sequence[float] | np.ndarray, y: Sequence[float] | np.ndarray
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     if len(x) != len(y):
         raise ValueError("x, y array must be same length")
     if len(x) < 4 or len(y) < 4:
         raise ValueError("At least 4 data points are needed")
+    return np.asarray(x, dtype=float), np.asarray(y, dtype=float)
 
 
 def calculate_com(
@@ -36,14 +49,12 @@ def calculate_com(
     float
         The calculated Center of Mass along the x axis.
     """
-    _check_xy_size(x, y)
-    x_arr = np.asarray(x, dtype=float)
-    y_weight = y - np.min(y) if subtract_baseline else y
-    y_arr = np.asarray(y_weight, dtype=float)
-    if np.allclose(y_weight, y[0]) or np.allclose(y_weight, 0.0):
+    x_arr, y_arr = _get_xy_ndarray(x, y)
+    y_weight = y_arr - np.min(y_arr) if subtract_baseline else y_arr
+    if np.allclose(y_weight, y_arr[0]) or np.allclose(y_weight, 0.0):
         raise ValueError("Y is flat/Zero")
 
-    return np.average(x_arr, weights=y_arr)
+    return float(np.average(x_arr, weights=y_weight))
 
 
 def fit_gaussian(
@@ -71,13 +82,13 @@ def fit_gaussian(
     ModelResult
         Result containing fitted parameters, COM, FWHM, and success flag.
     """
-    _check_xy_size(x, y)
+    x_arr, y_arr = _get_xy_ndarray(x, y)
     peak_0 = GaussianModel()
     line = LinearModel()
     model = peak_0 + line
     if not guess:
-        params = peak_0.guess(data=y, x=x)
-        params.update(line.guess(data=y, x=x))
+        params = peak_0.guess(data=y_arr, x=x_arr)
+        params.update(line.guess(data=y_arr, x=x_arr))
     elif isinstance(guess, dict):
         params = model.make_params(False, **guess)
     else:
@@ -86,17 +97,8 @@ def fit_gaussian(
         params = model.make_params(
             amplitude=amp, center=center, sigma=sigma, intercept=intercept, slope=slope
         )
-    output = model.fit(y, params=params, x=x)
+    output = model.fit(y_arr, params=params, x=x_arr)
     return output
-
-
-@dataclass
-class DerivativeResult:
-    """Result of 1st and 2nd derivative calculations."""
-
-    d1: np.ndarray
-    d2: np.ndarray
-    zero_crossings: list[float]
 
 
 def calculate_derivatives(
@@ -117,14 +119,14 @@ def calculate_derivatives(
     DerivativeResult
         Contains d1 (dy/dx), d2 (d^2y/dx^2) and d2 zero_crossings.
     """
-    _check_xy_size(x, y)
-    d1 = np.gradient(y, x, edge_order=1)
-    d2 = np.gradient(d1, x, edge_order=2)
+    x_arr, y_arr = _get_xy_ndarray(x, y)
+    d1 = np.gradient(y_arr, x_arr, edge_order=1)
+    d2 = np.gradient(d1, x_arr, edge_order=2)
     zero_crossings = []
     for i, value in enumerate(d1[:-1]):
         if value == 0.0:
-            zero_crossings.append(x[i])
+            zero_crossings.append(float(x_arr[i]))
         elif d1[i] * d1[i + 1] < 0:
-            zero_crossings.append((x[i] + x[i + 1]) / 2.0)
+            zero_crossings.append(float((x_arr[i] + x_arr[i + 1]) / 2.0))
 
     return DerivativeResult(d1=d1, d2=d2, zero_crossings=zero_crossings)
