@@ -42,7 +42,7 @@ class BlueAPISession:
         self.data: dict[str, dict[str, list[Any]]] = {}
         self.current_scan_id: Any | None = None
         self._active_plot_windows: list[InteractivePlotWindow] = []
-        self.auto_analyze: bool = False
+        self.auto_analyse: bool = True
         click.echo("Connecting to BlueAPI service...")
         self.bc = BlueapiClient.from_config(self.config)
         self.bc.login()
@@ -185,7 +185,7 @@ class BlueAPISession:
         y: str | None = None,
         guess: Any | None = None,
     ) -> FitResult:
-        """Perform Gaussian fit and Center of Mass calculation on scan data."""
+        """Perform Gaussian fit and Centre of Mass calculation on scan data."""
         if scan_id is None:
             scan_id = next(reversed(self.data))
         if x and y:
@@ -201,7 +201,7 @@ class BlueAPISession:
         com_res = calculate_com(x_data, y_data)
         df_res = calculate_derivatives(x_data, y_data)
         click.echo(
-            f"Fit (scan {scan_id}): center={g_res.best_values['center']:.4f}, "
+            f"Fit (scan {scan_id}): centre={g_res.best_values['center']:.4f}, "
             f"FWHM={g_res.params['fwhm'].value:.4f}, COM={com_res:.4f}"
         )
         return FitResult(gaussian=g_res, com=com_res, df=df_res)
@@ -286,17 +286,21 @@ class BlueAPISession:
                     )
                     if self.current_scan_id is not None:
                         self._save_scan_to_cache(str(self.current_scan_id))
-                        if self.auto_analyze:
+                        if self.auto_analyse:
                             try:
                                 fit_res = self.fit_scan(self.current_scan_id)
-                                p_cen = fit_res.gaussian.best_values["centre"]
+                                p_cen = fit_res.gaussian.best_values["center"]
                                 com = fit_res.com
                                 zc = fit_res.df.zero_crossings
-                                self.data[self.current_scan_id] = {
-                                    "centre": [p_cen],
-                                    "com": [com],
-                                    "zero_crossing": zc,
-                                }
+                                self.data[self.current_scan_id].update(
+                                    {
+                                        "centre": [p_cen],
+                                        "com": [com],
+                                        "zero_crossing": zc,
+                                        "max_slope_x": [fit_res.df.max_slope_x],
+                                        "min_slope_x": [fit_res.df.min_slope_x],
+                                    }
+                                )
 
                             except Exception as e:
                                 click.echo(f"Auto-fit failed: {e}")

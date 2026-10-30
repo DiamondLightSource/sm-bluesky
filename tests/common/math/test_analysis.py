@@ -169,6 +169,27 @@ def test_derivatives_non_uniform_grid() -> None:
     assert res.d2 == pytest.approx(np.zeros_like(x), abs=1e-3)
 
 
+def test_derivatives_square_wave_edges() -> None:
+    x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+    y = np.array([1.0, 4.0, 20.0, 20.0, 20.0, 4.0, 1.0, 0.5, 0.2])
+
+    res = calculate_derivatives(x, y)
+    assert res.max_slope_x == pytest.approx(2.0)
+    assert res.min_slope_x == pytest.approx(6.0)
+
+
+def test_derivatives_step_function() -> None:
+    x = np.linspace(0, 10, 201)
+    y_rising = 1.0 / (1.0 + np.exp(-10.0 * (x - 4.5)))
+    y_falling = 1.0 - y_rising
+
+    res_rising = calculate_derivatives(x, y_rising)
+    assert res_rising.max_slope_x == pytest.approx(4.5, abs=0.05)
+
+    res_falling = calculate_derivatives(x, y_falling)
+    assert res_falling.min_slope_x == pytest.approx(4.5, abs=0.05)
+
+
 def test_derivatives_insufficient_points_raises() -> None:
     with pytest.raises(ValueError, match="At least 4 data points are needed"):
         calculate_derivatives([1.0], [5.0])

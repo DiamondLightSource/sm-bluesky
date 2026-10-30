@@ -15,6 +15,8 @@ class DerivativeResult:
 
     d1: NDArray[np.float64]
     d2: NDArray[np.float64]
+    max_slope_x: float
+    min_slope_x: float
     zero_crossings: list[float]
 
 
@@ -33,7 +35,7 @@ def calculate_com(
     y: Sequence[float] | np.ndarray,
     subtract_baseline: bool = True,
 ) -> float:
-    """Calculate Center of Mass (COM) of 1D data.
+    """Calculate Centre of Mass (COM) of 1D data.
 
     Parameters
     ----------
@@ -47,7 +49,7 @@ def calculate_com(
     Returns
     -------
     float
-        The calculated Center of Mass along the x axis.
+        The calculated Centre of Mass along the x axis.
     """
     x_arr, y_arr = _get_xy_ndarray(x, y)
     y_weight = y_arr - np.min(y_arr) if subtract_baseline else y_arr
@@ -64,7 +66,7 @@ def fit_gaussian(
 ) -> ModelResult:
     """Fit a 1D Gaussian to (x, y) data.
 
-    Model: y(x) = baseline + amplitude * exp(-(x - center)^2 / (2 * sigma^2))
+    Model: y(x) = baseline + amplitude * exp(-(x - centre)^2 / (2 * sigma^2))
 
     Parameters
     ----------
@@ -73,8 +75,8 @@ def fit_gaussian(
     y : Sequence[float] | np.ndarray
         Dependent variable array.
     guess : tuple or dict, optional
-        Initial parameter guess. If tuple: (amplitude, center, sigma, intercept,slope).
-        If dict: keys {"amplitude", "center", "sigma", , intercept, slope(optional)}.
+        Initial parameter guess. If tuple: (amplitude, centre, sigma, intercept,slope).
+        If dict: keys {"amplitude", "centre", "sigma", , intercept, slope(optional)}.
         If None, initial guesses are estimated automatically.
 
     Returns
@@ -92,10 +94,10 @@ def fit_gaussian(
     elif isinstance(guess, dict):
         params = model.make_params(False, **guess)
     else:
-        amp, center, sigma, intercept = guess[:4]
+        amp, centre, sigma, intercept = guess[:4]
         slope = guess[4] if len(guess) > 4 else 0.0
         params = model.make_params(
-            amplitude=amp, center=center, sigma=sigma, intercept=intercept, slope=slope
+            amplitude=amp, center=centre, sigma=sigma, intercept=intercept, slope=slope
         )
     output = model.fit(y_arr, params=params, x=x_arr)
     return output
@@ -122,6 +124,8 @@ def calculate_derivatives(
     x_arr, y_arr = _get_xy_ndarray(x, y)
     d1 = np.gradient(y_arr, x_arr, edge_order=1)
     d2 = np.gradient(d1, x_arr, edge_order=2)
+    max_slope_x = float(x_arr[np.argmax(d1)])
+    min_slope_x = float(x_arr[np.argmin(d1)])
     zero_crossings = []
     for i, value in enumerate(d1[:-1]):
         if value == 0.0:
@@ -129,4 +133,10 @@ def calculate_derivatives(
         elif d1[i] * d1[i + 1] < 0:
             zero_crossings.append(float((x_arr[i] + x_arr[i + 1]) / 2.0))
 
-    return DerivativeResult(d1=d1, d2=d2, zero_crossings=zero_crossings)
+    return DerivativeResult(
+        d1=d1,
+        d2=d2,
+        max_slope_x=max_slope_x,
+        min_slope_x=min_slope_x,
+        zero_crossings=zero_crossings,
+    )
