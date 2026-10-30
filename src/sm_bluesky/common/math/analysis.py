@@ -119,7 +119,7 @@ def calculate_derivatives(
     Returns
     -------
     DerivativeResult
-        Contains d1 (dy/dx), d2 (d^2y/dx^2) and d2 zero_crossings.
+        Contains d1 (dy/dx), d2 (d^2y/dx^2), edges and zero_crossings.
     """
     x_arr, y_arr = _get_xy_ndarray(x, y)
     d1 = np.gradient(y_arr, x_arr, edge_order=1)
