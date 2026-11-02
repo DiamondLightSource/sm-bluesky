@@ -85,7 +85,7 @@ Create a ``.py`` file (for example, ``my_scans.py``) containing the plans and Py
     pl.step_scan([dev.idd_gap], [[dev.pgm.energy, [200, 300, 10]]])
 
     # Access the auto-fitted parameters from the last scan
-    print(f"Peak centre: {last_fit.centre}, COM: {last_fit.com}")
+    print(f"Peak centre: {last_fit.centre}, COM: {last_fit.com}, Zero crossings: {last_fit.zero_crossing}")
     print(f"Slopes: max={last_fit.max_slope_x}, min={last_fit.min_slope_x}")
 
 Running the Script
@@ -153,7 +153,13 @@ You can also configure preferred fit axes or run fits manually on any scan:
     res = fit_scan(scan_id="30", x="pgm-energy", y="det1")
 
     # Access the latest fitted summary parameters via last_fit
-    print(last_fit.centre, last_fit.com, last_fit.max_slope_x, last_fit.min_slope_x)
+    print(
+        last_fit.centre,
+        last_fit.com,
+        last_fit.max_slope_x,
+        last_fit.min_slope_x,
+        last_fit.zero_crossing,
+    )
 
 Interactive Plotting
 ^^^^^^^^^^^^^^^^^^^^
