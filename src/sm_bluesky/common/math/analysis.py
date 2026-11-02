@@ -90,7 +90,8 @@ def fit_gaussian(
     model = peak_0 + line
     if not guess:
         params = peak_0.guess(data=y_arr, x=x_arr)
-        params.update(line.guess(data=y_arr, x=x_arr))
+        bkg_points = y_arr <= np.percentile(y_arr, 20)
+        params.update(line.guess(data=y_arr[bkg_points], x=x_arr[bkg_points]))
     elif isinstance(guess, dict):
         params = model.make_params(False, **guess)
     else:
