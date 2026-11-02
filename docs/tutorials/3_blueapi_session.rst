@@ -57,6 +57,9 @@ Once the interactive IPython shell is running, you have access to:
 * ``scan_data``: A dictionary containing all collected event data from your scans.
 * ``plot(scan_id=None, cmap="viridis")``: Opens an interactive visualisation window.
 * ``run(script)``: Executes a Python script inside the active session namespace (a shortcut for ``%run -i <script>``).
+* ``fit_scan(scan_id=None, x=None, y=None, guess=None)``: Performs a 1D Gaussian fit, centre-of-mass (COM) calculation, and derivative on scan data.
+* ``set_fit_axes(x=None, y=None)``: Sets preferred X and Y channel names for ``fit_scan()`` for post-scan analysis.
+* ``last_fit``: Stored the latest fitted summary parameters (``centre``, ``com``, ``max_slope_x``, ``min_slope_x``) for interactive use and scripting.
 
 Writing & Running Scan Scripts
 ------------------------------
@@ -80,6 +83,10 @@ Create a ``.py`` file (for example, ``my_scans.py``) containing the plans and Py
 
     # Stack a step scan afterwards
     pl.step_scan([dev.idd_gap], [[dev.pgm.energy, [200, 300, 10]]])
+
+    # Access the auto-fitted parameters from the last scan
+    print(f"Peak centre: {last_fit.centre}, COM: {last_fit.com}")
+    print(f"Slopes: max={last_fit.max_slope_x}, min={last_fit.min_slope_x}")
 
 Running the Script
 ^^^^^^^^^^^^^^^^^^
@@ -123,6 +130,30 @@ Live data is stored in the ``scan_data`` dictionary, which is keyed first by the
     # Or access data from the most recent scan
     last_scan_id = next(reversed(scan_data))
     print(scan_data[last_scan_id])
+
+Scan Fitting & Auto-Analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default (``auto_analyse=True``), ``BlueAPISession`` automatically analyses each scan when it completes:
+
+* Fits a 1D Gaussian plus linear background to the scan data.
+* Calculates the centre of mass (COM) and 1st/2nd numerical derivatives (``d1``, ``d2``).
+* Appends the derived curves (``gaussian``, ``d1``, ``d2``) and scalar metrics (``centre``, ``com``, ``zero_crossing``, ``max_slope_x``, ``min_slope_x``) to ``scan_data[scan_id]``.
+* Updates ``last_fit`` with ``centre``, ``com``, ``max_slope_x``, and ``min_slope_x``.
+
+You can also configure preferred fit axes or run fits manually on any scan:
+
+.. code-block:: python
+
+    # Set preferred X and Y channels for auto-analysis and fit_scan()
+    set_fit_axes(x="pgm-energy", y="det1")
+
+    # Fit the most recent scan (or pass a specific scan_id, x, y, or initial guess)
+    res = fit_scan()
+    res = fit_scan(scan_id="30", x="pgm-energy", y="det1")
+
+    # Access the latest fitted summary parameters via last_fit
+    print(last_fit.centre, last_fit.com, last_fit.max_slope_x, last_fit.min_slope_x)
 
 Interactive Plotting
 ^^^^^^^^^^^^^^^^^^^^
