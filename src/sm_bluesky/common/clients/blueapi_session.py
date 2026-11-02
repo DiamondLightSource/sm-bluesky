@@ -34,6 +34,14 @@ class FitResult:
     df: DerivativeResult
 
 
+@dataclass
+class LastFit:
+    centre: float | None = None
+    com: float | None = None
+    max_slope_x: float | None = None
+    min_slope_x: float | None = None
+
+
 class BlueAPISession:
     def __init__(
         self, config: ApplicationConfig, instrument_session: str | None = None
@@ -45,6 +53,7 @@ class BlueAPISession:
         self.auto_analyse: bool = True
         self.preferred_x: str | None = None
         self.preferred_y: str | None = None
+        self.last_fit: LastFit = LastFit()
         click.echo("Connecting to BlueAPI service...")
         self.bc = BlueapiClient.from_config(self.config)
         self.bc.login()
@@ -135,6 +144,7 @@ class BlueAPISession:
                 "run": self.run,
                 "fit_scan": self.fit_scan,
                 "set_fit_axes": self.set_fit_axes,
+                "last_fit": self.last_fit,
             },
         )
 
@@ -215,6 +225,10 @@ class BlueAPISession:
             f"Fit (scan {scan_id}): centre={g_res.best_values['center']:.4f}, "
             f"FWHM={g_res.params['fwhm'].value:.4f}, COM={com_res:.4f}"
         )
+        self.last_fit.centre = float(g_res.best_values["center"])
+        self.last_fit.com = com_res
+        self.last_fit.max_slope_x = df_res.max_slope_x
+        self.last_fit.min_slope_x = df_res.min_slope_x
         return FitResult(gaussian=g_res, com=com_res, df=df_res)
 
     def print_plans(self) -> None:
@@ -304,7 +318,7 @@ class BlueAPISession:
                                 zc = fit_res.df.zero_crossings
                                 self.data[self.current_scan_id].update(
                                     {
-                                        "fit": fit_res.gaussian.best_fit.tolist(),
+                                        "gaussian": fit_res.gaussian.best_fit.tolist(),
                                         "d1": fit_res.df.d1.tolist(),
                                         "d2": fit_res.df.d2.tolist(),
                                         "centre": [p_cen],
