@@ -26,7 +26,7 @@ class PlotMode(StrEnum):
 
 DEFAULT_CMAP = "viridis"
 NO_FIELDS = "(no data)"
-DERIVED_Y_FIELDS = ("fit", "d1", "d2")
+DERIVED_Y_FIELDS = ("gaussian", "d1", "d2")
 SCALAR_META_FIELDS = {
     "centre",
     "com",

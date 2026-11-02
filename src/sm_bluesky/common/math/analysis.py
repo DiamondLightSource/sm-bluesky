@@ -76,7 +76,7 @@ def fit_gaussian(
         Dependent variable array.
     guess : tuple or dict, optional
         Initial parameter guess. If tuple: (amplitude, centre, sigma, intercept,slope).
-        If dict: keys {"amplitude", "centre", "sigma", , intercept, slope(optional)}.
+        If dict: keys {"amplitude", "center", "sigma", , intercept, slope(optional)}.
         If None, initial guesses are estimated automatically.
 
     Returns
