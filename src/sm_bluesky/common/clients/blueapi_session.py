@@ -41,6 +41,7 @@ class LastFit:
     com: float | None = None
     max_slope_x: float | None = None
     min_slope_x: float | None = None
+    zero_crossing: list[float] | None = None
 
 
 class BlueAPISession:
@@ -233,12 +234,14 @@ class BlueAPISession:
         df_res = calculate_derivatives(x_data, y_data, log=use_log)
         click.echo(
             f"Fit (scan {scan_id}): centre={g_res.best_values['center']:.4f}, "
-            f"FWHM={g_res.params['fwhm'].value:.4f}, COM={com_res:.4f}"
+            f"FWHM={g_res.params['fwhm'].value:.4f}, COM={com_res:.4f}, "
+            f"zero_crossing={df_res.zero_crossings}"
         )
         self.last_fit.centre = float(g_res.best_values["center"])
         self.last_fit.com = com_res
         self.last_fit.max_slope_x = df_res.max_slope_x
         self.last_fit.min_slope_x = df_res.min_slope_x
+        self.last_fit.zero_crossing = df_res.zero_crossings
         return FitResult(gaussian=g_res, com=com_res, df=df_res)
 
     def print_plans(self) -> None:

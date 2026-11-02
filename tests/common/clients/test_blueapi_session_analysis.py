@@ -68,8 +68,12 @@ def test_fit_scan_defaults_to_latest_scan_and_auto_resolves_channels(
     assert populated_session.last_fit.com == pytest.approx(5.0, abs=0.2)
     assert populated_session.last_fit.max_slope_x == pytest.approx(res.df.max_slope_x)
     assert populated_session.last_fit.min_slope_x == pytest.approx(res.df.min_slope_x)
+    assert populated_session.last_fit.zero_crossing == [pytest.approx(5.0, abs=0.2)]
     assert any(
-        "Fit" in str(c) or "centre" in str(c) or "COM" in str(c)
+        "Fit" in str(c)
+        and "centre=" in str(c)
+        and "COM=" in str(c)
+        and "zero_crossing=[5.0]" in str(c)
         for c in mock_echo.call_args_list
     )
 
@@ -177,7 +181,10 @@ def test_auto_analyse_triggers_on_scan_stop(
     )
 
     assert any(
-        "Centre" in str(c) or "COM" in str(c) or "Fit" in str(c)
+        "Fit" in str(c)
+        and "centre=" in str(c)
+        and "COM=" in str(c)
+        and "zero_crossing=[4.0]" in str(c)
         for c in mock_echo.call_args_list
     )
     assert session.data["auto_scan_1"]["centre"][0] == pytest.approx(4.0, rel=0.01)
@@ -192,6 +199,7 @@ def test_auto_analyse_triggers_on_scan_stop(
     assert session.last_fit.com == pytest.approx(4.0, rel=0.01)
     assert session.last_fit.max_slope_x == pytest.approx(2.0)
     assert session.last_fit.min_slope_x == pytest.approx(6.0)
+    assert session.last_fit.zero_crossing == [4.0]
 
     callback(
         DataEvent(

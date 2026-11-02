@@ -59,7 +59,7 @@ Once the interactive IPython shell is running, you have access to:
 * ``run(script)``: Executes a Python script inside the active session namespace (a shortcut for ``%run -i <script>``).
 * ``fit_scan(scan_id=None, x=None, y=None, guess=None, log_df=None)``: Performs a 1D Gaussian fit, centre-of-mass (COM) calculation, and derivative on scan data.
 * ``set_fit_axes(x=None, y=None, log_df=False)``: Sets preferred X and Y channel names (and optional log derivative flag) for ``fit_scan()`` for post-scan analysis.
-* ``last_fit``: Stores the latest fitted summary parameters (``centre``, ``com``, ``max_slope_x``, ``min_slope_x``) for interactive use and scripting.
+* ``last_fit``: Stores the latest fitted summary parameters (``centre``, ``com``, ``max_slope_x``, ``min_slope_x``, ``zero_crossing``) for interactive use and scripting.
 
 Writing & Running Scan Scripts
 ------------------------------
@@ -139,7 +139,7 @@ By default (``auto_analyse=True``), ``BlueAPISession`` automatically analyses ea
 * Fits a 1D Gaussian plus linear background to the scan data.
 * Calculates the centre of mass (COM) and 1st/2nd numerical derivatives (``d1``, ``d2``).
 * Appends the derived curves (``gaussian``, ``d1``, ``d2``) and scalar metrics (``centre``, ``com``, ``zero_crossing``, ``max_slope_x``, ``min_slope_x``) to ``scan_data[scan_id]``.
-* Updates ``last_fit`` with ``centre``, ``com``, ``max_slope_x``, and ``min_slope_x``.
+* Updates ``last_fit`` with ``centre``, ``com``, ``max_slope_x``, ``min_slope_x``, and ``zero_crossing``.
 
 You can also configure preferred fit axes or run fits manually on any scan:
 

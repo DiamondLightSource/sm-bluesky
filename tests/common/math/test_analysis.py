@@ -248,3 +248,12 @@ def test_derivatives_log_flag() -> None:
     res_non_pos = calculate_derivatives([1.0, 2.0, 3.0], [1.0, 0.0, 2.0], log=True)
     assert res_non_pos.d1.size == 0
     assert np.isnan(res_non_pos.max_slope_x)
+
+
+def test_derivatives_multiple_peaks_zero_crossings() -> None:
+    x = np.linspace(0, 10, 501)
+    y = np.exp(-((x - 3.0) ** 2) / 0.5) + np.exp(-((x - 7.0) ** 2) / 0.5)
+
+    res = calculate_derivatives(x, y)
+    assert len(res.zero_crossings) == 3
+    assert res.zero_crossings == pytest.approx([3.0, 5.0, 7.0], abs=0.05)
