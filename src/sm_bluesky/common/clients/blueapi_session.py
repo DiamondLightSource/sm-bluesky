@@ -11,6 +11,7 @@ from typing import Any
 
 import click
 import matplotlib.pyplot as plt
+import numpy as np
 from blueapi.client import BlueapiClient
 from blueapi.client.event_bus import AnyEvent
 from blueapi.config import ApplicationConfig
@@ -313,21 +314,26 @@ class BlueAPISession:
                         if self.auto_analyse:
                             try:
                                 fit_res = self.fit_scan(self.current_scan_id)
-                                p_cen = fit_res.gaussian.best_values["center"]
-                                com = fit_res.com
-                                zc = fit_res.df.zero_crossings
-                                self.data[self.current_scan_id].update(
-                                    {
-                                        "gaussian": fit_res.gaussian.best_fit.tolist(),
-                                        "d1": fit_res.df.d1.tolist(),
-                                        "d2": fit_res.df.d2.tolist(),
-                                        "centre": [p_cen],
-                                        "com": [com],
-                                        "zero_crossing": zc,
-                                        "max_slope_x": [fit_res.df.max_slope_x],
-                                        "min_slope_x": [fit_res.df.min_slope_x],
-                                    }
-                                )
+                                scan_entry = self.data[self.current_scan_id]
+                                if fit_res.gaussian.success:
+                                    scan_entry["gaussian"] = (
+                                        fit_res.gaussian.best_fit.tolist()
+                                    )
+                                    scan_entry["centre"] = [
+                                        fit_res.gaussian.best_values["center"]
+                                    ]
+                                if not np.isnan(fit_res.com):
+                                    scan_entry["com"] = [fit_res.com]
+                                if fit_res.df.d1.size > 0:
+                                    scan_entry.update(
+                                        {
+                                            "d1": fit_res.df.d1.tolist(),
+                                            "d2": fit_res.df.d2.tolist(),
+                                            "zero_crossing": fit_res.df.zero_crossings,
+                                            "max_slope_x": [fit_res.df.max_slope_x],
+                                            "min_slope_x": [fit_res.df.min_slope_x],
+                                        }
+                                    )
 
                             except Exception as e:
                                 click.echo(f"Auto-fit failed: {e}")

@@ -25,8 +25,6 @@ def _get_xy_ndarray(
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     if len(x) != len(y):
         raise ValueError("x, y array must be same length")
-    if len(x) < 4 or len(y) < 4:
-        raise ValueError("At least 4 data points are needed")
     return np.asarray(x, dtype=float), np.asarray(y, dtype=float)
 
 
@@ -49,11 +47,12 @@ def calculate_com(
     Returns
     -------
     float
-        The calculated Centre of Mass along the x axis.
+        The calculated Centre of Mass along the x axis, or NaN if insufficient
+        or flat data.
     """
     x_arr, y_arr = _get_xy_ndarray(x, y)
-    if np.allclose(y_arr, y_arr[0]):
-        raise ValueError("Y is flat/Zero")
+    if len(x_arr) < 2 or np.allclose(y_arr, y_arr[0]):
+        return float("nan")
 
     if subtract_baseline:
         is_negative = (np.median(y_arr) - np.min(y_arr)) > (
@@ -62,6 +61,9 @@ def calculate_com(
         y_weight = np.max(y_arr) - y_arr if is_negative else y_arr - np.min(y_arr)
     else:
         y_weight = y_arr
+
+    if np.isclose(np.sum(y_weight), 0.0):
+        return float("nan")
 
     return float(np.average(x_arr, weights=y_weight))
 
@@ -73,7 +75,7 @@ def fit_gaussian(
 ) -> ModelResult:
     """Fit a 1D Gaussian to (x, y) data.
 
-    Model: y(x) = baseline + amplitude * exp(-(x - centre)^2 / (2 * sigma^2))
+    Model: y(x) = slope*x + intercept + amplitude * exp(-(x - centre)^2 / (2 * sigma^2))
 
     Parameters
     ----------
@@ -95,14 +97,31 @@ def fit_gaussian(
     peak_0 = GaussianModel()
     line = LinearModel()
     model = peak_0 + line
+    if len(x_arr) < 5 or np.allclose(y_arr, y_arr[0]):
+        params = model.make_params(
+            amplitude=np.nan,
+            center=np.nan,
+            sigma=np.nan,
+            intercept=np.nan,
+            slope=np.nan,
+        )
+        res = ModelResult(model, params)
+        res.success = False
+        res.best_fit = np.array([], dtype=float)
+        res.best_values = params.valuesdict()
+        return res
     if not guess:
         is_negative = bool(
             (np.median(y_arr) - np.min(y_arr)) > (np.max(y_arr) - np.median(y_arr))
         )
         if is_negative:
             bkg_points = y_arr >= np.percentile(y_arr, 80)
+            if np.sum(bkg_points) < 2:
+                bkg_points = np.argsort(y_arr)[-2:]
         else:
             bkg_points = y_arr <= np.percentile(y_arr, 20)
+            if np.sum(bkg_points) < 2:
+                bkg_points = np.argsort(y_arr)[:2]
         line_params = line.guess(data=y_arr[bkg_points], x=x_arr[bkg_points])
         y_sub = y_arr - line.eval(line_params, x=x_arr)
         params = peak_0.guess(data=y_sub, x=x_arr, negative=is_negative)
@@ -138,6 +157,14 @@ def calculate_derivatives(
         Contains d1 (dy/dx), d2 (d^2y/dx^2), edges and zero_crossings.
     """
     x_arr, y_arr = _get_xy_ndarray(x, y)
+    if len(x_arr) < 3:
+        return DerivativeResult(
+            d1=np.array([], dtype=float),
+            d2=np.array([], dtype=float),
+            max_slope_x=float("nan"),
+            min_slope_x=float("nan"),
+            zero_crossings=[],
+        )
     d1 = np.gradient(y_arr, x_arr, edge_order=1)
     d2 = np.gradient(d1, x_arr, edge_order=2)
     max_slope_x = float(x_arr[np.argmax(d1)])

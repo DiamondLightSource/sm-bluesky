@@ -107,9 +107,14 @@ def test_fit_gaussian_noisy_data() -> None:
     assert res.best_values["sigma"] == pytest.approx(2.0, abs=0.2)
 
 
-def test_fit_gaussian_insufficient_points_raises() -> None:
-    with pytest.raises(ValueError, match="4 data points are needed"):
-        fit_gaussian([1.0, 2.0, 3.0], [10.0, 20.0, 10.0])
+def test_fit_gaussian_insufficient_or_flat_points() -> None:
+    res_short = fit_gaussian([1.0, 2.0, 3.0], [10.0, 20.0, 10.0])
+    assert res_short.success is False
+    assert np.isnan(res_short.best_values["center"])
+
+    res_flat = fit_gaussian([1.0, 2.0, 3.0, 4.0, 5.0], [5.0, 5.0, 5.0, 5.0, 5.0])
+    assert res_flat.success is False
+    assert np.isnan(res_flat.best_values["center"])
 
 
 def test_fit_gaussian_dimension_mismatch_raises() -> None:
@@ -157,11 +162,10 @@ def test_calculate_com_uneven_spacing() -> None:
     assert com == pytest.approx(1.5, abs=1e-4)
 
 
-def test_calculate_com_flat_data_raises() -> None:
+def test_calculate_com_flat_data_returns_nan() -> None:
     x = np.linspace(0, 10, 20)
     y = np.full_like(x, 5.0)
-    with pytest.raises(ValueError, match="Y is flat/Zero"):
-        calculate_com(x, y)
+    assert np.isnan(calculate_com(x, y))
 
 
 def test_calculate_com_dimension_mismatch_raises() -> None:
@@ -169,9 +173,9 @@ def test_calculate_com_dimension_mismatch_raises() -> None:
         calculate_com([1.0, 2.0, 3.0], [1.0, 2.0])
 
 
-def test_calculate_com_empty_raises() -> None:
-    with pytest.raises(ValueError, match="At least 4 data points are needed"):
-        calculate_com([], [])
+def test_calculate_com_empty_returns_nan() -> None:
+    assert np.isnan(calculate_com([], []))
+    assert np.isnan(calculate_com([1.0], [10.0]))
 
 
 @pytest.mark.parametrize("zero_crossing", [0, 3, -0.55])
@@ -219,9 +223,13 @@ def test_derivatives_step_function() -> None:
     assert res_falling.min_slope_x == pytest.approx(4.5, abs=0.05)
 
 
-def test_derivatives_insufficient_points_raises() -> None:
-    with pytest.raises(ValueError, match="At least 4 data points are needed"):
-        calculate_derivatives([1.0], [5.0])
+def test_derivatives_insufficient_points_returns_empty() -> None:
+    res = calculate_derivatives([1.0], [5.0])
+    assert res.d1.size == 0
+    assert res.d2.size == 0
+    assert np.isnan(res.max_slope_x)
+    assert np.isnan(res.min_slope_x)
+    assert res.zero_crossings == []
 
 
 def test_derivatives_dimension_mismatch_raises() -> None:
