@@ -107,7 +107,8 @@ def test_fit_scan_with_set_fit_axes(session: BlueAPISession) -> None:
         "det_noise": y_wrong,
         "det_roi": y_peak,
     }
-    session.set_fit_axes(y="det_roi")
+    session.set_fit_axes(y="det_roi", log_df=True)
+    assert session.log_df is True
     res = session.fit_scan(scan_id="scan_multi")
     assert res.gaussian.best_values["center"] == pytest.approx(5.0, abs=0.2)
 
@@ -191,6 +192,22 @@ def test_auto_analyse_triggers_on_scan_stop(
     assert session.last_fit.com == pytest.approx(4.0, rel=0.01)
     assert session.last_fit.max_slope_x == pytest.approx(2.0)
     assert session.last_fit.min_slope_x == pytest.approx(6.0)
+
+    callback(
+        DataEvent(
+            name="start",
+            doc={"scan_id": "empty_scan", "uid": "uid-empty", "time": 11},
+            task_id="task-empty",
+        )
+    )
+    callback(
+        DataEvent(
+            name="stop",
+            doc={"exit_status": "aborted", "time": 12, "uid": "uid-empty"},
+            task_id="task-empty",
+        )
+    )
+    mock_echo.assert_any_call("Auto-fit failed: Scan has no data")
 
 
 def test_auto_analyse_disabled_skips_fit(

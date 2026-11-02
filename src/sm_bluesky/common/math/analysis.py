@@ -62,9 +62,6 @@ def calculate_com(
     else:
         y_weight = y_arr
 
-    if np.isclose(np.sum(y_weight), 0.0):
-        return float("nan")
-
     return float(np.average(x_arr, weights=y_weight))
 
 
@@ -114,14 +111,10 @@ def fit_gaussian(
         is_negative = bool(
             (np.median(y_arr) - np.min(y_arr)) > (np.max(y_arr) - np.median(y_arr))
         )
-        if is_negative:
-            bkg_points = y_arr >= np.percentile(y_arr, 80)
-            if np.sum(bkg_points) < 2:
-                bkg_points = np.argsort(y_arr)[-2:]
-        else:
-            bkg_points = y_arr <= np.percentile(y_arr, 20)
-            if np.sum(bkg_points) < 2:
-                bkg_points = np.argsort(y_arr)[:2]
+        n_bkg = max(2, len(y_arr) // 5)
+        bkg_points = (
+            np.argsort(y_arr)[-n_bkg:] if is_negative else np.argsort(y_arr)[:n_bkg]
+        )
         line_params = line.guess(data=y_arr[bkg_points], x=x_arr[bkg_points])
         y_sub = y_arr - line.eval(line_params, x=x_arr)
         params = peak_0.guess(data=y_sub, x=x_arr, negative=is_negative)
@@ -141,6 +134,7 @@ def fit_gaussian(
 def calculate_derivatives(
     x: Sequence[float] | np.ndarray,
     y: Sequence[float] | np.ndarray,
+    log: bool = False,
 ) -> DerivativeResult:
     """Calculate 1st and 2nd derivatives of (x, y).
 
@@ -150,6 +144,8 @@ def calculate_derivatives(
         Independent variable array.
     y : Sequence[float] | np.ndarray
         Dependent variable array.
+    log : bool, optional
+        If True, take the natural logarithm of y before differentiating (default False).
 
     Returns
     -------
@@ -157,7 +153,7 @@ def calculate_derivatives(
         Contains d1 (dy/dx), d2 (d^2y/dx^2), edges and zero_crossings.
     """
     x_arr, y_arr = _get_xy_ndarray(x, y)
-    if len(x_arr) < 3:
+    if len(x_arr) < 3 or (log and np.any(y_arr <= 0)):
         return DerivativeResult(
             d1=np.array([], dtype=float),
             d2=np.array([], dtype=float),
@@ -165,6 +161,8 @@ def calculate_derivatives(
             min_slope_x=float("nan"),
             zero_crossings=[],
         )
+    if log:
+        y_arr = np.log(y_arr)
     d1 = np.gradient(y_arr, x_arr, edge_order=1)
     d2 = np.gradient(d1, x_arr, edge_order=2)
     max_slope_x = float(x_arr[np.argmax(d1)])

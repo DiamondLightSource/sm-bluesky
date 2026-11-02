@@ -235,3 +235,16 @@ def test_derivatives_insufficient_points_returns_empty() -> None:
 def test_derivatives_dimension_mismatch_raises() -> None:
     with pytest.raises(ValueError, match="x, y array must be same length"):
         calculate_derivatives([1.0, 2.0, 3.0], [1.0, 2.0])
+
+
+def test_derivatives_log_flag() -> None:
+    x = np.linspace(0, 10, 201)
+    mu = 3.0 / (1.0 + np.exp(-10.0 * (x - 4.5)))
+    y_transmission = np.exp(-mu)
+
+    res = calculate_derivatives(x, y_transmission, log=True)
+    assert res.min_slope_x == pytest.approx(4.5, abs=0.05)
+
+    res_non_pos = calculate_derivatives([1.0, 2.0, 3.0], [1.0, 0.0, 2.0], log=True)
+    assert res_non_pos.d1.size == 0
+    assert np.isnan(res_non_pos.max_slope_x)

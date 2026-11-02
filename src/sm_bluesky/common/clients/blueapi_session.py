@@ -54,6 +54,7 @@ class BlueAPISession:
         self.auto_analyse: bool = True
         self.preferred_x: str | None = None
         self.preferred_y: str | None = None
+        self.log_df: bool = False
         self.last_fit: LastFit = LastFit()
         click.echo("Connecting to BlueAPI service...")
         self.bc = BlueapiClient.from_config(self.config)
@@ -192,10 +193,16 @@ class BlueAPISession:
         window = InteractivePlotWindow(self.data, scan_id, cmap=cmap)
         self._active_plot_windows.append(window)
 
-    def set_fit_axes(self, x: str | None = None, y: str | None = None) -> None:
-        """Set preferred X and Y channel names for fit_scan and auto-analysis."""
+    def set_fit_axes(
+        self,
+        x: str | None = None,
+        y: str | None = None,
+        log_df: bool = False,
+    ) -> None:
+        """Set preferred X/Y channels and log-derivative flag for fit_scan."""
         self.preferred_x = x
         self.preferred_y = y
+        self.log_df = log_df
 
     def fit_scan(
         self,
@@ -203,6 +210,7 @@ class BlueAPISession:
         x: str | None = None,
         y: str | None = None,
         guess: Any | None = None,
+        log_df: bool | None = None,
     ) -> FitResult:
         """Perform Gaussian fit and Centre of Mass calculation on scan data."""
         if scan_id is None:
@@ -219,9 +227,10 @@ class BlueAPISession:
             x_data = scan[x_col] if x_col else list(range(1, len(y_data) + 1))
         else:
             raise ValueError("Scan has no data")
+        use_log = self.log_df if log_df is None else log_df
         g_res = fit_gaussian(x_data, y_data, guess)
         com_res = calculate_com(x_data, y_data)
-        df_res = calculate_derivatives(x_data, y_data)
+        df_res = calculate_derivatives(x_data, y_data, log=use_log)
         click.echo(
             f"Fit (scan {scan_id}): centre={g_res.best_values['center']:.4f}, "
             f"FWHM={g_res.params['fwhm'].value:.4f}, COM={com_res:.4f}"

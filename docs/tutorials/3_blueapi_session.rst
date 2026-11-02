@@ -57,9 +57,9 @@ Once the interactive IPython shell is running, you have access to:
 * ``scan_data``: A dictionary containing all collected event data from your scans.
 * ``plot(scan_id=None, cmap="viridis")``: Opens an interactive visualisation window.
 * ``run(script)``: Executes a Python script inside the active session namespace (a shortcut for ``%run -i <script>``).
-* ``fit_scan(scan_id=None, x=None, y=None, guess=None)``: Performs a 1D Gaussian fit, centre-of-mass (COM) calculation, and derivative on scan data.
-* ``set_fit_axes(x=None, y=None)``: Sets preferred X and Y channel names for ``fit_scan()`` for post-scan analysis.
-* ``last_fit``: Stored the latest fitted summary parameters (``centre``, ``com``, ``max_slope_x``, ``min_slope_x``) for interactive use and scripting.
+* ``fit_scan(scan_id=None, x=None, y=None, guess=None, log_df=None)``: Performs a 1D Gaussian fit, centre-of-mass (COM) calculation, and derivative on scan data.
+* ``set_fit_axes(x=None, y=None, log_df=False)``: Sets preferred X and Y channel names (and optional log derivative flag) for ``fit_scan()`` for post-scan analysis.
+* ``last_fit``: Stores the latest fitted summary parameters (``centre``, ``com``, ``max_slope_x``, ``min_slope_x``) for interactive use and scripting.
 
 Writing & Running Scan Scripts
 ------------------------------
