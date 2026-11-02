@@ -4,7 +4,11 @@ import pytest
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
 
-from sm_bluesky.common.clients.blueapi_session import BlueAPISession, FitResult
+from sm_bluesky.common.clients.blueapi_session import (
+    BlueAPISession,
+    FitResult,
+    LastFit,
+)
 
 
 @pytest.fixture
@@ -50,6 +54,7 @@ def populated_session(session: BlueAPISession) -> BlueAPISession:
 def test_fit_scan_defaults_to_latest_scan_and_auto_resolves_channels(
     populated_session: BlueAPISession, mock_echo: MagicMock
 ) -> None:
+    initial_last_fit = populated_session.last_fit
     res = populated_session.fit_scan()
 
     assert isinstance(res, FitResult)
@@ -58,6 +63,11 @@ def test_fit_scan_defaults_to_latest_scan_and_auto_resolves_channels(
     assert res.gaussian.params["height"] == pytest.approx(100.0, abs=10.0)
     assert res.com == pytest.approx(5.0, abs=0.2)
     assert res.df.zero_crossings == [pytest.approx(5.0, abs=0.2)]
+    assert populated_session.last_fit is initial_last_fit
+    assert populated_session.last_fit.centre == pytest.approx(5.0, abs=0.2)
+    assert populated_session.last_fit.com == pytest.approx(5.0, abs=0.2)
+    assert populated_session.last_fit.max_slope_x == pytest.approx(res.df.max_slope_x)
+    assert populated_session.last_fit.min_slope_x == pytest.approx(res.df.min_slope_x)
     assert any(
         "Fit" in str(c) or "centre" in str(c) or "COM" in str(c)
         for c in mock_echo.call_args_list
@@ -77,7 +87,6 @@ def test_fit_scan_with_user_guess(
 ) -> None:
     guess = (90.0, 4.8, 1.0, 1.0)
     res = populated_session.fit_scan(scan_id="scan_1", guess=guess)
-    assert isinstance(res, FitResult)
     assert isinstance(res, FitResult)
     assert res.gaussian.best_values["center"] == pytest.approx(5.0, abs=0.2)
 
@@ -118,22 +127,9 @@ def test_fit_scan_empty_scan_raises(session: BlueAPISession) -> None:
         session.fit_scan(scan_id="scan_empty")
 
 
-@patch("IPython.start_ipython")
-def test_start_shell_exports_analysis_utilities(
-    mock_start: MagicMock, session: BlueAPISession
-) -> None:
-    session.start_shell()
-    mock_start.assert_called_once()
-    user_ns = mock_start.call_args.kwargs["user_ns"]
-
-    assert "fit_scan" in user_ns
-    assert user_ns["fit_scan"] == session.fit_scan
-    assert "set_fit_axes" in user_ns
-    assert user_ns["set_fit_axes"] == session.set_fit_axes
-
-
-def test_auto_analyse_disabled_by_default(session: BlueAPISession) -> None:
+def test_auto_analyse_enabled_by_default(session: BlueAPISession) -> None:
     assert session.auto_analyse is True
+    assert session.last_fit == LastFit()
 
 
 def test_auto_analyse_triggers_on_scan_stop(
@@ -191,3 +187,32 @@ def test_auto_analyse_triggers_on_scan_stop(
     assert len(session.data["auto_scan_1"]["gaussian"]) == len(x_vals)
     assert len(session.data["auto_scan_1"]["d1"]) == len(x_vals)
     assert len(session.data["auto_scan_1"]["d2"]) == len(x_vals)
+    assert session.last_fit.centre == pytest.approx(4.0, rel=0.01)
+    assert session.last_fit.com == pytest.approx(4.0, rel=0.01)
+    assert session.last_fit.max_slope_x == pytest.approx(2.0)
+    assert session.last_fit.min_slope_x == pytest.approx(6.0)
+
+
+def test_auto_analyse_disabled_skips_fit(
+    session: BlueAPISession, mock_client_class: MagicMock
+) -> None:
+    session.auto_analyse = False
+    callback = mock_client_class.from_config.return_value.add_callback.call_args[0][0]
+
+    callback(
+        DataEvent(
+            name="start",
+            doc={"scan_id": "auto_scan_off", "uid": "uid-2", "time": 0},
+            task_id="task-2",
+        )
+    )
+    callback(
+        DataEvent(
+            name="stop",
+            doc={"exit_status": "success", "time": 1, "uid": "uid-2"},
+            task_id="task-2",
+        )
+    )
+
+    assert session.last_fit == LastFit()
+    assert "gaussian" not in session.data["auto_scan_off"]

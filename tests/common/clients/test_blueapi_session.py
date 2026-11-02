@@ -3,17 +3,12 @@ import threading
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pytest
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
 
 from sm_bluesky.common.cli import load_config
-from sm_bluesky.common.clients.blueapi_session import (
-    BlueAPISession,
-    FitResult,
-    LastFit,
-)
+from sm_bluesky.common.clients.blueapi_session import BlueAPISession
 
 
 def test_load_config_with_path(tmp_path: Path) -> None:
@@ -425,118 +420,3 @@ def test_run_script_no_active_session(
         f"Error: Cannot execute script {script.resolve()}: No active session found.",
         fg="red",
     )
-
-
-def test_set_fit_axes(session: BlueAPISession) -> None:
-    assert session.preferred_x is None
-    assert session.preferred_y is None
-    session.set_fit_axes("motor1", "det1")
-    assert session.preferred_x == "motor1"
-    assert session.preferred_y == "det1"
-
-
-@pytest.fixture
-def gaussian_peak() -> tuple[list[float], list[float]]:
-    x = np.linspace(0, 10, 21)
-    y = 5.0 + 50.0 * np.exp(-((x - 5.0) ** 2) / (2 * 1.0**2))
-    return x.tolist(), y.tolist()
-
-
-def test_fit_scan_two_columns_and_default_scan_id(
-    mock_echo: MagicMock,
-    session: BlueAPISession,
-    gaussian_peak: tuple[list[float], list[float]],
-) -> None:
-    x, y = gaussian_peak
-    session.data["1"] = {"motor": x, "det": y}
-    initial_last_fit = session.last_fit
-
-    res = session.fit_scan()
-
-    assert isinstance(res, FitResult)
-    assert session.last_fit is initial_last_fit
-    assert session.last_fit.centre == pytest.approx(5.0, abs=1e-2)
-    assert session.last_fit.com == pytest.approx(5.0, abs=1e-2)
-    assert session.last_fit.max_slope_x == pytest.approx(res.df.max_slope_x)
-    assert session.last_fit.min_slope_x == pytest.approx(res.df.min_slope_x)
-    assert res.gaussian.best_values["center"] == pytest.approx(5.0, abs=1e-2)
-    assert res.com == pytest.approx(5.0, abs=1e-2)
-    assert len(res.df.d1) == len(x)
-    assert any("Fit (scan 1):" in call.args[0] for call in mock_echo.call_args_list)
-
-
-def test_fit_scan_preferred_and_explicit_axes(
-    session: BlueAPISession,
-    gaussian_peak: tuple[list[float], list[float]],
-) -> None:
-    x, y = gaussian_peak
-    session.data["10"] = {"other": [1.0] * len(x), "energy": x, "signal": y}
-
-    session.set_fit_axes("energy", "signal")
-    res_pref = session.fit_scan("10")
-    assert res_pref.gaussian.best_values["center"] == pytest.approx(5.0, abs=1e-2)
-
-    res_explicit = session.fit_scan("10", x="energy", y="signal")
-    assert res_explicit.gaussian.best_values["center"] == pytest.approx(5.0, abs=1e-2)
-
-
-def test_fit_scan_single_column_uses_point_numbers(
-    session: BlueAPISession,
-    gaussian_peak: tuple[list[float], list[float]],
-) -> None:
-    _, y = gaussian_peak
-    session.data["2"] = {"det": y}
-
-    res = session.fit_scan("2")
-    assert isinstance(res, FitResult)
-    assert res.gaussian.best_values["center"] == pytest.approx(11.0, abs=1e-1)
-
-
-def test_fit_scan_empty_raises(session: BlueAPISession) -> None:
-    session.data["empty"] = {}
-    with pytest.raises(ValueError, match="Scan has no data"):
-        session.fit_scan("empty")
-
-
-def test_auto_analyse_stores_fit_and_updates_last_fit(
-    session: BlueAPISession,
-    callback,
-    gaussian_peak: tuple[list[float], list[float]],
-) -> None:
-    assert session.last_fit == LastFit()
-
-    callback(_start_event(scan_id=42, uid="uid42", task_id="task42"))
-
-    xs, ys = gaussian_peak
-    for i, (xv, yv) in enumerate(zip(xs, ys, strict=True), start=1):
-        callback(
-            _data_event({"motor": xv, "det": yv}, seq_num=i, time=i, task_id="task42")
-        )
-
-    callback(_stop_event(uid="uid42", time=100, task_id="task42"))
-
-    assert isinstance(session.last_fit, LastFit)
-    assert session.last_fit.centre == pytest.approx(5.0, abs=1e-2)
-    assert session.last_fit.com == pytest.approx(5.0, abs=1e-2)
-    assert session.last_fit.max_slope_x is not None
-    assert session.last_fit.min_slope_x is not None
-
-    scan_data = session.data["42"]
-    assert "gaussian" in scan_data
-    assert "d1" in scan_data
-    assert "d2" in scan_data
-    assert scan_data["centre"] == [pytest.approx(5.0, abs=1e-2)]
-    assert scan_data["com"] == [pytest.approx(5.0, abs=1e-2)]
-    assert "zero_crossing" in scan_data
-    assert "max_slope_x" in scan_data
-    assert "min_slope_x" in scan_data
-
-
-def test_auto_analyse_disabled_skips_fit(session: BlueAPISession, callback) -> None:
-    session.auto_analyse = False
-
-    callback(_start_event(scan_id=43, uid="uid43", task_id="task43"))
-    callback(_stop_event(uid="uid43", time=1, task_id="task43"))
-
-    assert session.last_fit == LastFit()
-    assert "gaussian" not in session.data["43"]
