@@ -606,7 +606,7 @@ def test_analysis_fields_filtered_in_1d_and_2d():
         "scan1": {
             "pgm-energy": [1.0, 2.0, 3.0, 4.0],
             "det1": [10.0, 50.0, 20.0, 5.0],
-            "fit": [11.0, 48.0, 21.0, 6.0],
+            "gaussian": [11.0, 48.0, 21.0, 6.0],
             "d1": [40.0, 5.0, -22.5, -15.0],
             "d2": [-35.0, -31.25, -10.0, 7.5],
             "centre": [2.2],
@@ -619,9 +619,9 @@ def test_analysis_fields_filtered_in_1d_and_2d():
     win = InteractivePlotWindow(data, initial_scan_id="scan1")
 
     active_fields = win.get_active_fields()
-    assert active_fields == ["det1", "pgm-energy", "fit", "d1", "d2"]
+    assert active_fields == ["det1", "pgm-energy", "gaussian", "d1", "d2"]
     assert win.active_y_states["det1"] is True
-    assert win.active_y_states["fit"] is False
+    assert win.active_y_states["gaussian"] is False
 
     x_labels = [t.get_text() for t in win.widgets["radio_x"].labels]
     assert x_labels == ["Point number", "det1", "pgm-energy"]
