@@ -33,6 +33,27 @@ def test_fit_gaussian_clean_peak() -> None:
     assert res.best_values["intercept"] == pytest.approx(true_baseline, abs=0.1)
 
 
+def test_fit_gaussian_negative_peak() -> None:
+    true_x0 = 11.2
+    true_sigma = 1.5
+    true_amplitude = -120.0
+    true_baseline = 50.0
+
+    x = np.linspace(5, 20, 151)
+    y = true_baseline + (true_amplitude / (true_sigma * np.sqrt(2 * np.pi))) * np.exp(
+        -((x - true_x0) ** 2) / (2 * true_sigma**2)
+    )
+
+    res = fit_gaussian(x, y)
+
+    assert isinstance(res, ModelResult)
+    assert res.success is True
+    assert res.best_values["center"] == pytest.approx(true_x0, abs=1e-2)
+    assert res.best_values["sigma"] == pytest.approx(true_sigma, abs=1e-2)
+    assert res.best_values["amplitude"] == pytest.approx(true_amplitude, abs=0.1)
+    assert res.best_values["intercept"] == pytest.approx(true_baseline, abs=0.1)
+
+
 def test_fit_gaussian_custom_guess_tuple() -> None:
     x0, sigma, amp, base = 5.0, 1.2, 80.0, 5.0
     x = np.linspace(0, 10, 101)
@@ -119,6 +140,14 @@ def test_calculate_com_with_constant_background() -> None:
 
     com_raw = calculate_com(x, y, subtract_baseline=False)
     assert abs(com_raw - 4.0) > abs(com_subtracted - 4.0)
+
+
+def test_calculate_com_negative_peak() -> None:
+    x = np.linspace(0, 10, 101)
+    y = 50.0 - 25.0 * np.exp(-((x - 3.5) ** 2) / (2 * 0.8**2))
+
+    com = calculate_com(x, y, subtract_baseline=True)
+    assert com == pytest.approx(3.5, abs=0.05)
 
 
 def test_calculate_com_uneven_spacing() -> None:

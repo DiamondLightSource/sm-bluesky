@@ -52,9 +52,16 @@ def calculate_com(
         The calculated Centre of Mass along the x axis.
     """
     x_arr, y_arr = _get_xy_ndarray(x, y)
-    y_weight = y_arr - np.min(y_arr) if subtract_baseline else y_arr
-    if np.allclose(y_weight, y_arr[0]) or np.allclose(y_weight, 0.0):
+    if np.allclose(y_arr, y_arr[0]):
         raise ValueError("Y is flat/Zero")
+
+    if subtract_baseline:
+        is_negative = (np.median(y_arr) - np.min(y_arr)) > (
+            np.max(y_arr) - np.median(y_arr)
+        )
+        y_weight = np.max(y_arr) - y_arr if is_negative else y_arr - np.min(y_arr)
+    else:
+        y_weight = y_arr
 
     return float(np.average(x_arr, weights=y_weight))
 
@@ -89,9 +96,17 @@ def fit_gaussian(
     line = LinearModel()
     model = peak_0 + line
     if not guess:
-        params = peak_0.guess(data=y_arr, x=x_arr)
-        bkg_points = y_arr <= np.percentile(y_arr, 20)
-        params.update(line.guess(data=y_arr[bkg_points], x=x_arr[bkg_points]))
+        is_negative = bool(
+            (np.median(y_arr) - np.min(y_arr)) > (np.max(y_arr) - np.median(y_arr))
+        )
+        if is_negative:
+            bkg_points = y_arr >= np.percentile(y_arr, 80)
+        else:
+            bkg_points = y_arr <= np.percentile(y_arr, 20)
+        line_params = line.guess(data=y_arr[bkg_points], x=x_arr[bkg_points])
+        y_sub = y_arr - line.eval(line_params, x=x_arr)
+        params = peak_0.guess(data=y_sub, x=x_arr, negative=is_negative)
+        params.update(line_params)
     elif isinstance(guess, dict):
         params = model.make_params(False, **guess)
     else:
