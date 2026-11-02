@@ -6878,8 +6878,6 @@ client = [
     { name = "ipython" },
     { name = "lmfit" },
     { name = "matplotlib" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
 server = [
     { name = "blueapi" },
@@ -6926,7 +6924,6 @@ requires-dist = [
     { name = "pyepics", marker = "extra == 'testing'" },
     { name = "pyserial", marker = "extra == 'server'" },
     { name = "scanspec" },
-    { name = "scipy", marker = "extra == 'client'" },
     { name = "zhinst-core", marker = "extra == 'server'" },
 ]
 provides-extras = ["testing", "client", "server"]

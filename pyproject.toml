@@ -32,7 +32,7 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 testing = ["jupyter", "pyepics"]
-client = ["ipython", "matplotlib", "blueapi", "scipy", "lmfit"]
+client = ["ipython", "matplotlib", "blueapi", "lmfit"]
 server = ["pyserial", "zhinst-core", "blueapi"]
 [dependency-groups]
 dev = [
