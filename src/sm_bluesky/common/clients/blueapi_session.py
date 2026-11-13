@@ -3,6 +3,7 @@ import os
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
@@ -10,12 +11,37 @@ from typing import Any
 
 import click
 import matplotlib.pyplot as plt
+import numpy as np
 from blueapi.client import BlueapiClient
 from blueapi.client.event_bus import AnyEvent
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
+from lmfit.model import ModelResult
+
+from sm_bluesky.common.math import (
+    DerivativeResult,
+    calculate_com,
+    calculate_derivatives,
+    fit_gaussian,
+)
 
 from .interactive_plot import DEFAULT_CMAP, InteractivePlotWindow
+
+
+@dataclass
+class FitResult:
+    gaussian: ModelResult
+    com: float
+    df: DerivativeResult
+
+
+@dataclass
+class LastFit:
+    centre: float | None = None
+    com: float | None = None
+    max_slope_x: float | None = None
+    min_slope_x: float | None = None
+    zero_crossing: list[float] | None = None
 
 
 class BlueAPISession:
@@ -26,6 +52,11 @@ class BlueAPISession:
         self.data: dict[str, dict[str, list[Any]]] = {}
         self.current_scan_id: Any | None = None
         self._active_plot_windows: list[InteractivePlotWindow] = []
+        self.auto_analyse: bool = True
+        self.preferred_x: str | None = None
+        self.preferred_y: str | None = None
+        self.log_df: bool = False
+        self.last_fit: LastFit = LastFit()
         click.echo("Connecting to BlueAPI service...")
         self.bc = BlueapiClient.from_config(self.config)
         self.bc.login()
@@ -114,6 +145,9 @@ class BlueAPISession:
                 "scan_data": self.data,
                 "plot": self.plot,
                 "run": self.run,
+                "fit_scan": self.fit_scan,
+                "set_fit_axes": self.set_fit_axes,
+                "last_fit": self.last_fit,
             },
         )
 
@@ -159,6 +193,56 @@ class BlueAPISession:
 
         window = InteractivePlotWindow(self.data, scan_id, cmap=cmap)
         self._active_plot_windows.append(window)
+
+    def set_fit_axes(
+        self,
+        x: str | None = None,
+        y: str | None = None,
+        log_df: bool = False,
+    ) -> None:
+        """Set preferred X/Y channels and log-derivative flag for fit_scan."""
+        self.preferred_x = x
+        self.preferred_y = y
+        self.log_df = log_df
+
+    def fit_scan(
+        self,
+        scan_id: Any | None = None,
+        x: str | None = None,
+        y: str | None = None,
+        guess: Any | None = None,
+        log_df: bool | None = None,
+    ) -> FitResult:
+        """Perform Gaussian fit and Centre of Mass calculation on scan data."""
+        if scan_id is None:
+            scan_id = next(reversed(self.data))
+        scan = self.data[str(scan_id)]
+        x_col = x or (self.preferred_x if self.preferred_x in scan else None)
+        y_col = y or (self.preferred_y if self.preferred_y in scan else None)
+        vals = list(scan.values())
+        if len(vals) >= 2:
+            x_data = scan[x_col] if x_col else vals[0]
+            y_data = scan[y_col] if y_col else vals[1]
+        elif len(vals) == 1:
+            y_data = scan[y_col] if y_col else vals[0]
+            x_data = scan[x_col] if x_col else list(range(1, len(y_data) + 1))
+        else:
+            raise ValueError("Scan has no data")
+        use_log = self.log_df if log_df is None else log_df
+        g_res = fit_gaussian(x_data, y_data, guess)
+        com_res = calculate_com(x_data, y_data)
+        df_res = calculate_derivatives(x_data, y_data, log=use_log)
+        click.echo(
+            f"Fit (scan {scan_id}): centre={g_res.best_values['center']:.4f}, "
+            f"FWHM={g_res.params['fwhm'].value:.4f}, COM={com_res:.4f}, "
+            f"zero_crossing={df_res.zero_crossings}"
+        )
+        self.last_fit.centre = float(g_res.best_values["center"])
+        self.last_fit.com = com_res
+        self.last_fit.max_slope_x = df_res.max_slope_x
+        self.last_fit.min_slope_x = df_res.min_slope_x
+        self.last_fit.zero_crossing = df_res.zero_crossings
+        return FitResult(gaussian=g_res, com=com_res, df=df_res)
 
     def print_plans(self) -> None:
         click.echo("\nPlans available:")
@@ -239,6 +323,32 @@ class BlueAPISession:
                         f"uid: {uid}): {status}"
                     )
                     if self.current_scan_id is not None:
+                        if self.auto_analyse:
+                            try:
+                                fit_res = self.fit_scan(self.current_scan_id)
+                                scan_entry = self.data[self.current_scan_id]
+                                if fit_res.gaussian.success:
+                                    scan_entry["gaussian"] = (
+                                        fit_res.gaussian.best_fit.tolist()
+                                    )
+                                    scan_entry["centre"] = [
+                                        fit_res.gaussian.best_values["center"]
+                                    ]
+                                if not np.isnan(fit_res.com):
+                                    scan_entry["com"] = [fit_res.com]
+                                if fit_res.df.d1.size > 0:
+                                    scan_entry.update(
+                                        {
+                                            "d1": fit_res.df.d1.tolist(),
+                                            "d2": fit_res.df.d2.tolist(),
+                                            "zero_crossing": fit_res.df.zero_crossings,
+                                            "max_slope_x": [fit_res.df.max_slope_x],
+                                            "min_slope_x": [fit_res.df.min_slope_x],
+                                        }
+                                    )
+
+                            except Exception as e:
+                                click.echo(f"Auto-fit failed: {e}")
                         self._save_scan_to_cache(str(self.current_scan_id))
                     self.current_scan_id = None
 

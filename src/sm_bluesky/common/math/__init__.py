@@ -1,3 +1,9 @@
+from .analysis import (
+    DerivativeResult,
+    calculate_com,
+    calculate_derivatives,
+    fit_gaussian,
+)
 from .conversion import cal_range_num, step_size_to_step_num, to_float
 from .rebinning import (
     binned_axis,
@@ -8,6 +14,10 @@ from .rebinning import (
 )
 
 __all__ = [
+    "DerivativeResult",
+    "calculate_com",
+    "calculate_derivatives",
+    "fit_gaussian",
     "cal_range_num",
     "edges_from_centres",
     "step_size_to_step_num",
