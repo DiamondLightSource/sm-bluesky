@@ -63,6 +63,51 @@ def session(
     return session
 
 
+@pytest.fixture
+def callback(session: BlueAPISession, mock_client_class: MagicMock):
+    mock_client = mock_client_class.from_config.return_value
+    return mock_client.add_callback.call_args[0][0]
+
+
+def _start_event(
+    scan_id: str | int = "scan1",
+    uid: str = "uid1",
+    time: float = 0,
+    task_id: str = "task1",
+) -> DataEvent:
+    return DataEvent(
+        name="start",
+        doc={"scan_id": scan_id, "uid": uid, "time": time},
+        task_id=task_id,
+    )
+
+
+def _data_event(
+    data: dict,
+    seq_num: int = 1,
+    time: float = 1,
+    task_id: str = "task1",
+) -> DataEvent:
+    return DataEvent(
+        name="event",
+        doc={"seq_num": seq_num, "data": data, "time": time},
+        task_id=task_id,
+    )
+
+
+def _stop_event(
+    status: str = "success",
+    uid: str = "uid1",
+    time: float = 2,
+    task_id: str = "task1",
+) -> DataEvent:
+    return DataEvent(
+        name="stop",
+        doc={"exit_status": status, "time": time, "uid": uid},
+        task_id=task_id,
+    )
+
+
 def test_blueapi_session_initialisation_with_instrument_session(
     mock_echo: MagicMock, mock_secho: MagicMock, mock_client_class: MagicMock
 ) -> None:
@@ -100,50 +145,36 @@ def test_blueapi_session_initialisation_without_instrument_session(
 def test_start_shell(mock_start: MagicMock, session: BlueAPISession) -> None:
     session.start_shell()
     mock_start.assert_called_once()
-    kwargs = mock_start.call_args.kwargs
-    assert "bc" in kwargs["user_ns"]
-    assert "pl" in kwargs["user_ns"]
-    assert "dev" in kwargs["user_ns"]
-    assert "scan_data" in kwargs["user_ns"]
-    assert "run" in kwargs["user_ns"]
-    assert kwargs["user_ns"]["bc"] is session.bc
-    assert kwargs["user_ns"]["run"] == session.run
+    assert mock_start.call_args.kwargs["user_ns"] == {
+        "bc": session.bc,
+        "pl": session.bc.plans,
+        "show_plan": session.print_plans,
+        "dev": session.bc.devices,
+        "show_devices": session.print_devices,
+        "scan_data": session.data,
+        "plot": session.plot,
+        "run": session.run,
+        "fit_scan": session.fit_scan,
+        "set_fit_axes": session.set_fit_axes,
+        "last_fit": session.last_fit,
+    }
 
 
 def test_callbacks_handling(
-    mock_echo: MagicMock, session: BlueAPISession, mock_client_class: MagicMock
+    mock_echo: MagicMock, session: BlueAPISession, callback
 ) -> None:
-    mock_client = mock_client_class.from_config.return_value
-    mock_client.add_callback.assert_called_once()
-    callback = mock_client.add_callback.call_args[0][0]
-
-    start_event = DataEvent(
-        name="start",
-        doc={"scan_id": "scan1", "uid": "uid1", "time": 0},
-        task_id="task1",
-    )
-    callback(start_event)
+    callback(_start_event())
     assert session.current_scan_id == "scan1"
     assert "scan1" in session.data
     mock_echo.assert_any_call(
         "1970-01-01 00:00:00 - Run started (scan_id=scan1, uid=uid1)"
     )
 
-    event = DataEvent(
-        name="event",
-        doc={"seq_num": 1, "data": {"motor1": 10.5}, "time": 1},
-        task_id="task1",
-    )
-    callback(event)
+    callback(_data_event({"motor1": 10.5}))
     assert session.data["scan1"]["motor1"] == [10.5]
     mock_echo.assert_any_call("1970-01-01 00:00:01 - Point 1: motor1=10.5")
 
-    stop_event = DataEvent(
-        name="stop",
-        doc={"exit_status": "success", "time": 2, "uid": "uid1"},
-        task_id="task1",
-    )
-    callback(stop_event)
+    callback(_stop_event())
     assert session.current_scan_id is None
     mock_echo.assert_any_call(
         "1970-01-01 00:00:02 - Run complete (scan_id=scan1, uid: uid1): success"
@@ -151,19 +182,10 @@ def test_callbacks_handling(
 
 
 def test_callback_scan_id_collision(
-    mock_echo: MagicMock, session: BlueAPISession, mock_client_class: MagicMock
+    mock_echo: MagicMock, session: BlueAPISession, callback
 ) -> None:
-    mock_client = mock_client_class.from_config.return_value
-    callback = mock_client.add_callback.call_args[0][0]
-
     for i, expected_id in enumerate(("scan1", "scan1_1", "scan1_2")):
-        callback(
-            DataEvent(
-                name="start",
-                doc={"scan_id": "scan1", "uid": f"uid{i}", "time": 0},
-                task_id=f"task{i}",
-            )
-        )
+        callback(_start_event(scan_id="scan1", uid=f"uid{i}", task_id=f"task{i}"))
         assert session.current_scan_id == expected_id
         assert expected_id in session.data
         mock_echo.assert_any_call(
@@ -172,18 +194,10 @@ def test_callback_scan_id_collision(
 
 
 def test_callback_event_without_scan_id(
-    mock_echo: MagicMock, session: BlueAPISession, mock_client_class: MagicMock
+    mock_echo: MagicMock, session: BlueAPISession, callback
 ) -> None:
-    mock_client = mock_client_class.from_config.return_value
-    callback = mock_client.add_callback.call_args[0][0]
     session.current_scan_id = None
-
-    event = DataEvent(
-        name="event",
-        doc={"seq_num": 1, "data": {"motor1": 10.5}, "time": 1},
-        task_id="task1",
-    )
-    callback(event)
+    callback(_data_event({"motor1": 10.5}))
 
     assert "1970-01-01 00:00:01 - Point 1: motor1=10.5" not in [
         call.args[0] for call in mock_echo.call_args_list
@@ -191,19 +205,11 @@ def test_callback_event_without_scan_id(
 
 
 def test_dead_plot_window_removed(session: BlueAPISession) -> None:
-    class FakePlot:
-        class FakeFig:
-            number = 1
-
-        fig = FakeFig()
-
-    class FakeDeadPlot:
-        class FakeFig:
-            number = 2
-
-        fig = FakeFig()
-
-    session._active_plot_windows = [FakePlot(), FakeDeadPlot()]  # type: ignore
+    active_win = MagicMock()
+    active_win.fig.number = 1
+    dead_win = MagicMock()
+    dead_win.fig.number = 2
+    session._active_plot_windows = [active_win, dead_win]
 
     with (
         patch(
@@ -228,31 +234,13 @@ def test_blueapi_session_scan_caching(
 
     callback = mock_client.add_callback.call_args[0][0]
 
-    callback(
-        DataEvent(
-            name="start",
-            doc={"scan_id": 888, "uid": "uid1", "time": 0.0},
-            task_id="task1",
-        )
-    )
+    callback(_start_event(scan_id=888, time=0.0))
     assert session1.data["888"] == {}
 
-    callback(
-        DataEvent(
-            name="event",
-            doc={"seq_num": 1, "data": {"motor": 10}, "time": 0.0},
-            task_id="task1",
-        )
-    )
+    callback(_data_event({"motor": 10}, time=0.0))
     assert session1.data["888"]["motor"] == [10]
 
-    callback(
-        DataEvent(
-            name="stop",
-            doc={"exit_status": "success", "uid": "uid1", "time": 0.0},
-            task_id="task1",
-        )
-    )
+    callback(_stop_event(time=0.0))
     cache_file = tmp_path / ".sm-bluesky" / "cache" / "test-session_scans.jsonl"
     assert cache_file.exists()
     assert json.loads(cache_file.read_text().strip()) == {"888": {"motor": [10]}}
