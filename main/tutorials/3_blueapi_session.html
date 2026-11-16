@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Interactive BlueAPI Session &#8212; sm-bluesky 1.4.1.dev15+gf1a426b2f documentation</title>
+    <title>Interactive BlueAPI Session &#8212; sm-bluesky 1.4.1.dev16+g6ce3e441c documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=d9dc52a3"></script>
+    <script src="../_static/documentation_options.js?v=7b4dd859"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -536,6 +536,9 @@ sm-bluesky<span class="w"> </span>client<span class="w"> </span>-c<span class="w
 <li><p><code class="docutils literal notranslate"><span class="pre">scan_data</span></code>: A dictionary containing all collected event data from your scans.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">plot(scan_id=None,</span> <span class="pre">cmap=&quot;viridis&quot;)</span></code>: Opens an interactive visualisation window.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">run(script)</span></code>: Executes a Python script inside the active session namespace (a shortcut for <code class="docutils literal notranslate"><span class="pre">%run</span> <span class="pre">-i</span> <span class="pre">&lt;script&gt;</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fit_scan(scan_id=None,</span> <span class="pre">x=None,</span> <span class="pre">y=None,</span> <span class="pre">guess=None,</span> <span class="pre">log_df=None)</span></code>: Performs a 1D Gaussian fit, centre-of-mass (COM) calculation, and derivative on scan data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set_fit_axes(x=None,</span> <span class="pre">y=None,</span> <span class="pre">log_df=False)</span></code>: Sets preferred X and Y channel names (and optional log derivative flag) for <code class="docutils literal notranslate"><span class="pre">fit_scan()</span></code> for post-scan analysis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">last_fit</span></code>: Stores the latest fitted summary parameters (<code class="docutils literal notranslate"><span class="pre">centre</span></code>, <code class="docutils literal notranslate"><span class="pre">com</span></code>, <code class="docutils literal notranslate"><span class="pre">max_slope_x</span></code>, <code class="docutils literal notranslate"><span class="pre">min_slope_x</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_crossing</span></code>) for interactive use and scripting.</p></li>
 </ul>
 </section>
 <section id="writing-running-scan-scripts">
@@ -554,6 +557,10 @@ sm-bluesky<span class="w"> </span>client<span class="w"> </span>-c<span class="w
 
 <span class="c1"># Stack a step scan afterwards</span>
 <span class="n">pl</span><span class="o">.</span><span class="n">step_scan</span><span class="p">([</span><span class="n">dev</span><span class="o">.</span><span class="n">idd_gap</span><span class="p">],</span> <span class="p">[[</span><span class="n">dev</span><span class="o">.</span><span class="n">pgm</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">10</span><span class="p">]]])</span>
+
+<span class="c1"># Access the auto-fitted parameters from the last scan</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Peak centre: </span><span class="si">{</span><span class="n">last_fit</span><span class="o">.</span><span class="n">centre</span><span class="si">}</span><span class="s2">, COM: </span><span class="si">{</span><span class="n">last_fit</span><span class="o">.</span><span class="n">com</span><span class="si">}</span><span class="s2">, Zero crossings: </span><span class="si">{</span><span class="n">last_fit</span><span class="o">.</span><span class="n">zero_crossing</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Slopes: max=</span><span class="si">{</span><span class="n">last_fit</span><span class="o">.</span><span class="n">max_slope_x</span><span class="si">}</span><span class="s2">, min=</span><span class="si">{</span><span class="n">last_fit</span><span class="o">.</span><span class="n">min_slope_x</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -592,6 +599,34 @@ sm-bluesky<span class="w"> </span>client<span class="w"> </span>-c<span class="w
 <span class="c1"># Or access data from the most recent scan</span>
 <span class="n">last_scan_id</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">scan_data</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">scan_data</span><span class="p">[</span><span class="n">last_scan_id</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="scan-fitting-auto-analysis">
+<h3>Scan Fitting &amp; Auto-Analysis<a class="headerlink" href="#scan-fitting-auto-analysis" title="Link to this heading">#</a></h3>
+<p>By default (<code class="docutils literal notranslate"><span class="pre">auto_analyse=True</span></code>), <code class="docutils literal notranslate"><span class="pre">BlueAPISession</span></code> automatically analyses each scan when it completes:</p>
+<ul class="simple">
+<li><p>Fits a 1D Gaussian plus linear background to the scan data.</p></li>
+<li><p>Calculates the centre of mass (COM) and 1st/2nd numerical derivatives (<code class="docutils literal notranslate"><span class="pre">d1</span></code>, <code class="docutils literal notranslate"><span class="pre">d2</span></code>).</p></li>
+<li><p>Appends the derived curves (<code class="docutils literal notranslate"><span class="pre">gaussian</span></code>, <code class="docutils literal notranslate"><span class="pre">d1</span></code>, <code class="docutils literal notranslate"><span class="pre">d2</span></code>) and scalar metrics (<code class="docutils literal notranslate"><span class="pre">centre</span></code>, <code class="docutils literal notranslate"><span class="pre">com</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_crossing</span></code>, <code class="docutils literal notranslate"><span class="pre">max_slope_x</span></code>, <code class="docutils literal notranslate"><span class="pre">min_slope_x</span></code>) to <code class="docutils literal notranslate"><span class="pre">scan_data[scan_id]</span></code>.</p></li>
+<li><p>Updates <code class="docutils literal notranslate"><span class="pre">last_fit</span></code> with <code class="docutils literal notranslate"><span class="pre">centre</span></code>, <code class="docutils literal notranslate"><span class="pre">com</span></code>, <code class="docutils literal notranslate"><span class="pre">max_slope_x</span></code>, <code class="docutils literal notranslate"><span class="pre">min_slope_x</span></code>, and <code class="docutils literal notranslate"><span class="pre">zero_crossing</span></code>.</p></li>
+</ul>
+<p>You can also configure preferred fit axes or run fits manually on any scan:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set preferred X and Y channels for auto-analysis and fit_scan()</span>
+<span class="n">set_fit_axes</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">"pgm-energy"</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">"det1"</span><span class="p">)</span>
+
+<span class="c1"># Fit the most recent scan (or pass a specific scan_id, x, y, or initial guess)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">fit_scan</span><span class="p">()</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">fit_scan</span><span class="p">(</span><span class="n">scan_id</span><span class="o">=</span><span class="s2">"30"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">"pgm-energy"</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">"det1"</span><span class="p">)</span>
+
+<span class="c1"># Access the latest fitted summary parameters via last_fit</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="n">last_fit</span><span class="o">.</span><span class="n">centre</span><span class="p">,</span>
+    <span class="n">last_fit</span><span class="o">.</span><span class="n">com</span><span class="p">,</span>
+    <span class="n">last_fit</span><span class="o">.</span><span class="n">max_slope_x</span><span class="p">,</span>
+    <span class="n">last_fit</span><span class="o">.</span><span class="n">min_slope_x</span><span class="p">,</span>
+    <span class="n">last_fit</span><span class="o">.</span><span class="n">zero_crossing</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -719,6 +754,7 @@ sm-bluesky<span class="w"> </span>client<span class="w"> </span>-c<span class="w
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-collection-live-plotting">Data Collection &amp; Live Plotting</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#accessing-data">Accessing Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scan-fitting-auto-analysis">Scan Fitting &amp; Auto-Analysis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-plotting">Interactive Plotting</a></li>
 </ul>
 </li>
