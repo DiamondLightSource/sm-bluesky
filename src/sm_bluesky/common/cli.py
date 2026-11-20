@@ -11,7 +11,7 @@ import click
 from sm_bluesky import __version__
 
 if TYPE_CHECKING:
-    from blueapi.config import ApplicationConfig
+    from blueapi.config import ApplicationConfig, DeviceManagerSource
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -244,7 +244,10 @@ def send(payload: str, host: str = "127.0.0.1", port: int = 7891, timeout: float
     help="Automatically set the active instrument session to 'dummy'.",
 )
 def blueapi_client(
-    beamline: str | None, config: Path | None, session: str | None, dummy: bool
+    beamline: str | None,
+    config: Path | None,
+    instrument_session: str | None,
+    dummy: bool,
 ) -> None:
     """Launch an interactive IPython BlueAPI client session."""
     if not beamline and not config:
@@ -261,34 +264,25 @@ def blueapi_client(
         config_path=config,
         beamline=beamline,
     )
+    beamline = _get_app_beamline_from_mock_config(app_config)
 
-    cache_dir = os.path.expanduser("~/.sm-bluesky/")
+    if dummy or instrument_session is None:
+        instrument_session = "dummy"
+
+    cache_dir = os.path.expanduser(f"~/.sm-bluesky/{beamline}/{instrument_session}/")
     os.makedirs(cache_dir, exist_ok=True)
-    session_config_path = os.path.join(cache_dir, "session_config.json")
+    instrument_session_config_path = os.path.join(cache_dir, "session_config.json")
 
-    if dummy:
-        session = "dummy"
-
-    if session:
-        try:
-            with open(session_config_path, "w") as f:
-                json.dump({"last_session": session}, f)
-        except Exception as e:
-            click.echo(f"Warning: Could not save session cache: {e}")
-    else:
-        if os.path.exists(session_config_path):
-            try:
-                with open(session_config_path) as f:
-                    config_data = json.load(f)
-                    session = config_data.get("last_session")
-                    if session:
-                        click.echo(f"Restoring last used session: {session}")
-            except Exception as e:
-                click.echo(f"Warning: Could not read session cache: {e}")
+    try:
+        with open(instrument_session_config_path, "w") as f:
+            json.dump({"last_session": instrument_session}, f)
+    except Exception as e:
+        click.echo(f"Warning: Could not save instrument_session cache: {e}")
 
     bs_session = BlueAPISession(
         config=app_config,
-        instrument_session=session,
+        cache_dir=cache_dir,
+        instrument_session=instrument_session,
     )
     bs_session.start_shell()
 
@@ -331,3 +325,10 @@ def load_config(
             url=TcpUrl(f"tcp://{target_beamline}-rabbitmq-daq.diamond.ac.uk:61613"),
         ),
     )
+
+
+def _get_app_beamline_from_mock_config(app: ApplicationConfig) -> str:
+    for source in app.env.sources:
+        if isinstance(source, DeviceManagerSource):
+            return source.module.split(".")[-1]
+    raise ValueError("No beamline in found configuration.")

@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -15,14 +16,23 @@ from blueapi.client.event_bus import AnyEvent
 from blueapi.config import ApplicationConfig
 from blueapi.core import DataEvent
 
+from sm_bluesky.common.utils.logging import Tee
+
 from .interactive_plot import DEFAULT_CMAP, InteractivePlotWindow
 
 
 class BlueAPISession:
     def __init__(
-        self, config: ApplicationConfig, instrument_session: str | None = None
+        self,
+        config: ApplicationConfig,
+        cache_dir: str,
+        instrument_session: str,
     ):
+        cache_dir = os.path.expanduser(self._cache_dir)
+        os.makedirs(cache_dir, exist_ok=True)
+
         self.config: ApplicationConfig = config
+        self._cache_dir = cache_dir
         self.data: dict[str, dict[str, list[Any]]] = {}
         self.current_scan_id: Any | None = None
         self._active_plot_windows: list[InteractivePlotWindow] = []
@@ -45,20 +55,13 @@ class BlueAPISession:
                 fg="red",
             )
 
-    def _get_cache_path(self) -> str | None:
-        if not getattr(self.bc, "instrument_session", None):
-            return None
-        cache_dir = os.path.expanduser("~/.sm-bluesky/cache")
-        os.makedirs(cache_dir, exist_ok=True)
-        return os.path.join(cache_dir, f"{self.bc.instrument_session}_scans.jsonl")
+    def _get_scan_cache_path(self) -> str:
+        return os.path.join(self._cache_dir, f"{self.bc.instrument_session}_scans.json")
 
     def _load_scan_cache(self) -> None:
-        cache_file = self._get_cache_path()
-        if not cache_file:
-            return
+        cache_file = self._get_scan_cache_path()
         if not os.path.exists(cache_file):
             return
-
         try:
             with open(cache_file) as f:
                 for line in f:
@@ -70,10 +73,9 @@ class BlueAPISession:
             click.echo(f"Warning: Could not read scan cache: {e}")
 
     def _save_scan_to_cache(self, scan_id: str) -> None:
-        cache_file = self._get_cache_path()
-        if not cache_file or scan_id not in self.data:
+        cache_file = self._get_scan_cache_path()
+        if scan_id not in self.data:
             return
-
         try:
             with open(cache_file, "a") as f:
                 line = json.dumps({str(scan_id): self.data[scan_id]})
@@ -83,39 +85,56 @@ class BlueAPISession:
 
     def start_shell(self) -> None:
         """Start an interactive IPython shell with the BlueAPI client available."""
+
         from IPython import start_ipython
         from traitlets.config import Config
 
-        c = Config()
-        c.InteractiveShellApp.exec_lines = [
-            (
-                "try:\n\tget_ipython().run_line_magic('matplotlib', 'auto')"
-                "\n\tplot()\n"
-                "except Exception as e:"
-                "\n\tprint(f'Failed to start interactive plot: {e}')"
+        log_file = open(
+            os.path.join(self._cache_dir, "blueapi_client_terminal.log"),
+            "a",
+            buffering=1,
+        )
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+
+        try:
+            sys.stdout = Tee(original_stdout, log_file)
+            sys.stderr = Tee(original_stderr, log_file)
+
+            c = Config()
+            c.InteractiveShellApp.exec_lines = [
+                (
+                    "try:\n\tget_ipython().run_line_magic('matplotlib', 'auto')"
+                    "\n\tplot()\n"
+                    "except Exception as e:"
+                    "\n\tprint(f'Failed to start interactive plot: {e}')"
+                )
+            ]
+
+            c.TerminalInteractiveShell.banner1 = (
+                "\nBlueAPI client ready.\n"
+                'The client is available as "bc".\n'
+                "Use exit() or Ctrl-D to leave.\n"
             )
-        ]
 
-        c.TerminalInteractiveShell.banner1 = (
-            "\nBlueAPI client ready.\n"
-            'The client is available as "bc".\n'
-            "Use exit() or Ctrl-D to leave.\n"
-        )
-
-        start_ipython(
-            argv=[],
-            config=c,
-            user_ns={
-                "bc": self.bc,
-                "pl": self.bc.plans,
-                "show_plan": self.print_plans,
-                "dev": self.bc.devices,
-                "show_devices": self.print_devices,
-                "scan_data": self.data,
-                "plot": self.plot,
-                "run": self.run,
-            },
-        )
+            start_ipython(
+                argv=[],
+                config=c,
+                user_ns={
+                    "bc": self.bc,
+                    "pl": self.bc.plans,
+                    "show_plan": self.print_plans,
+                    "dev": self.bc.devices,
+                    "show_devices": self.print_devices,
+                    "scan_data": self.data,
+                    "plot": self.plot,
+                    "run": self.run,
+                },
+            )
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
+            log_file.close()
 
     def _refresh_plots(self, update_data: bool = True) -> None:
         self._active_plot_windows = [
