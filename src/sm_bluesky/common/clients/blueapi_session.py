@@ -5,7 +5,6 @@ import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from typing import Any
@@ -25,7 +24,7 @@ from sm_bluesky.common.math import (
     calculate_derivatives,
     fit_gaussian,
 )
-from sm_bluesky.common.utils.logging import Tee
+from sm_bluesky.common.utils.logging import Tee, format_time
 
 from .interactive_plot import DEFAULT_CMAP, InteractivePlotWindow
 
@@ -66,24 +65,8 @@ class BlueAPISession:
         self.preferred_y: str | None = None
         self.log_df: bool = False
         self.last_fit: LastFit = LastFit()
-        click.echo("Connecting to BlueAPI service...")
         self.bc = BlueapiClient.from_config(self.config)
-        self.bc.login()
-
-        self._install_callbacks()
-        self.bc.run_task = self._live_plot_during_task(self.bc.run_task)
-        self.print_inventory()
-
-        if instrument_session:
-            self.bc.instrument_session = instrument_session
-            click.echo(f"Active instrument session: {instrument_session}")
-            self._load_scan_cache()
-        else:
-            click.secho(
-                "\n[Notice] No instrument session set. Set `bc.instrument_session ="
-                " '<session_id>'` before dispatching plans.",
-                fg="red",
-            )
+        self.bc.instrument_session = instrument_session
 
     def _get_scan_cache_path(self) -> str:
         return os.path.join(self._cache_dir, f"{self.bc.instrument_session}_scans.json")
@@ -98,9 +81,9 @@ class BlueAPISession:
                     data_chunk = json.loads(line)
                     self.data.update(data_chunk)
             if self.data:
-                click.echo(f"Loaded {len(self.data)} previous scans from cache.")
+                print(f"Loaded {len(self.data)} previous scans from cache.")
         except Exception as e:
-            click.echo(f"Warning: Could not read scan cache: {e}")
+            print(f"Warning: Could not read scan cache: {e}")
 
     def _save_scan_to_cache(self, scan_id: str) -> None:
         cache_file = self._get_scan_cache_path()
@@ -111,7 +94,7 @@ class BlueAPISession:
                 line = json.dumps({str(scan_id): self.data[scan_id]})
                 f.write(line + "\n")
         except Exception as e:
-            click.echo(f"Warning: Could not write to scan cache: {e}")
+            print(f"Warning: Could not write to scan cache: {e}")
 
     def start_shell(self) -> None:
         """Start an interactive IPython shell with the BlueAPI client available."""
@@ -124,32 +107,72 @@ class BlueAPISession:
             "a",
             buffering=1,
         )
-        original_stdout = sys.stdout
-        original_stderr = sys.stderr
+
+        def setup_session_logging():
+            """Capture submitted commands and their execution output."""
+            from IPython import get_ipython
+
+            shell = get_ipython()
+            original_streams = {}
+
+            def pre_run_cell(info):
+                stdout = Tee(sys.stdout, log_file)
+
+                # Record the actual submitted command without writing to the terminal.
+                stdout.write(f"In [{shell.execution_count}]: {info.raw_cell}\n")
+
+                original_streams["stdout"] = sys.stdout
+                original_streams["stderr"] = sys.stderr
+
+                sys.stdout = stdout
+                sys.stderr = Tee(sys.stderr, log_file)
+
+            def post_run_cell(result):
+                # Startup commands may not have passed through pre_run_cell.
+                if not original_streams:
+                    return
+
+                sys.stdout = original_streams.pop("stdout")
+                sys.stderr = original_streams.pop("stderr")
+                log_file.flush()
+
+            shell.events.register("pre_run_cell", pre_run_cell)
+            shell.events.register("post_run_cell", post_run_cell)
 
         try:
-            sys.stdout = Tee(original_stdout, log_file)
-            sys.stderr = Tee(original_stderr, log_file)
-
             c = Config()
+
             c.InteractiveShellApp.exec_lines = [
+                "_setup_session_logging()",
                 (
-                    "try:\n\tget_ipython().run_line_magic('matplotlib', 'auto')"
-                    "\n\tplot()\n"
-                    "except Exception as e:"
-                    "\n\tprint(f'Failed to start interactive plot: {e}')"
-                )
+                    "try:\n"
+                    "    get_ipython().run_line_magic('matplotlib', 'auto')\n"
+                    "    plot()\n"
+                    "except Exception as e:\n"
+                    "    print(f'Failed to start interactive plot: {e}')"
+                ),
             ]
+            print("Connecting to BlueAPI service...")
+            self.bc.login()
+
+            self._install_callbacks()
+            self.bc.run_task = self._live_plot_during_task(self.bc.run_task)
+            self.print_inventory()
+
+            print(f"Active instrument session: {self.bc.instrument_session}")
+            self._load_scan_cache()
 
             c.TerminalInteractiveShell.banner1 = (
                 "\nBlueAPI client ready.\n"
                 'The client is available as "bc".\n'
                 "Use exit() or Ctrl-D to leave.\n"
             )
+
             start_ipython(
                 argv=[],
                 config=c,
                 user_ns={
+                    "_setup_session_logging": setup_session_logging,
                     "bc": self.bc,
                     "pl": self.bc.plans,
                     "show_plan": self.print_plans,
@@ -163,9 +186,8 @@ class BlueAPISession:
                     "last_fit": self.last_fit,
                 },
             )
+
         finally:
-            sys.stdout = original_stdout
-            sys.stderr = original_stderr
             log_file.close()
 
     def _refresh_plots(self, update_data: bool = True) -> None:
@@ -249,7 +271,7 @@ class BlueAPISession:
         g_res = fit_gaussian(x_data, y_data, guess)
         com_res = calculate_com(x_data, y_data)
         df_res = calculate_derivatives(x_data, y_data, log=use_log)
-        click.echo(
+        print(
             f"Fit (scan {scan_id}): centre={g_res.best_values['center']:.4f}, "
             f"FWHM={g_res.params['fwhm'].value:.4f}, COM={com_res:.4f}, "
             f"zero_crossing={df_res.zero_crossings}"
@@ -262,14 +284,14 @@ class BlueAPISession:
         return FitResult(gaussian=g_res, com=com_res, df=df_res)
 
     def print_plans(self) -> None:
-        click.echo("\nPlans available:")
+        print("\nPlans available:")
         for plan in self.bc.plans:
-            click.echo(f"  {plan.name}")
+            print(f"  {plan.name}")
 
     def print_devices(self) -> None:
-        click.echo("\nDevices available:")
+        print("\nDevices available:")
         for device in self.bc.devices:
-            click.echo(f"  {device.name}")
+            print(f"  {device.name}")
 
     def print_inventory(self) -> None:
         self.print_plans()
@@ -321,8 +343,8 @@ class BlueAPISession:
                     self.current_scan_id = scan_id_str
                     self.data[scan_id_str] = {}
 
-                    click.echo(
-                        f"{self._format_time(time)} -"
+                    print(
+                        f"{format_time(time)} -"
                         f" Run started (scan_id={scan_id_str}, uid={uid})"
                     )
 
@@ -334,8 +356,8 @@ class BlueAPISession:
                         "uid": uid,
                     },
                 ):
-                    click.echo(
-                        f"{self._format_time(time)} -"
+                    print(
+                        f"{format_time(time)} -"
                         f" Run complete (scan_id={self.current_scan_id}, "
                         f"uid: {uid}): {status}"
                     )
@@ -365,7 +387,7 @@ class BlueAPISession:
                                     )
 
                             except Exception as e:
-                                click.echo(f"Auto-fit failed: {e}")
+                                print(f"Auto-fit failed: {e}")
                         self._save_scan_to_cache(str(self.current_scan_id))
                     self.current_scan_id = None
 
@@ -384,11 +406,7 @@ class BlueAPISession:
                     values = ", ".join(
                         f"{name}={value}" for name, value in event_data.items()
                     )
-                    click.echo(f"{self._format_time(time)} - Point {point}: {values}")
+                    print(f"{format_time(time)} - Point {point}: {values}")
 
         callback_id = self.bc.add_callback(feedback)
-        click.echo(f"Installed data event callback (id={callback_id}).")
-
-    @staticmethod
-    def _format_time(timestamp: int) -> str:
-        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+        print(f"Installed data event callback (id={callback_id}).")

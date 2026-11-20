@@ -1,9 +1,15 @@
 import re
+import time
+from datetime import datetime
 from io import TextIOWrapper
 
 ANSI_ESCAPE = re.compile(
     r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1B\\))"
 )
+
+
+def format_time(timestamp: float) -> str:
+    return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
 class Tee:
@@ -12,18 +18,25 @@ class Tee:
     def __init__(self, stream, logfile: TextIOWrapper):
         self.stream = stream
         self.logfile = logfile
+        self._buffer = ""
 
-    def write(self, text):
+    def write(self, text: str) -> int:
+        # Preserve the terminal's normal behaviour.
         self.stream.write(text)
 
-        # Strip ANSI escape sequences and terminal editing characters.
+        # Strip terminal control sequences from the log copy.
         clean_text = ANSI_ESCAPE.sub("", text)
-        clean_text = clean_text.replace("\b", "")
-        clean_text = clean_text.replace("\r", "")
+        clean_text = clean_text.replace("\b", "").replace("\r", "")
 
-        self.logfile.write(clean_text)
+        self._buffer += clean_text
+
+        # Write complete lines, timestamping each one.
+        while "\n" in self._buffer:
+            line, self._buffer = self._buffer.split("\n", 1)
+            t = format_time(time.time())
+            self.logfile.write(f"{t}: {line}\n")
+
         self.logfile.flush()
-
         return len(text)
 
     def flush(self):
