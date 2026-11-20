@@ -25,7 +25,6 @@ from sm_bluesky.common.math import (
     calculate_derivatives,
     fit_gaussian,
 )
-
 from sm_bluesky.common.utils.logging import Tee
 
 from .interactive_plot import DEFAULT_CMAP, InteractivePlotWindow

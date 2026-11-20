@@ -15,8 +15,15 @@ class Tee:
 
     def write(self, text):
         self.stream.write(text)
-        self.logfile.write(ANSI_ESCAPE.sub("", text))
+
+        # Strip ANSI escape sequences and terminal editing characters.
+        clean_text = ANSI_ESCAPE.sub("", text)
+        clean_text = clean_text.replace("\b", "")
+        clean_text = clean_text.replace("\r", "")
+
+        self.logfile.write(clean_text)
         self.logfile.flush()
+
         return len(text)
 
     def flush(self):
