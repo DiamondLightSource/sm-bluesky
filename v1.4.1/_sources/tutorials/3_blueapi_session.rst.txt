@@ -1,0 +1,226 @@
+Interactive BlueAPI Session
+===========================
+
+The ``BlueAPISession`` class provides a rich, interactive IPython environment on top of the standard ``BlueapiClient``. It comes pre-configured with automatic data collection callbacks, live plotting, and convenient shortcuts for dispatching plans.
+
+Launching the Session
+---------------------
+
+You can launch an interactive session either through the command-line interface or programmatically in Python.
+
+CLI
+^^^
+
+Use the ``sm-bluesky client`` command to start a session. You can specify a remote beamline configuration or provide a local YAML config file.
+
+.. code-block:: bash
+
+    # Connect to a remote beamline server (e.g., p99) with a specific session ID
+    sm-bluesky client -b p99 -s my_session
+
+    # Connect using a local configuration file
+    sm-bluesky client -c ./src/yaml_config/blueapi_config.yaml -s my_session
+
+.. tip::
+
+    If you omit the ``-s`` flag, the client will automatically restore your last used session (if cached). Otherwise, set ``bc.instrument_session = '<session_id>'`` in the shell before dispatching plans, or use ``-d`` to start a dummy session.
+
+Programmatically
+^^^^^^^^^^^^^^^^
+
+You can also embed the session directly into your own Python scripts or Jupyter Notebooks:
+
+.. code-block:: python
+
+    from sm_bluesky.common.clients.blueapi_session import BlueAPISession
+    from sm_bluesky.common.cli import load_config
+
+    # Load configuration for a specific beamline
+    config = load_config(beamline="p99")
+    
+    # Initialise the session
+    session = BlueAPISession(config=config, instrument_session="my_session")
+    
+    # Start the interactive IPython shell
+    session.start_shell()
+
+The Interactive Shell Environment
+---------------------------------
+
+Once the interactive IPython shell is running, you have access to:
+
+* ``bc``: The underlying ``BlueapiClient`` instance.
+* ``pl``: A shortcut to access available plans (e.g., ``pl.step_scan(...)``).
+* ``dev``: A shortcut to access available devices (e.g., ``dev.dcm``).
+* ``show_plan()``: Prints a list of all plans available on the server.
+* ``show_devices()``: Prints a list of all devices available on the server.
+* ``scan_data``: A dictionary containing all collected event data from your scans.
+* ``plot(scan_id=None, cmap="viridis")``: Opens an interactive visualisation window.
+* ``run(script)``: Executes a Python script inside the active session namespace (a shortcut for ``%run -i <script>``).
+* ``fit_scan(scan_id=None, x=None, y=None, guess=None, log_df=None)``: Performs a 1D Gaussian fit, centre-of-mass (COM) calculation, and derivative on scan data.
+* ``set_fit_axes(x=None, y=None, log_df=False)``: Sets preferred X and Y channel names (and optional log derivative flag) for ``fit_scan()`` for post-scan analysis.
+* ``last_fit``: Stores the latest fitted summary parameters (``centre``, ``com``, ``max_slope_x``, ``min_slope_x``, ``zero_crossing``) for interactive use and scripting.
+
+Writing & Running Scan Scripts
+------------------------------
+
+To automate sequences of scans, loops, or custom logic, you can write a standard Python script that directly uses session objects (``pl``, ``dev``, ``bc``, ``scan_data``, ``plot``) and run it inside the session.
+
+Creating a Script
+^^^^^^^^^^^^^^^^^
+
+Create a ``.py`` file (for example, ``my_scans.py``) containing the plans and Python logic you want to execute:
+
+.. code-block:: python
+
+    # my_scans.py
+    from time import sleep
+
+    for num_points in range(2, 5):
+        print(f"Running count scan with {num_points} points...")
+        pl.count([dev.pgm.energy], num_points, 0.5)
+        sleep(1.0)
+
+    # Stack a step scan afterwards
+    pl.step_scan([dev.idd_gap], [[dev.pgm.energy, [200, 300, 10]]])
+
+    # Access the auto-fitted parameters from the last scan
+    print(f"Peak centre: {last_fit.centre}, COM: {last_fit.com}, Zero crossings: {last_fit.zero_crossing}")
+    print(f"Slopes: max={last_fit.max_slope_x}, min={last_fit.min_slope_x}")
+
+Running the Script
+^^^^^^^^^^^^^^^^^^
+
+From inside the interactive ``BlueAPISession`` shell, pass the script path to ``run()``:
+
+.. code-block:: python
+
+    run("my_scans.py")
+
+    # Or using IPython's built-in magic with the -i flag:
+    %run -i my_scans.py
+
+.. note::
+
+    ``run("my_scans.py")`` validates the script's Python syntax and ``Ctrl+C`` interruption continue to work automatically during each scan.
+
+Data Collection & Live Plotting
+-------------------------------
+
+When you initialise a ``BlueAPISession``, it automatically subscribes to data events from the BlueAPI server. As you run plans, data points are collected and stored in memory.
+
+Accessing Data
+^^^^^^^^^^^^^^
+
+Live data is stored in the ``scan_data`` dictionary, which is keyed first by the ``scan_id`` and then by the device name.
+
+.. code-block:: python
+
+    # Run a simple count on the DCM device
+    pl.count(dev.dcm)
+
+    # Run a step scan
+    # - Detectors: [dev.idd_gap]
+    # - Axes & Ranges: [[dev.pgm.energy, [start=200, stop=300, step=1]]]
+    pl.step_scan([dev.idd_gap], [[dev.pgm.energy, [200, 300, 1]]])
+
+    # Access the collected data for a specific scan ID
+    print(scan_data["1"])
+
+    # Or access data from the most recent scan
+    last_scan_id = next(reversed(scan_data))
+    print(scan_data[last_scan_id])
+
+Scan Fitting & Auto-Analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default (``auto_analyse=True``), ``BlueAPISession`` automatically analyses each scan when it completes:
+
+* Fits a 1D Gaussian plus linear background to the scan data.
+* Calculates the centre of mass (COM) and 1st/2nd numerical derivatives (``d1``, ``d2``).
+* Appends the derived curves (``gaussian``, ``d1``, ``d2``) and scalar metrics (``centre``, ``com``, ``zero_crossing``, ``max_slope_x``, ``min_slope_x``) to ``scan_data[scan_id]``.
+* Updates ``last_fit`` with ``centre``, ``com``, ``max_slope_x``, ``min_slope_x``, and ``zero_crossing``.
+
+You can also configure preferred fit axes or run fits manually on any scan:
+
+.. code-block:: python
+
+    # Set preferred X and Y channels for auto-analysis and fit_scan()
+    set_fit_axes(x="pgm-energy", y="det1")
+
+    # Fit the most recent scan (or pass a specific scan_id, x, y, or initial guess)
+    res = fit_scan()
+    res = fit_scan(scan_id="30", x="pgm-energy", y="det1")
+
+    # Access the latest fitted summary parameters via last_fit
+    print(
+        last_fit.centre,
+        last_fit.com,
+        last_fit.max_slope_x,
+        last_fit.min_slope_x,
+        last_fit.zero_crossing,
+    )
+
+Interactive Plotting
+^^^^^^^^^^^^^^^^^^^^
+
+You can visualise this data in near real-time using the built-in interactive plot window. By default, the window will attempt to open automatically, but you can also summon it manually:
+
+.. code-block:: python
+
+    # Open the plotting window for the current data
+    plot()
+
+    # Open the plotting window for a specific scan with a custom 2D colormap
+    plot(scan_id="123", cmap="plasma")
+
+The interactive plot window polls for new data in the background as a scan progresses and provides controls in the side panel for:
+
+* **Scan Selection:** Toggle recent scans or add a specific scan by ID.
+* **Channel Selection:** Choose the X axis and toggle multiple Y channels (in **1D Line** mode), or choose X, Y, and colour Z channels (in **2D** modes).
+* **Plot Mode:**
+    * **1D Line:** Plot one or more Y channels against a selected X axis (or ``Point number``) across all active scans.
+    * **2D Grid:** Rebin 2D step or fast grid scans into a 2D heatmap (``X``, ``Y``, and colour ``Z``) with a colorbar, automatically falling back to a scatter plot for ungridded points.
+    * **2D Contour:** Render filled triangulated contours of ``(X, Y, Z)`` data with a colorbar (falling back to a scatter plot when points are collinear or fewer than three).
+* **Log Scale:** Toggle logarithmic scaling on the Y axis (in **1D Line** mode) or on the colour normalisation (in **2D Grid** and **2D Contour** modes).
+
+Session Caching & Variable Persistence
+--------------------------------------
+
+The interactive client automatically caches your active session ID and collected scan data so you can seamlessly resume your work after closing the terminal.
+
+Automatic Caching
+^^^^^^^^^^^^^^^^^
+
+- **Session ID:** When you launch the client with the ``-s`` flag (e.g., ``sm-bluesky client -b i10 -s my_session``), your session ID is remembered. The next time you launch the client without the ``-s`` flag, it will automatically reconnect to ``my_session``.
+- **Scan Data:** Every time a hardware scan completes, the collected data is automatically saved to a local cache (``~/.sm-bluesky/cache/``). When you restart your client and reconnect to the same session, your previous ``scan_data`` is automatically loaded back into memory, allowing you to instantly run ``plot()`` on older scans.
+
+User Variables
+^^^^^^^^^^^^^^
+
+There is no easy way to restore the whole namespace as we have active network connections and thread locking is used by the client. Therefore while raw ``scan_data`` is cached automatically, any custom variables or processed data arrays you create must be manually set to be persistent. 
+
+You can save these across sessions using IPython's built-in ``%store`` magic command:
+
+.. tip::
+
+    **Saving a variable:**
+    
+    .. code-block:: python
+    
+        # Create a variable
+        my_custom_data = scan_data["123"] * 2.5
+        
+        # Store it to the local IPython cache
+        %store my_custom_data
+
+    **Restoring a variable (after restarting the client):**
+    
+    .. code-block:: python
+
+        # Retrieve the variable from the local IPython cache
+        %store -r my_custom_data
+        
+        print(my_custom_data)
+
+    To view all currently stored variables, simply run ``%store`` without any arguments. You can also restore previously saved variables into your current namespace with ``%store -r``.

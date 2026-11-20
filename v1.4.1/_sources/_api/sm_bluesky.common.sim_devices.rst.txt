@@ -1,0 +1,25 @@
+``sm_bluesky.common.sim_devices``
+=================================
+        
+        
+        
+
+.. automodule:: sm_bluesky.common.sim_devices
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        SimDetector
+        SimMotorExtra
+        SimStage
+    
+    

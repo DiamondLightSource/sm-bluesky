@@ -1,0 +1,23 @@
+``sm_bluesky.beamlines.i06_1.plans``
+====================================
+        
+        
+
+.. automodule:: sm_bluesky.beamlines.i06_1.plans
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        fastfieldscan
+        fastfieldscan_with_energy
+    
+    

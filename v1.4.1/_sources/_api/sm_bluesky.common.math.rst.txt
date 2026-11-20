@@ -1,0 +1,43 @@
+``sm_bluesky.common.math``
+==========================
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+.. automodule:: sm_bluesky.common.math
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        DerivativeResult
+        calculate_com
+        calculate_derivatives
+        fit_gaussian
+        cal_range_num
+        edges_from_centres
+        step_size_to_step_num
+        to_float
+        binned_axis
+        extract_xyz
+        grid_heatmap
+        unique_axis
+    
+    

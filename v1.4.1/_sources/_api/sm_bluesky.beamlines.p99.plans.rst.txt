@@ -1,0 +1,23 @@
+``sm_bluesky.beamlines.p99.plans``
+==================================
+        
+        
+
+.. automodule:: sm_bluesky.beamlines.p99.plans
+    :members:
+
+    
+    
+    
+
+    
+    
+    .. rubric:: Members
+
+    .. autosummary::
+        :nosignatures:
+    
+        stxm_fast
+        stxm_step
+    
+    
