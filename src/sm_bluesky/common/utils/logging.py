@@ -1,4 +1,9 @@
+import re
 from io import TextIOWrapper
+
+ANSI_ESCAPE = re.compile(
+    r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1B\\))"
+)
 
 
 class Tee:
@@ -10,7 +15,7 @@ class Tee:
 
     def write(self, text):
         self.stream.write(text)
-        self.logfile.write(text)
+        self.logfile.write(ANSI_ESCAPE.sub("", text))
         self.logfile.flush()
         return len(text)
 

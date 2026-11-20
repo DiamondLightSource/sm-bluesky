@@ -11,7 +11,7 @@ import click
 from sm_bluesky import __version__
 
 if TYPE_CHECKING:
-    from blueapi.config import ApplicationConfig, DeviceManagerSource
+    from blueapi.config import ApplicationConfig
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -232,7 +232,7 @@ def send(payload: str, host: str = "127.0.0.1", port: int = 7891, timeout: float
 )
 @click.option(
     "-s",
-    "--session",
+    "--instrument_session",
     type=str,
     default=None,
     help="Pre-assign the active instrument session (e.g. cm44186-1).",
@@ -328,6 +328,8 @@ def load_config(
 
 
 def _get_app_beamline_from_mock_config(app: ApplicationConfig) -> str:
+    from blueapi.config import DeviceManagerSource
+
     for source in app.env.sources:
         if isinstance(source, DeviceManagerSource):
             return source.module.split(".")[-1]

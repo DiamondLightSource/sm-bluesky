@@ -28,7 +28,7 @@ class BlueAPISession:
         cache_dir: str,
         instrument_session: str,
     ):
-        cache_dir = os.path.expanduser(self._cache_dir)
+        cache_dir = os.path.expanduser(cache_dir)
         os.makedirs(cache_dir, exist_ok=True)
 
         self.config: ApplicationConfig = config
