@@ -81,9 +81,8 @@ def loop(
     visited once.
 
     When ``mirror`` is True (default), the scan symmetrically returns along the
-    same positions back to the start. Set ``mirror=False`` to define explicit
-    forward and return regions (e.g. asymmetric step sizes or multi-segment
-    hysteresis loops).
+    same positions back to the start. Set ``mirror=False`` to define
+    forward and return regions (e.g. multi-segment hysteresis loops).
 
     Parameters
     ----------
