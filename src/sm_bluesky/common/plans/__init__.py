@@ -14,7 +14,7 @@ from .alignments import (
 )
 from .fast_scan import fast_scan_1d, fast_scan_grid, soft_fly_energy_scan
 from .grid_scan import grid_fast_scan, grid_step_scan
-from .loop_scan import loop
+from .loop_scan import loop_step_scan
 
 __all__ = [
     "fast_scan_and_move_fit",
@@ -25,7 +25,7 @@ __all__ = [
     "fast_scan_grid",
     "grid_fast_scan",
     "grid_step_scan",
-    "loop",
+    "loop_step_scan",
     "trigger_img",
     "soft_fly_energy_scan",
 ]

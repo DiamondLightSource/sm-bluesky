@@ -4,7 +4,7 @@ import pytest
 from bluesky.run_engine import RunEngine
 from ophyd_async.testing import assert_emitted
 
-from sm_bluesky.common.plans import loop
+from sm_bluesky.common.plans import loop_step_scan
 from sm_bluesky.common.plans.loop_scan import _generate_loop_positions
 from sm_bluesky.common.sim_devices import SimDetector, SimStage
 
@@ -170,7 +170,7 @@ def test_generate_loop_positions_invalid(
         ),
     ],
 )
-async def test_loop_forward_and_return_single_run(
+async def test_loop_step_scan_forward_and_return_single_run(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     sim_stage_step: SimStage,
@@ -182,7 +182,7 @@ async def test_loop_forward_and_return_single_run(
     expected_positions: list[float],
 ) -> None:
     run_engine(
-        loop(
+        loop_step_scan(
             [fake_detector],
             sim_stage_step.x,
             start,
@@ -199,7 +199,7 @@ async def test_loop_forward_and_return_single_run(
         event=len(expected_positions),
         stop=1,
     )
-    assert run_engine_documents["start"][0]["plan_name"] == "loop"
+    assert run_engine_documents["start"][0]["plan_name"] == "loop_step_scan"
     events = run_engine_documents["event"]
     positions = [event["data"][sim_stage_step.x.name] for event in events]
     assert positions == pytest.approx(expected_positions)

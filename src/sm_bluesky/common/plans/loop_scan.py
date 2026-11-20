@@ -62,7 +62,7 @@ def _generate_loop_positions(
 
 
 @plan
-def loop(
+def loop_step_scan(
     detectors: Sequence[Readable],
     movable: Movable[float],
     start: float | Sequence[float],
@@ -108,6 +108,6 @@ def loop(
         A Bluesky generator executing the loop scan in a single run.
     """
     positions = _generate_loop_positions(start, stop, step_size, mirror=mirror)
-    _md: dict[str, Any] = {"plan_name": "loop", **(md or {})}
+    _md: dict[str, Any] = {"plan_name": "loop_step_scan", **(md or {})}
     scan_args: tuple[Any, ...] = (movable, positions)
     return (yield from bp.list_scan(detectors, *scan_args, md=_md))
