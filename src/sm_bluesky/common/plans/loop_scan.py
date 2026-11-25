@@ -111,15 +111,6 @@ def loop_step_scan(
     if movable_name is not None:
         detectors = [det for det in detectors if det.name != movable_name]
     positions = _generate_loop_positions(start, stop, step_size, mirror=mirror)
-    hinted = get_hinted_fields(movable) or (
-        [movable_name] if movable_name is not None else []
-    )
-    user_md = dict(md or {})
-    user_hints = user_md.pop("hints", None)
-    hints: dict[str, Any] = {
-        **({"dimensions": [(hinted, "primary")]} if hinted else {}),
-        **(user_hints or {}),
-    }
     _md: dict[str, Any] = {
         "plan_name": "loop_step_scan",
         "plan_args": {
@@ -136,8 +127,12 @@ def loop_step_scan(
             "movable": repr(movable),
             "positions": positions,
         },
-        "hints": hints,
-        **user_md,
+        **(md or {}),
     }
+    if movable_name is not None and not get_hinted_fields(movable):
+        _md["hints"] = {
+            "dimensions": [([movable_name], "primary")],
+            **(_md.get("hints") or {}),
+        }
     scan_args: tuple[Any, ...] = (movable, positions)
     return (yield from bp.list_scan(detectors, *scan_args, md=_md))
