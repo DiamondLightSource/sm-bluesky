@@ -116,11 +116,9 @@ def loop_step_scan(
         "plan_args": {
             "detectors": [repr(det) for det in detectors],
             "movable": repr(movable),
-            "start": start if isinstance(start, int | float) else list(start),
-            "stop": stop if isinstance(stop, int | float) else list(stop),
-            "step_size": (
-                step_size if isinstance(step_size, int | float) else list(step_size)
-            ),
+            "start": start,
+            "stop": stop,
+            "step_size": step_size,
             "mirror": mirror,
         },
         "plan_pattern_args": {
