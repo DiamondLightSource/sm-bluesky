@@ -2,6 +2,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 from bluesky.run_engine import RunEngine
+from ophyd_async.core import init_devices, soft_signal_rw
 from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.plans import loop_step_scan
@@ -208,4 +209,49 @@ async def test_loop_step_scan_forward_and_return_single_run(
     assert all(f"{fake_detector.name}-value" in event["data"] for event in events)
     assert await sim_stage_step.x.user_readback.get_value() == pytest.approx(
         expected_positions[-1]
+    )
+
+
+@pytest.mark.parametrize("include_detector", [True, False])
+async def test_loop_step_scan_strips_movable_from_detectors(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_stage_step: SimStage,
+    fake_detector: SimDetector,
+    include_detector: bool,
+) -> None:
+    detectors = (
+        [fake_detector, sim_stage_step.x] if include_detector else [sim_stage_step.x]
+    )
+    run_engine(loop_step_scan(detectors, sim_stage_step.x, 0.0, 0.2, 0.1))
+
+    start_doc = run_engine_documents["start"][0]
+    expected_detectors = [fake_detector.name] if include_detector else []
+    assert start_doc["detectors"] == expected_detectors
+    assert start_doc["motors"] == [sim_stage_step.x.name]
+    assert sim_stage_step.x.name not in start_doc["detectors"]
+
+
+@pytest.mark.parametrize("use_signal", [False, True])
+async def test_loop_step_scan_start_metadata_and_hints(
+    run_engine: RunEngine,
+    run_engine_documents: Mapping[str, list[dict]],
+    sim_stage_step: SimStage,
+    use_signal: bool,
+) -> None:
+    if use_signal:
+        async with init_devices(mock=True):
+            movable = soft_signal_rw(float, initial_value=0.0, name="halbach-field")
+    else:
+        movable = sim_stage_step.x
+
+    run_engine(loop_step_scan([], movable, 0.0, 0.2, 0.1))
+
+    start_doc = run_engine_documents["start"][0]
+    assert start_doc["hints"]["dimensions"] == [([movable.name], "primary")]
+    assert "args" not in start_doc["plan_args"]
+    assert "args" not in start_doc["plan_pattern_args"]
+    assert start_doc["plan_args"]["movable"] == repr(movable)
+    assert start_doc["plan_pattern_args"]["positions"] == pytest.approx(
+        [0.0, 0.1, 0.2, 0.1, 0.0]
     )

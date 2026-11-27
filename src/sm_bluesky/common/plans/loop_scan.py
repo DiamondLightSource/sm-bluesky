@@ -4,8 +4,8 @@ from typing import Any
 
 import bluesky.plans as bp
 import numpy as np
-from bluesky.protocols import Movable, Readable
-from bluesky.utils import CustomPlanMetadata, MsgGenerator, plan
+from bluesky.protocols import HasName, Movable, Readable
+from bluesky.utils import CustomPlanMetadata, MsgGenerator, get_hinted_fields, plan
 
 
 def _generate_segment(
@@ -107,7 +107,30 @@ def loop_step_scan(
     MsgGenerator
         A Bluesky generator executing the loop scan in a single run.
     """
+    movable_name = movable.name if isinstance(movable, HasName) else None
+    if movable_name is not None:
+        detectors = [det for det in detectors if det.name != movable_name]
     positions = _generate_loop_positions(start, stop, step_size, mirror=mirror)
-    _md: dict[str, Any] = {"plan_name": "loop_step_scan", **(md or {})}
+    _md: dict[str, Any] = {
+        "plan_name": "loop_step_scan",
+        "plan_args": {
+            "detectors": [repr(det) for det in detectors],
+            "movable": repr(movable),
+            "start": start,
+            "stop": stop,
+            "step_size": step_size,
+            "mirror": mirror,
+        },
+        "plan_pattern_args": {
+            "movable": repr(movable),
+            "positions": positions,
+        },
+        **(md or {}),
+    }
+    if movable_name is not None and not get_hinted_fields(movable):
+        _md["hints"] = {
+            "dimensions": [([movable_name], "primary")],
+            **(_md.get("hints") or {}),
+        }
     scan_args: tuple[Any, ...] = (movable, positions)
     return (yield from bp.list_scan(detectors, *scan_args, md=_md))
