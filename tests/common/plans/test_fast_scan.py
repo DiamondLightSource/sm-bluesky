@@ -5,7 +5,7 @@ import pytest
 from bluesky.run_engine import RunEngine
 from dodal.devices.motors import XYZStage
 from numpy import linspace
-from ophyd_async.core import get_mock_put
+from ophyd_async.core import get_mock_put, set_mock_value
 from ophyd_async.sim import SimPointDetector
 from ophyd_async.testing import assert_emitted
 
@@ -65,23 +65,25 @@ async def test_fast_scan_1d_success(
 async def test_fast_scan_1d_success_without_speed(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_stage_delay: XYZStage,
+    sim_stage: XYZStage,
 ) -> None:
-    run_engine(fast_scan_1d([sim_stage_delay.y], sim_stage_delay.x, 1, 5))
+    set_mock_value(sim_stage.x.velocity, 88.88)
+    set_mock_value(sim_stage.x.max_velocity, 100)
+    run_engine(fast_scan_1d([sim_stage.y], sim_stage.x, 1, 5))
 
-    assert 88.88 == await sim_stage_delay.x.velocity.get_value()
-    assert 2 == get_mock_put(sim_stage_delay.x.user_setpoint).call_count
-    assert 3 == get_mock_put(sim_stage_delay.x.velocity).call_count
+    assert 88.88 == await sim_stage.x.velocity.get_value()
+    assert 2 == get_mock_put(sim_stage.x.user_setpoint).call_count
+    assert 3 == get_mock_put(sim_stage.x.velocity).call_count
     # check speed is set and reset
     assert [
-        mock.call(pytest.approx(0)),  # SimMotor fast move to start
+        mock.call(pytest.approx(100)),  # max_velocity for fast move to start
         mock.call(pytest.approx(88.88)),
         mock.call(pytest.approx(88.88)),
-    ] == get_mock_put(sim_stage_delay.x.velocity).call_args_list
+    ] == get_mock_put(sim_stage.x.velocity).call_args_list
 
     """Only 1 event as sim motor motor_done_move is set to True,
-      so only 1 loop is ran"""  #
-    assert_emitted(run_engine_documents, start=1, descriptor=1, event=mock.ANY, stop=1)
+      so only 1 loop is ran"""
+    assert_emitted(run_engine_documents, start=1, descriptor=1, event=1, stop=1)
 
 
 async def test_fast_scan_2d_success(

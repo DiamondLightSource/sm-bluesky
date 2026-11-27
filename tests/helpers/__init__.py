@@ -1,3 +1,4 @@
+from .fake_detector import FakeDetector
 from .helper_functions import (
     check_msg_set,
     check_msg_wait,
@@ -6,6 +7,7 @@ from .helper_functions import (
 from .math_function import gaussian
 
 __all__ = [
+    "FakeDetector",
     "check_msg_set",
     "check_msg_wait",
     "check_mv_wait",
