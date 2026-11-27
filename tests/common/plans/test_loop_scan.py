@@ -2,11 +2,12 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 from bluesky.run_engine import RunEngine
+from dodal.devices.motors import XYZStage
 from ophyd_async.testing import assert_emitted
 
 from sm_bluesky.common.plans import loop_step_scan
 from sm_bluesky.common.plans.loop_scan import _generate_loop_positions
-from sm_bluesky.common.sim_devices import SimDetector, SimStage
+from tests.helpers import FakeDetector
 
 
 @pytest.mark.parametrize(
@@ -173,8 +174,8 @@ def test_generate_loop_positions_invalid(
 async def test_loop_step_scan_forward_and_return_single_run(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_stage_step: SimStage,
-    fake_detector: SimDetector,
+    sim_stage: XYZStage,
+    fake_detector: FakeDetector,
     start: float | Sequence[float],
     stop: float | Sequence[float],
     step_size: float | Sequence[float],
@@ -184,7 +185,7 @@ async def test_loop_step_scan_forward_and_return_single_run(
     run_engine(
         loop_step_scan(
             [fake_detector],
-            sim_stage_step.x,
+            sim_stage.x,
             start,
             stop,
             step_size,
@@ -201,11 +202,11 @@ async def test_loop_step_scan_forward_and_return_single_run(
     )
     assert run_engine_documents["start"][0]["plan_name"] == "loop_step_scan"
     events = run_engine_documents["event"]
-    positions = [event["data"][sim_stage_step.x.name] for event in events]
+    positions = [event["data"][sim_stage.x.name] for event in events]
     assert positions == pytest.approx(expected_positions)
     if mirror:
         assert positions == pytest.approx(list(reversed(positions)))
     assert all(f"{fake_detector.name}-value" in event["data"] for event in events)
-    assert await sim_stage_step.x.user_readback.get_value() == pytest.approx(
+    assert await sim_stage.x.user_readback.get_value() == pytest.approx(
         expected_positions[-1]
     )
