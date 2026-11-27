@@ -24,8 +24,9 @@ from ophyd_async.core import (
 from ophyd_async.epics.adandor import AndorDetector
 from ophyd_async.epics.adcore import ADBaseIO, ADWriterFactory
 from ophyd_async.epics.adcore._io import NDPluginFileIO
+from ophyd_async.epics.motor import VeloAndAcclRespectingMotorMock
 
-from sm_bluesky.common.sim_devices import SimDetector, SimStage
+from tests.helpers import FakeDetector
 
 RECORD = str(Path(__file__).parent / "panda" / "db" / "panda.db")
 INCOMPLETE_BLOCK_RECORD = str(
@@ -122,30 +123,34 @@ async def sim_motor() -> XYZStage:
 
 
 @pytest.fixture
-async def sim_stage_step() -> SimStage:
+async def sim_stage() -> XYZStage:
+    """XYZStage whose motors move instantly (the default Motor mock)."""
     async with init_devices(mock=True):
-        sim_stage_step = SimStage(name="sim_stage_step", instant=True)
-    return sim_stage_step
+        sim_stage = XYZStage("BLxxI-MO-STAGE-01:", name="sim_stage")
+    for motor in (sim_stage.x, sim_stage.y, sim_stage.z):
+        set_mock_value(motor.low_limit_travel, -100)
+        set_mock_value(motor.high_limit_travel, 100)
+    return sim_stage
 
 
 @pytest.fixture
-async def sim_stage_delay() -> SimStage:
-    async with init_devices(mock=True):
-        sim_stage_delay = SimStage(name="sim_stage_delay", instant=False)
-    set_mock_value(sim_stage_delay.x.velocity, 88.88)
-    set_mock_value(sim_stage_delay.x.acceleration_time, 0.01)
-    set_mock_value(sim_stage_delay.y.velocity, 88.88)
-    set_mock_value(sim_stage_delay.y.acceleration_time, 0.01)
-    set_mock_value(sim_stage_delay.z.velocity, 88.88)
-    set_mock_value(sim_stage_delay.z.acceleration_time, 0.01)
+async def sim_stage_delay() -> XYZStage:
+    """XYZStage whose motors take time to move, respecting velocity and
+    acceleration time."""
+    sim_stage_delay = XYZStage("BLxxI-MO-STAGE-02:", name="sim_stage_delay")
+    for motor in (sim_stage_delay.x, sim_stage_delay.y, sim_stage_delay.z):
+        await motor.connect(mock=VeloAndAcclRespectingMotorMock())
+        set_mock_value(motor.velocity, 88.88)
+        set_mock_value(motor.acceleration_time, 0.01)
+        set_mock_value(motor.low_limit_travel, -100)
+        set_mock_value(motor.high_limit_travel, 100)
     return sim_stage_delay
 
 
 @pytest.fixture
-async def fake_detector() -> SimDetector:
+async def fake_detector() -> FakeDetector:
     async with init_devices(mock=True):
-        fake_detector = SimDetector(prefix="fake_Pv", name="fake_detector")
-    set_mock_value(fake_detector.value, 0)
+        fake_detector = FakeDetector()
     return fake_detector
 
 

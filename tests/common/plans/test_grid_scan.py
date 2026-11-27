@@ -16,7 +16,6 @@ from sm_bluesky.common.plans.grid_scan import (
     grid_fast_scan,
     grid_step_scan,
 )
-from sm_bluesky.common.sim_devices import SimStage
 
 
 async def test_grid_fast_zero_velocity_fail(
@@ -425,21 +424,21 @@ async def test_grid_fast_unknown_step_snake_with_point_correction(
 async def test_grid_step_with_home(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_stage_step: SimStage,
+    sim_stage: XYZStage,
     andor2: AndorDetector,
 ) -> None:
-    await sim_stage_step.x.set(-1)
-    await sim_stage_step.y.set(-2)
+    await sim_stage.x.set(-1)
+    await sim_stage.y.set(-2)
 
     run_engine(
         grid_step_scan(
             dets=[andor2],
             count_time=0.2,
-            x_step_motor=sim_stage_step.x,  # type: ignore
+            x_step_motor=sim_stage.x,  # type: ignore
             x_step_start=0,
             x_step_end=2,
             x_step_size=0.2,
-            y_step_motor=sim_stage_step.y,  # type: ignore
+            y_step_motor=sim_stage.y,  # type: ignore
             y_step_start=-1,
             y_step_end=1,
             y_step_size=0.25,
@@ -457,28 +456,28 @@ async def test_grid_step_with_home(
         event=99,
         stop=1,
     )
-    assert -1 == await sim_stage_step.x.user_readback.get_value()
-    assert -2 == await sim_stage_step.y.user_readback.get_value()
+    assert -1 == await sim_stage.x.user_readback.get_value()
+    assert -2 == await sim_stage.y.user_readback.get_value()
 
 
 async def test_grid_step_without_home_with_readable(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_stage_step: SimStage,
+    sim_stage: XYZStage,
 ) -> None:
-    await sim_stage_step.x.set(-1)
-    await sim_stage_step.y.set(-2)
+    await sim_stage.x.set(-1)
+    await sim_stage.y.set(-2)
     y_step_end = 1
     x_step_end = 2
     run_engine(
         grid_step_scan(
-            dets=[sim_stage_step.z],
+            dets=[sim_stage.z],
             count_time=0.2,
-            x_step_motor=sim_stage_step.x,  # type: ignore
+            x_step_motor=sim_stage.x,  # type: ignore
             x_step_start=0,
             x_step_end=x_step_end,
             x_step_size=0.2,
-            y_step_motor=sim_stage_step.y,  # type: ignore
+            y_step_motor=sim_stage.y,  # type: ignore
             y_step_start=-1,
             y_step_end=y_step_end,
             y_step_size=0.25,
@@ -487,15 +486,15 @@ async def test_grid_step_without_home_with_readable(
         ),
     )
     assert_emitted(run_engine_documents, start=1, descriptor=1, event=99, stop=1)
-    assert x_step_end == await sim_stage_step.x.user_readback.get_value()
-    assert y_step_end == await sim_stage_step.y.user_readback.get_value()
+    assert x_step_end == await sim_stage.x.user_readback.get_value()
+    assert y_step_end == await sim_stage.y.user_readback.get_value()
 
 
 async def test_grid_fast_sim_flyable_motor_with_andor_point(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
     andor2_point: SingleTriggerDetector,
-    sim_stage_delay: XYZStage,
+    sim_stage: XYZStage,
 ) -> None:
     plan_time = 0.5
     count_time = 0.01
@@ -506,10 +505,10 @@ async def test_grid_fast_sim_flyable_motor_with_andor_point(
         grid_fast_scan(
             dets=[andor2_point],
             count_time=count_time,
-            step_motor=sim_stage_delay.x,
+            step_motor=sim_stage.x,
             step_start=step_start,
             step_end=step_end,
-            scan_motor=sim_stage_delay.y,
+            scan_motor=sim_stage.y,
             scan_start=1,
             scan_end=2,
             plan_time=plan_time,
@@ -562,3 +561,9 @@ async def test_grid_fast_sim_flyable_motor(
         run_engine_documents["event"].__len__()
         == run_engine_documents["stream_datum"].__len__()
     )
+    # The delayed motor means the detector is read several times during each
+    # scan line, so there should be more events than step positions.
+    step_positions = {
+        event["data"]["sim_stage_delay-x"] for event in run_engine_documents["event"]
+    }
+    assert len(run_engine_documents["event"]) > len(step_positions)

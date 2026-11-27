@@ -4,8 +4,8 @@ import pytest
 from bluesky.plan_stubs import sleep
 from bluesky.plans import count
 from bluesky.run_engine import RunEngine
+from dodal.devices.motors import XYZStage
 
-from sm_bluesky.common.sim_devices import SimStage
 from sm_bluesky.common.utils.decorators import (
     add_default_metadata,
     add_extra_names_to_meta,
@@ -21,12 +21,12 @@ DEFAULT_METADATA = {
 async def test_add_meta_success_with_no_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_stage_step: SimStage,
+    sim_stage: XYZStage,
 ) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
 
     run_engine(
-        count_meta([sim_stage_step.x]),
+        count_meta([sim_stage.x]),
     )
     assert run_engine_documents["start"][0]["energy"] == DEFAULT_METADATA["energy"]
     assert (
@@ -39,11 +39,11 @@ async def test_add_meta_success_with_no_meta(
 async def test_add_meta_success_with_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_stage_step: SimStage,
+    sim_stage: XYZStage,
 ) -> None:
     count_meta = add_default_metadata(count, DEFAULT_METADATA)
     run_engine(
-        count_meta([sim_stage_step.x], md={"bah": "bah"}),
+        count_meta([sim_stage.x], md={"bah": "bah"}),
     )
     assert run_engine_documents["start"][0]["energy"] == DEFAULT_METADATA["energy"]
     assert (
@@ -57,11 +57,11 @@ async def test_add_meta_success_with_meta(
 async def test_add_meta_success_with_no_extra_meta(
     run_engine: RunEngine,
     run_engine_documents: Mapping[str, list[dict]],
-    sim_stage_step: SimStage,
+    sim_stage: XYZStage,
 ) -> None:
     count_meta = add_default_metadata(count)
 
-    run_engine(count_meta([sim_stage_step.x]))
+    run_engine(count_meta([sim_stage.x]))
     assert run_engine_documents["start"][0]["plan_name"] == "count"
 
 
