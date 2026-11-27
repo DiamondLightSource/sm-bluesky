@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Running Bluesky locally &#8212; sm-bluesky 1.4.1.dev23+g3e11523cb documentation</title>
+    <title>Running Bluesky locally &#8212; sm-bluesky 1.4.2.dev1+gacd84a690 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=b8948c8a"></script>
+    <script src="../_static/documentation_options.js?v=521d11d9"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -487,13 +487,12 @@
                   
   <section id="running-bluesky-locally">
 <h1>Running Bluesky locally<a class="headerlink" href="#running-bluesky-locally" title="Link to this heading">#</a></h1>
-<p>This document outlines how to run Bluesky locally for rapid testing and development using the provided <code class="docutils literal notranslate"><span class="pre">sm-bluesky</span></code> command-line tools. This will run a local instance of BlueAPI alongside a message broker with an ipython interactive environment.</p>
+<p>This document outlines how to run Bluesky locally for testing and development using the provided <code class="docutils literal notranslate"><span class="pre">sm-bluesky</span></code> CLI. This will run a local instance of BlueAPI with an IPython interactive environment.</p>
 <section id="local-blueapi-with-sm-bluesky">
 <h2>Local BlueAPI with sm-bluesky<a class="headerlink" href="#local-blueapi-with-sm-bluesky" title="Link to this heading">#</a></h2>
-<p>To run blueAPI locally, you must first start a message broker (RabbitMQ/STOMP) to handle live event streaming (This will soon not be necessary). Please follow the instructions at <a class="reference external" href="https://diamondlightsource.github.io/blueapi/main/tutorials/run-bus.html">Start RabbitMQ</a> to set up your message bus.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>Once RabbitMQ is running, you can start the BlueAPI server and connect your client.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Running a STOMP message broker (RabbitMQ) is optional and is no longer required to start BlueAPI locally. If you want live event streaming over STOMP, follow the instructions at <a class="reference external" href="https://diamondlightsource.github.io/blueapi/main/tutorials/run-bus.html">Start RabbitMQ</a> and uncomment the <code class="docutils literal notranslate"><span class="pre">stomp</span></code> section in <code class="docutils literal notranslate"><span class="pre">src/yaml_config/blueapi_config.yaml</span></code>.</p>
 </div>
 <section id="step-1-start-the-blueapi-server">
 <h3>Step 1: Start the BlueAPI Server<a class="headerlink" href="#step-1-start-the-blueapi-server" title="Link to this heading">#</a></h3>
@@ -516,9 +515,10 @@
       <span class="n">module</span><span class="p">:</span> <span class="n">dodal</span><span class="o">.</span><span class="n">plans</span>
     <span class="o">-</span> <span class="n">kind</span><span class="p">:</span> <span class="n">planFunctions</span>
       <span class="n">module</span><span class="p">:</span> <span class="n">dodal</span><span class="o">.</span><span class="n">plan_stubs</span><span class="o">.</span><span class="n">wrapped</span>
-<span class="n">stomp</span><span class="p">:</span>
-  <span class="n">enabled</span><span class="p">:</span> <span class="kc">True</span>
-  <span class="n">url</span><span class="p">:</span> <span class="n">tcp</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">61613</span><span class="o">/</span>
+<span class="c1">## Optional Stomp bus</span>
+<span class="c1"># stomp:</span>
+<span class="c1">#   enabled: True</span>
+<span class="c1">#   url: tcp://localhost:61613/</span>
 </pre></div>
 </div>
 </section>
