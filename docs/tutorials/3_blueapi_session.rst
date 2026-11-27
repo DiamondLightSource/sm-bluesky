@@ -176,13 +176,17 @@ You can visualise this data in near real-time using the built-in interactive plo
 
 The interactive plot window polls for new data in the background as a scan progresses and provides controls in the side panel for:
 
-* **Scan Selection:** Toggle recent scans or add a specific scan by ID.
+* **Scan Selection:** Toggle recent scans or add a specific scan by ID. Each scan keeps its own colour (shown on its label) for as long as the window is open. **Newest only** shows just the latest scan; **Clear** deselects everything. The list shows ten scans at a time: scroll over it with the mouse wheel (or click its scroll bar) to reach older scans. It stays on the newest scans unless you scroll up, and scans you have selected stay plotted when they are scrolled out of view. The X, Y and Z channel lists scroll the same way (eight rows at a time). When a selection is scrolled out of view, the list header says so, e.g. ``X AXIS  1–8/22 · pgm-energy`` or ``Y CHANNELS  7–14/21 · +2 ticked``.
 * **Channel Selection:** Choose the X axis and toggle multiple Y channels (in **1D Line** mode), or choose X, Y, and colour Z channels (in **2D** modes).
 * **Plot Mode:**
     * **1D Line:** Plot one or more Y channels against a selected X axis (or ``Point number``) across all active scans.
     * **2D Grid:** Rebin 2D step or fast grid scans into a 2D heatmap (``X``, ``Y``, and colour ``Z``) with a colorbar, automatically falling back to a scatter plot for ungridded points.
     * **2D Contour:** Render filled triangulated contours of ``(X, Y, Z)`` data with a colorbar (falling back to a scatter plot when points are collinear or fewer than three).
 * **Log Scale:** Toggle logarithmic scaling on the Y axis (in **1D Line** mode) or on the colour normalisation (in **2D Grid** and **2D Contour** modes).
+* **Follow Latest:** When ticked, each new scan replaces the selection instead of being added to it, so a long session does not pile up overlaid scans.
+* **Fit results:** ``gaussian`` is drawn dashed in the scan's colour, with the fitted centre marked when X is a real axis; ``d1``/``d2`` use a separate right-hand axis.
+
+The line under the plot shows the newest scan's point count and when the plot last updated; in 2D modes the newest point is circled in red. Keyboard shortcuts (with the plot window focused): ``l`` log scale, ``m`` next plot mode, ``n`` newest scan only, ``u`` clear the selection. Other keys keep their usual matplotlib meaning (``g`` grid, ``s`` save, ``h`` home view, ...).
 
 Session Caching & Variable Persistence
 --------------------------------------

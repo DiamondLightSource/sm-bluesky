@@ -1,6 +1,5 @@
 from unittest.mock import patch
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -13,8 +12,6 @@ from sm_bluesky.common.clients.interactive_plot import (
     InteractivePlotWindow,
     PlotMode,
 )
-
-matplotlib.use("Agg")
 
 
 @pytest.fixture
@@ -33,7 +30,6 @@ def mock_show(monkeypatch):
 
 @pytest.fixture
 def window(sample_data):
-    plt.close("all")
     return InteractivePlotWindow(sample_data, initial_scan_id="scan1")
 
 
@@ -55,17 +51,10 @@ def test_get_active_fields(window: InteractivePlotWindow):
     assert "motor2" not in fields
 
 
-def test_get_visible_scans(window: InteractivePlotWindow):
+def test_get_visible_scans_shows_newest_window():
     large_data = {f"scan{i}": {"Point number": [1]} for i in range(15)}
     win = InteractivePlotWindow(large_data)
-    win.active_scans.add("scan1")
-    win.active_scans.add("scan10")
-
-    vis = win.get_visible_scans()
-    assert len(vis) == 10
-    assert "scan1" in vis
-    assert "scan10" in vis
-    assert "scan14" in vis
+    assert win.get_visible_scans() == [f"scan{i}" for i in range(5, 15)]
 
 
 def test_unselect_all(window: InteractivePlotWindow):
@@ -84,12 +73,10 @@ def test_submit_scan_invalid(window: InteractivePlotWindow):
     assert "scan_missing" not in window.active_scans
 
 
-def test_submit_scan_empty_or_error(window: InteractivePlotWindow):
+@pytest.mark.parametrize("text", ["", "Not found: 123"])
+def test_submit_scan_empty_or_error(window: InteractivePlotWindow, text: str):
     initial_scans = set(window.active_scans)
-    window.submit_scan("")
-    assert window.active_scans == initial_scans
-
-    window.submit_scan("Not found: 123")
+    window.submit_scan(text)
     assert window.active_scans == initial_scans
 
 
@@ -99,48 +86,64 @@ def test_on_x_change(window: InteractivePlotWindow):
         mock_draw.assert_called_once()
 
 
-def test_on_y_toggle(window: InteractivePlotWindow):
-    window.active_y_states["det1"] = False
+@pytest.mark.parametrize("initial", [False, True])
+def test_on_y_toggle_flips_state_and_redraws(
+    window: InteractivePlotWindow, initial: bool
+):
+    window.active_y_states["det1"] = initial
     with patch.object(window, "draw_plot") as mock_draw:
         window.on_y_toggle("det1")
-        assert window.active_y_states["det1"] is True
-        mock_draw.assert_called_once()
+    assert window.active_y_states["det1"] is (not initial)
+    mock_draw.assert_called_once()
 
-    window.on_y_toggle("det1")
-    assert window.active_y_states["det1"] is False
+
+def test_on_y_toggle_none_is_ignored(window: InteractivePlotWindow):
+    before = dict(window.active_y_states)
     window.on_y_toggle(None)
+    assert window.active_y_states == before
 
 
-def test_on_scan_toggle(window: InteractivePlotWindow):
+@pytest.mark.parametrize("initially_active", [False, True])
+def test_on_scan_toggle(window: InteractivePlotWindow, initially_active: bool):
     window.active_scans.clear()
+    if initially_active:
+        window.active_scans.add("scan2")
     window.on_scan_toggle("scan2")
-    assert "scan2" in window.active_scans
-    window.on_scan_toggle("scan2")
-    assert "scan2" not in window.active_scans
+    assert ("scan2" in window.active_scans) is (not initially_active)
+
+
+def test_on_scan_toggle_none_is_ignored(window: InteractivePlotWindow):
+    before = set(window.active_scans)
     window.on_scan_toggle(None)
+    assert window.active_scans == before
 
 
-def test_update_plot(window: InteractivePlotWindow):
+def test_update_plot_new_scan_rebuilds_ui(window: InteractivePlotWindow):
     window.data_source["scan3"] = {"Point number": [1]}
     with (
         patch.object(window, "build_ui") as mock_build,
         patch.object(window, "draw_plot") as mock_draw,
     ):
         window.update_plot()
-        mock_build.assert_called_once()
-        mock_draw.assert_called_once()
-
+    mock_build.assert_called_once()
+    mock_draw.assert_called_once()
     assert "scan3" in window.scans
     assert "scan3" in window.active_scans
 
+
+def test_update_plot_new_point_redraws_without_rebuild(
+    window: InteractivePlotWindow,
+):
+    window.data_source["scan3"] = {"Point number": [1]}
+    window.update_plot()
     window.data_source["scan3"]["Point number"].append(2)
     with (
         patch.object(window, "build_ui") as mock_build,
         patch.object(window, "draw_plot") as mock_draw,
     ):
         window.update_plot()
-        mock_build.assert_not_called()
-        mock_draw.assert_called_once()
+    mock_build.assert_not_called()
+    mock_draw.assert_called_once()
 
 
 def test_update_plot_closed(window: InteractivePlotWindow):
@@ -151,12 +154,8 @@ def test_update_plot_closed(window: InteractivePlotWindow):
 
 
 def test_draw_with_x_choice(window: InteractivePlotWindow):
-    class MockRadio:
-        value_selected = "motor1"
-
-    window.widgets["radio_x"] = MockRadio()
     with patch.object(window.ax, "set_xlabel") as mock_xlabel:
-        window.draw_plot()
+        window.on_x_change("motor1")
         mock_xlabel.assert_called_with("motor1")
 
 
@@ -175,10 +174,7 @@ def test_draw_plot_explicitly(window: InteractivePlotWindow):
 
 
 def test_draw_plot_x_axis_fallback(window: InteractivePlotWindow):
-    class MockRadio:
-        value_selected = "motor1"
-
-    window.widgets["radio_x"] = MockRadio()
+    window.line_x = "motor1"
     window.active_scans.add("scan1")
     window.active_scans.add("scan2")
     with patch.object(window.ax, "set_xlabel") as mock_xlabel:
@@ -202,7 +198,6 @@ def grid_data():
 
 @pytest.fixture
 def grid_window(grid_data):
-    plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
     win.on_mode_change(PlotMode.GRID_2D)
     return win
@@ -215,12 +210,12 @@ def test_mode_defaults_to_1d(window: InteractivePlotWindow):
     assert not window.ax_z.get_visible()
 
 
-def test_switch_to_2d_builds_2d_controls(grid_window: InteractivePlotWindow):
-    win = grid_window
-    assert win.mode == PlotMode.GRID_2D
-    assert "radio_x" in win.widgets
-    assert "radio_y" in win.widgets
-    assert "radio_z" in win.widgets
+@pytest.mark.parametrize("mode", [PlotMode.GRID_2D, PlotMode.CONTOUR_2D])
+def test_switch_to_2d_mode_builds_2d_controls(grid_data, mode: PlotMode):
+    win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
+    win.on_mode_change(mode)
+    assert win.mode == mode
+    assert {"radio_x", "radio_y", "radio_z"} <= win.widgets.keys()
     assert "check_y" not in win.widgets
     assert win.ax_z.get_visible()
     assert win.ax_cbar.get_visible()
@@ -235,7 +230,6 @@ def _filled_cells(win) -> int:
 def test_2d_draw_heatmap_with_colorbar(grid_window: InteractivePlotWindow):
     win = grid_window
     assert len(win.ax.collections) == 1
-    assert len(win.ax.lines) == 0
     assert isinstance(win.ax.collections[0], QuadMesh)
     assert _filled_cells(win) == 9
     assert win.ax.get_xlabel() == "x_motor"
@@ -295,26 +289,28 @@ def test_2d_uses_most_recent_active_scan(grid_window: InteractivePlotWindow):
     win.build_ui()
     win.draw_plot()
     assert _filled_cells(win) == 1
-    assert "Scan other" in win.ax.get_title()
+    assert "Scan other" in win.ax.get_title(loc="left")
 
 
-def test_2d_no_scan_selected(grid_window: InteractivePlotWindow):
-    win = grid_window
+@pytest.mark.parametrize("mode", [PlotMode.GRID_2D, PlotMode.CONTOUR_2D])
+def test_2d_no_scan_selected(grid_data, mode: PlotMode):
+    win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
+    win.on_mode_change(mode)
     win.unselect_all(None)
     assert win.get_2d_scan() is None
     assert win.get_2d_fields() == []
     assert len(win.ax.collections) == 0
-    assert "no scan selected" in win.ax.get_title()
+    assert "no scan selected" in win.ax.get_title(loc="left")
     assert (win.x_field, win.y_field, win.z_field) == (None, None, None)
 
 
-def test_2d_waiting_for_data(grid_data):
-    plt.close("all")
+@pytest.mark.parametrize("mode", [PlotMode.GRID_2D, PlotMode.CONTOUR_2D])
+def test_2d_waiting_for_data(grid_data, mode: PlotMode):
     grid_data["grid"] = {"x_motor": [], "y_motor": [], "det": []}
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(PlotMode.GRID_2D)
+    win.on_mode_change(mode)
     assert len(win.ax.collections) == 0
-    assert "waiting for data" in win.ax.get_title()
+    assert "waiting for data" in win.ax.get_title(loc="left")
     assert not win.ax_cbar.get_visible()
 
 
@@ -372,28 +368,13 @@ def test_1d_x_change_does_not_touch_2d_state(window: InteractivePlotWindow):
 
 
 def test_2d_single_field_scan_defaults(grid_data):
-    plt.close("all")
     grid_data["grid"] = {"only": [1.0, 2.0]}
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
     win.on_mode_change(PlotMode.GRID_2D)
     assert (win.x_field, win.y_field, win.z_field) == ("only", "only", "only")
 
 
-def test_switch_to_contour_builds_2d_controls(grid_data):
-    plt.close("all")
-    win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(PlotMode.CONTOUR_2D)
-    assert win.mode == PlotMode.CONTOUR_2D
-    assert "radio_x" in win.widgets
-    assert "radio_y" in win.widgets
-    assert "radio_z" in win.widgets
-    assert "check_y" not in win.widgets
-    assert win.ax_z.get_visible()
-    assert win.ax_cbar.get_visible()
-
-
 def test_contour_draw_with_colorbar(grid_data):
-    plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
     win.on_mode_change(PlotMode.CONTOUR_2D)
     assert win.ax_cbar.get_visible()
@@ -403,8 +384,8 @@ def test_contour_draw_with_colorbar(grid_data):
     assert isinstance(win.ax.collections[0], TriContourSet)
 
 
-def test_contour_draw_fallback_collinear(grid_data):
-    plt.close("all")
+@pytest.mark.parametrize("log_scale", [False, True])
+def test_contour_draw_fallback_collinear(grid_data, log_scale: bool):
     grid_data["grid"] = {
         "x_motor": [0.0, 1.0, 2.0],
         "y_motor": [0.0, 0.0, 0.0],
@@ -412,30 +393,11 @@ def test_contour_draw_fallback_collinear(grid_data):
     }
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
     win.on_mode_change(PlotMode.CONTOUR_2D)
+    if log_scale:
+        win.on_log_toggle("Log Scale")
     assert win.ax_cbar.get_visible()
     assert isinstance(win.ax.collections[0], PathCollection)
-
-    win.on_log_toggle("Log Scale")
-    assert isinstance(win.ax.collections[0], PathCollection)
-    assert isinstance(win.ax.collections[0].norm, LogNorm)
-
-
-def test_contour_no_scan_selected(grid_data):
-    plt.close("all")
-    win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(PlotMode.CONTOUR_2D)
-    win.unselect_all(None)
-    assert "no scan selected" in win.ax.get_title()
-    assert len(win.ax.collections) == 0
-
-
-def test_contour_waiting_for_data(grid_data):
-    plt.close("all")
-    grid_data["grid"] = {"x_motor": [], "y_motor": [], "det": []}
-    win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(PlotMode.CONTOUR_2D)
-    assert "waiting for data" in win.ax.get_title()
-    assert not win.ax_cbar.get_visible()
+    assert isinstance(win.ax.collections[0].norm, LogNorm) is log_scale
 
 
 def test_log_scale_default_false(window: InteractivePlotWindow):
@@ -443,60 +405,51 @@ def test_log_scale_default_false(window: InteractivePlotWindow):
     assert "check_log" in window.widgets
 
 
-def test_on_log_toggle(window: InteractivePlotWindow):
+@pytest.mark.parametrize("initial", [False, True])
+def test_on_log_toggle_flips_and_redraws(window: InteractivePlotWindow, initial):
+    window.log_scale = initial
     with patch.object(window, "draw_plot") as mock_draw:
         window.on_log_toggle("Log Scale")
-        assert window.log_scale is True
-        mock_draw.assert_called_once()
+    assert window.log_scale is (not initial)
+    mock_draw.assert_called_once()
 
-        window.on_log_toggle("Log Scale")
-        assert window.log_scale is False
-        assert mock_draw.call_count == 2
 
+def test_on_log_toggle_ignores_other_labels(window: InteractivePlotWindow):
     window.on_log_toggle("Other")
     assert window.log_scale is False
 
 
-def test_1d_log_scale(window: InteractivePlotWindow):
-    assert window.ax.get_yscale() == "linear"
-    window.on_log_toggle("Log Scale")
-    assert window.ax.get_yscale() == "log"
-    window.on_log_toggle("Log Scale")
-    assert window.ax.get_yscale() == "linear"
+@pytest.mark.parametrize(
+    "n_toggles, expected", [(0, "linear"), (1, "log"), (2, "linear")]
+)
+def test_1d_log_scale(window: InteractivePlotWindow, n_toggles: int, expected: str):
+    for _ in range(n_toggles):
+        window.on_log_toggle("Log Scale")
+    assert window.ax.get_yscale() == expected
 
 
 def test_1d_log_scale_non_positive():
-    plt.close("all")
     data = {"1": {"y1": [-5, 0], "y2": [-1, -2]}}
     win = InteractivePlotWindow(data, initial_scan_id="1")
     win.on_log_toggle("Log Scale")
     assert win.ax.get_yscale() == "linear"
 
 
-def test_2d_log_scale_heatmap(grid_data):
-    plt.close("all")
+@pytest.mark.parametrize(
+    "mode, collection_type",
+    [(PlotMode.GRID_2D, QuadMesh), (PlotMode.CONTOUR_2D, TriContourSet)],
+)
+def test_2d_log_scale(grid_data, mode: PlotMode, collection_type: type):
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(PlotMode.GRID_2D)
+    win.on_mode_change(mode)
     win.on_log_toggle("Log Scale")
-    assert isinstance(win.ax.collections[0], QuadMesh)
     mappable = win.ax.collections[0]
-    assert isinstance(mappable.norm, LogNorm)
-    assert win.ax_cbar.get_visible()
-
-
-def test_2d_log_scale_contour(grid_data):
-    plt.close("all")
-    win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
-    win.on_mode_change(PlotMode.CONTOUR_2D)
-    win.on_log_toggle("Log Scale")
-    assert isinstance(win.ax.collections[0], TriContourSet)
-    mappable = win.ax.collections[0]
+    assert isinstance(mappable, collection_type)
     assert isinstance(mappable.norm, LogNorm)
     assert win.ax_cbar.get_visible()
 
 
 def test_2d_log_scale_non_positive():
-    plt.close("all")
     data = {
         "grid": {
             "x": [0, 1, 0, 1],
@@ -513,7 +466,6 @@ def test_2d_log_scale_non_positive():
 
 
 def test_2d_log_scale_uniform_positive():
-    plt.close("all")
     data = {
         "grid": {
             "x": [0, 1, 0, 1],
@@ -531,7 +483,6 @@ def test_2d_log_scale_uniform_positive():
 
 
 def test_log_scale_persists_across_mode_changes(grid_data):
-    plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
     win.on_log_toggle("Log Scale")
     assert win.log_scale is True
@@ -544,7 +495,6 @@ def test_log_scale_persists_across_mode_changes(grid_data):
 
 
 def test_2d_log_scale_contour_single_decade():
-    plt.close("all")
     data = {
         "scan": {
             "x": [0, 1, 2, 0, 1, 2, 0, 1, 2],
@@ -560,10 +510,10 @@ def test_2d_log_scale_contour_single_decade():
     assert isinstance(win.ax.collections[0].norm, LogNorm)
 
 
-def test_2d_contour_large_z_overflow():
-    """Ensure z values exceeding 32 bit do not trigger OverflowError
-    and default to scatter"""
-    plt.close("all")
+@pytest.mark.parametrize("log_scale", [False, True])
+def test_2d_contour_large_z_overflow(log_scale: bool):
+    """z values beyond 32-bit range must not raise OverflowError; the contour
+    plot is still drawn."""
     data = {
         "scan": {
             "x": [0, 1, 2, 0, 1, 2, 0, 1, 2],
@@ -573,14 +523,12 @@ def test_2d_contour_large_z_overflow():
     }
     win = InteractivePlotWindow(data, initial_scan_id="scan")
     win.on_mode_change(PlotMode.CONTOUR_2D)
-    assert isinstance(win.ax.collections[0], TriContourSet)
-
-    win.on_log_toggle("Log Scale")
+    if log_scale:
+        win.on_log_toggle("Log Scale")
     assert isinstance(win.ax.collections[0], TriContourSet)
 
 
 def test_custom_cmap(grid_data):
-    plt.close("all")
     win = InteractivePlotWindow(grid_data, initial_scan_id="grid", cmap="plasma")
     win.on_mode_change(PlotMode.GRID_2D)
     assert win.cmap == "plasma"
@@ -588,7 +536,6 @@ def test_custom_cmap(grid_data):
 
 
 def test_invalid_cmap_fallback(grid_data):
-    plt.close("all")
     with patch("click.secho") as mock_secho:
         win_bad = InteractivePlotWindow(
             grid_data, initial_scan_id="grid", cmap="not_a_colormap"
@@ -601,7 +548,6 @@ def test_invalid_cmap_fallback(grid_data):
 
 
 def test_analysis_fields_filtered_in_1d_and_2d():
-    plt.close("all")
     data = {
         "scan1": {
             "pgm-energy": [1.0, 2.0, 3.0, 4.0],
@@ -626,3 +572,632 @@ def test_analysis_fields_filtered_in_1d_and_2d():
     x_labels = [t.get_text() for t in win.widgets["radio_x"].labels]
     assert x_labels == ["Point number", "det1", "pgm-energy"]
     assert win.get_2d_fields() == ["pgm-energy", "det1"]
+
+
+@pytest.mark.parametrize(
+    "removed, expected_active",
+    [
+        (["scan2"], {"scan1"}),
+        (["scan1"], {"scan2"}),
+    ],
+)
+def test_update_plot_resyncs_when_scans_removed(
+    window: InteractivePlotWindow, removed: list[str], expected_active: set[str]
+):
+    for scan_id in removed:
+        del window.data_source[scan_id]
+    window.update_plot()
+    assert window.active_scans == expected_active
+
+
+def test_update_plot_resync_tracks_remaining_scans(window: InteractivePlotWindow):
+    del window.data_source["scan1"]
+    window.data_source["scan9"] = {"Point number": [1]}
+    window.update_plot()
+    assert window.scans == ["scan2", "scan9"]
+
+
+def test_update_plot_resync_after_all_scans_removed(window: InteractivePlotWindow):
+    window.data_source.clear()
+    window.update_plot()
+    assert (window.scans, window.active_scans) == ([], set())
+
+
+def test_update_plot_selects_scans_added_with_replacement(
+    window: InteractivePlotWindow,
+):
+    window.active_scans = {"scan2"}
+    window.data_source["scan2"] = {"Point number": [1]}
+    window.data_source["scan3"] = {"Point number": [1]}
+    window.update_plot()
+    assert window.active_scans == {"scan2", "scan3"}
+
+
+def test_update_plot_keeps_unreplaced_selection(window: InteractivePlotWindow):
+    window.active_scans = {"scan1"}
+    window.data_source["scan2"] = {"Point number": [5]}
+    window.update_plot()
+    assert "scan1" in window.active_scans
+
+
+@pytest.mark.parametrize(
+    "action",
+    [
+        lambda w: w.on_log_toggle("Log Scale"),
+        lambda w: w.on_mode_change(PlotMode.GRID_2D),
+        lambda w: w.on_y_toggle("det1"),
+        lambda w: w.draw_plot(),
+        lambda w: w.build_ui(),
+    ],
+    ids=["log", "mode", "y-toggle", "draw", "build"],
+)
+def test_ui_callbacks_survive_scan_removed_before_update(
+    window: InteractivePlotWindow, action
+):
+    del window.data_source["scan1"]
+    action(window)
+    assert "scan1" not in window.active_scans
+
+
+@pytest.fixture
+def live_2d_window(grid_data):
+    """2D window on 'grid' with a new, still empty scan 'live' just started."""
+    win = InteractivePlotWindow(grid_data, initial_scan_id="grid")
+    win.on_mode_change(PlotMode.GRID_2D)
+    win.on_x_change("y_motor")
+    win.on_y_change("x_motor")
+    grid_data["live"] = {}
+    win.update_plot()
+    return win, grid_data["live"]
+
+
+def _add_points(scan: dict, n: int) -> None:
+    for i in range(n):
+        for key, value in (("x_motor", i % 2), ("y_motor", i // 2), ("det", i)):
+            scan.setdefault(key, []).append(float(value))
+
+
+def test_2d_new_scan_draws_once_data_arrives(live_2d_window):
+    win, live = live_2d_window
+    _add_points(live, 4)
+    win.update_plot()
+    assert "waiting for data" not in win.ax.get_title(loc="left")
+
+
+def test_2d_new_scan_keeps_user_axis_choice(live_2d_window):
+    win, live = live_2d_window
+    _add_points(live, 4)
+    win.update_plot()
+    assert (win.x_field, win.y_field) == ("y_motor", "x_motor")
+
+
+@pytest.mark.parametrize(
+    "values",
+    [[None, 1.0, 2.0], ["on", 1.0, 2.0], [None, None, None], [np.nan, 3.0, 1.0]],
+    ids=["none", "string", "all-none", "nan"],
+)
+def test_1d_log_scale_tolerates_non_numeric(values):
+    data = {"1": {"y": values}}
+    win = InteractivePlotWindow(data, initial_scan_id="1")
+    win.on_log_toggle("Log Scale")
+    expected = (
+        "log" if any(isinstance(v, float) and v > 0 for v in values) else ("linear")
+    )
+    assert win.ax.get_yscale() == expected
+
+
+# --- Look and feel / UX --------------------------------------------------------
+
+
+@pytest.fixture
+def fit_window():
+    """1D window over three peak scans; scan 'c' carries fit results."""
+    x = [float(v) for v in np.linspace(-2, 2, 21)]
+    data = {}
+    for name, centre in (("a", 0.0), ("b", 0.5), ("c", -0.5)):
+        y = [float(100 * np.exp(-((v - centre) ** 2) / 0.3)) for v in x]
+        data[name] = {"energy": x, "det": y}
+    data["c"]["gaussian"] = list(data["c"]["det"])
+    data["c"]["centre"] = [-0.5]
+    data["c"]["d1"] = [float(v) for v in np.gradient(data["c"]["det"], x)]
+    win = InteractivePlotWindow(data, initial_scan_id="a")
+    win.active_scans |= {"b", "c"}
+    win.build_ui()
+    _choose_x(win, "energy")
+    return win
+
+
+def _choose_x(win: InteractivePlotWindow, field: str) -> None:
+    radio = win.widgets["radio_x"]
+    radio.set_active([t.get_text() for t in radio.labels].index(field))
+
+
+def _legend_labels(win: InteractivePlotWindow) -> list[str]:
+    legend = win.ax.get_legend()
+    return [t.get_text() for t in legend.get_texts()] if legend else []
+
+
+def test_scan_colour_stable_when_other_scans_toggle(fit_window):
+    before = fit_window.scan_colour("c")
+    fit_window.on_scan_toggle("a")
+    assert fit_window.scan_colour("c") == before
+
+
+def test_scan_lines_use_scan_colour(fit_window):
+    colours = {
+        line.get_label(): line.get_color()
+        for line in fit_window.ax.lines
+        if line.get_label().endswith(": det")
+    }
+    assert colours == {f"{s}: det": fit_window.scan_colour(s) for s in ("a", "b", "c")}
+
+
+def test_legend_ordered_by_scan(fit_window):
+    assert _legend_labels(fit_window) == ["a: det", "b: det", "c: det"]
+
+
+def test_scan_list_labels_coloured_like_lines(fit_window):
+    labels = fit_window.widgets["scan_check"].labels
+    assert [t.get_color() for t in labels] == [
+        fit_window.scan_colour(t.get_text()) for t in labels
+    ]
+
+
+def test_fit_gaussian_drawn_dashed(fit_window):
+    fit_window.on_y_toggle("gaussian")
+    (line,) = [ln for ln in fit_window.ax.lines if ln.get_label() == "c: gaussian"]
+    assert line.get_linestyle() == "--"
+
+
+def test_fit_centre_marked_when_x_is_a_real_axis(fit_window):
+    fit_window.on_y_toggle("gaussian")
+    assert [t.get_text() for t in fit_window.ax.texts] == ["-0.5"]
+
+
+def test_fit_centre_not_marked_against_point_number(fit_window):
+    _choose_x(fit_window, "Point number")
+    fit_window.on_y_toggle("gaussian")
+    assert len(fit_window.ax.texts) == 0
+
+
+def test_derivative_drawn_on_right_hand_axis(fit_window):
+    fit_window.on_y_toggle("d1")
+    assert [ln.get_label() for ln in fit_window.ax_d.lines] == ["c: d1"]
+
+
+def test_derivative_axis_label_on_right(fit_window):
+    fit_window.on_y_toggle("d1")
+    assert fit_window.ax_d.yaxis.get_label_position() == "right"
+
+
+@pytest.mark.parametrize("toggle_d1", [False, True])
+def test_derivative_axis_shown_only_with_derivatives(fit_window, toggle_d1: bool):
+    if toggle_d1:
+        fit_window.on_y_toggle("d1")
+    assert fit_window.ax_d.get_visible() is toggle_d1
+
+
+def test_derivatives_not_on_main_axis(fit_window):
+    fit_window.on_y_toggle("d1")
+    assert all("d1" not in ln.get_label() for ln in fit_window.ax.lines)
+
+
+@pytest.mark.parametrize("n_points, has_markers", [(10, True), (60, True), (61, False)])
+def test_markers_only_for_short_scans(n_points: int, has_markers: bool):
+    data = {"s": {"det": [float(i) for i in range(n_points)]}}
+    win = InteractivePlotWindow(data)
+    assert (win.ax.lines[0].get_marker() not in (None, "None", "")) is has_markers
+
+
+def test_non_numeric_readings_plotted_as_gaps():
+    data = {"s": {"x": [1.0, 2.0, 3.0], "det": [1.0, "bad", 3.0]}}
+    win = InteractivePlotWindow(data)
+    assert np.isnan(win.ax.lines[0].get_ydata()[1])
+
+
+@pytest.mark.parametrize(
+    "scans, expected",
+    [
+        (["a"], "Scan a  ·  det"),
+        (["a", "b", "c"], "Scans a, b, c  ·  det"),
+    ],
+)
+def test_1d_title_names_scans_and_channels(fit_window, scans, expected):
+    fit_window.active_scans = set(scans)
+    fit_window.draw_plot()
+    assert fit_window.ax.get_title(loc="left") == expected
+
+
+def test_status_line_summarises_newest_scan(fit_window):
+    assert fit_window._status_text.get_text().startswith(
+        "Scan c: 21 points   ·   3 scans shown"
+    )
+
+
+@pytest.mark.parametrize(
+    "setup, hint",
+    [
+        (lambda w: w.unselect_all(None), "Select a scan on the right to plot it."),
+        (lambda w: w.on_y_toggle("det"), "Tick a Y channel to plot it."),
+    ],
+    ids=["no-scan", "no-channel"],
+)
+def test_empty_plot_shows_hint(fit_window, setup, hint: str):
+    setup(fit_window)
+    assert [t.get_text() for t in fit_window.ax.texts] == [hint]
+
+
+def test_select_latest_keeps_only_newest(fit_window):
+    fit_window.select_latest(None)
+    assert fit_window.active_scans == {"c"}
+
+
+@pytest.mark.parametrize("follow, expected", [(False, {"a", "new"}), (True, {"new"})])
+def test_follow_latest_controls_new_scan_selection(
+    sample_data, follow: bool, expected: set[str]
+):
+    sample_data.clear()
+    sample_data["a"] = {"Point number": [1]}
+    win = InteractivePlotWindow(sample_data, initial_scan_id="a")
+    win.follow_latest = follow
+    sample_data["new"] = {"Point number": [1]}
+    win.update_plot()
+    assert win.active_scans == expected
+
+
+def test_follow_latest_option_selects_newest(fit_window):
+    fit_window.on_option_toggle("Follow Latest")
+    assert (fit_window.follow_latest, fit_window.active_scans) == (True, {"c"})
+
+
+def test_log_option_routed_from_options_box(fit_window):
+    fit_window.on_option_toggle("Log Scale")
+    assert fit_window.log_scale is True
+
+
+def _key(win: InteractivePlotWindow, key: str) -> None:
+    from matplotlib.backend_bases import KeyEvent
+
+    win.on_key(KeyEvent("key_press_event", win.fig.canvas, key))
+
+
+def test_key_l_toggles_log_and_checkbox(fit_window):
+    _key(fit_window, "l")
+    assert fit_window.log_scale is True
+    assert fit_window.widgets["check_log"].get_status()[0] is True
+
+
+@pytest.mark.parametrize(
+    "presses, expected",
+    [(1, PlotMode.GRID_2D), (2, PlotMode.CONTOUR_2D), (3, PlotMode.LINE_1D)],
+)
+def test_key_m_cycles_mode(fit_window, presses: int, expected: PlotMode):
+    for _ in range(presses):
+        _key(fit_window, "m")
+    assert fit_window.mode == expected
+
+
+def test_mode_change_syncs_mode_radio(fit_window):
+    fit_window.on_mode_change(PlotMode.CONTOUR_2D)
+    assert fit_window.widgets["mode_radio"].value_selected == PlotMode.CONTOUR_2D
+
+
+@pytest.mark.parametrize("key, expected", [("n", {"c"}), ("u", set())])
+def test_selection_keys(fit_window, key: str, expected: set[str]):
+    _key(fit_window, key)
+    assert fit_window.active_scans == expected
+
+
+def test_other_keys_go_to_matplotlib(fit_window):
+    with patch(
+        "sm_bluesky.common.clients.interactive_plot.key_press_handler"
+    ) as default:
+        _key(fit_window, "g")
+    default.assert_called_once()
+
+
+def test_2d_marks_newest_point(grid_window: InteractivePlotWindow):
+    (marker,) = grid_window.ax.lines
+    assert (marker.get_xdata()[0], marker.get_ydata()[0]) == (2.0, 2.0)
+
+
+@pytest.mark.parametrize("n_fields", [3, 12, 40])
+def test_controls_stay_inside_panel(n_fields: int):
+    data = {"s": {f"ch{i:02d}": [1.0, 2.0] for i in range(n_fields)}}
+    win = InteractivePlotWindow(data)
+    bottoms = [
+        ax.get_position().y0
+        for ax in (win.ax_scan_txt, win.ax_scan, win.ax_mode, win.ax_x, win.ax_y)
+    ]
+    assert min(bottoms) >= 0.05
+
+
+# --- Scrollable scan list -----------------------------------------------------
+
+
+@pytest.fixture
+def many_scans():
+    return {f"s{i:02d}": {"det": [float(i), float(i + 1)]} for i in range(25)}
+
+
+@pytest.fixture
+def long_list(many_scans):
+    return InteractivePlotWindow(many_scans, initial_scan_id="s24")
+
+
+def _shown(win: InteractivePlotWindow) -> list[str]:
+    return [t.get_text() for t in win.widgets["scan_check"].labels]
+
+
+def test_scan_list_starts_at_newest(long_list):
+    assert _shown(long_list) == [f"s{i:02d}" for i in range(15, 25)]
+
+
+@pytest.mark.parametrize(
+    "rows, first",
+    [(-1, 14), (-5, 10), (-100, 0), (100, 15), (0, 15)],
+)
+def test_scroll_scans_moves_window_and_clamps(long_list, rows: int, first: int):
+    long_list.scroll_scans(rows)
+    assert _shown(long_list)[0] == f"s{first:02d}"
+
+
+def test_scrolled_away_scans_stay_selected(long_list):
+    long_list.scroll_scans(-100)
+    assert "s24" in long_list.active_scans
+
+
+def test_scrolled_away_scans_stay_plotted(long_list):
+    long_list.scroll_scans(-100)
+    long_list.draw_plot()
+    assert [ln.get_label() for ln in long_list.ax.lines] == ["s24: det"]
+
+
+def test_toggle_scan_after_scrolling(long_list):
+    long_list.scroll_scans(-100)
+    long_list.on_scan_toggle("s00")
+    assert "s00" in long_list.active_scans
+
+
+@pytest.mark.parametrize(
+    "scrolled, expected_last", [(False, "s25"), (True, "s19")], ids=["follow", "kept"]
+)
+def test_new_scan_follows_unless_scrolled_away(
+    many_scans, long_list, scrolled: bool, expected_last: str
+):
+    if scrolled:
+        long_list.scroll_scans(-5)
+    many_scans["s25"] = {"det": [1.0]}
+    long_list.update_plot()
+    assert _shown(long_list)[-1] == expected_last
+
+
+def test_scrolling_back_to_bottom_resumes_following(many_scans, long_list):
+    long_list.scroll_scans(-5)
+    long_list.scroll_scans(5)
+    many_scans["s25"] = {"det": [1.0]}
+    long_list.update_plot()
+    assert _shown(long_list)[-1] == "s25"
+
+
+@pytest.mark.parametrize(
+    "rows, header",
+    [
+        (0, "SCANS  16\u201325/25"),
+        (-15, "SCANS  1\u201310/25  \u00b7 +1 selected"),
+    ],
+)
+def test_scan_list_header_shows_position(long_list, rows: int, header: str):
+    long_list.scroll_scans(rows)
+    assert long_list.ax_scan.get_title(loc="left") == header
+
+
+def test_short_scan_list_has_plain_header_and_no_scrollbar(window):
+    assert window.ax_scan.get_title(loc="left") == "SCANS"
+    assert len(window.ax_scan.patches) == 0
+
+
+def test_long_scan_list_draws_scrollbar(long_list):
+    assert len(long_list.ax_scan.patches) == 2
+
+
+def _mouse(win, name: str, x: float, y: float, **kwargs):
+    from matplotlib.backend_bases import MouseEvent
+
+    px, py = win.ax_scan.transAxes.transform((x, y))
+    return MouseEvent(name, win.fig.canvas, px, py, **kwargs)
+
+
+@pytest.mark.parametrize(
+    "button, first", [("up", 14), ("down", 15)], ids=["wheel-up", "wheel-down"]
+)
+def test_mouse_wheel_over_list_scrolls(long_list, button: str, first: int):
+    long_list.on_scroll(
+        _mouse(
+            long_list,
+            "scroll_event",
+            0.5,
+            0.5,
+            button=button,
+            step=1 if button == "up" else -1,
+        )
+    )
+    assert _shown(long_list)[0] == f"s{first:02d}"
+
+
+def test_mouse_wheel_elsewhere_does_not_scroll(long_list):
+    from matplotlib.backend_bases import MouseEvent
+
+    px, py = long_list.ax.transAxes.transform((0.5, 0.5))
+    long_list.on_scroll(
+        MouseEvent("scroll_event", long_list.fig.canvas, px, py, button="up", step=1)
+    )
+    assert _shown(long_list)[0] == "s15"
+
+
+@pytest.mark.parametrize("y, first", [(0.99, 0), (0.5, 8), (0.01, 15)])
+def test_clicking_scroll_track_jumps(long_list, y: float, first: int):
+    long_list.on_list_click(_mouse(long_list, "button_press_event", 0.97, y, button=1))
+    assert _shown(long_list)[0] == f"s{first:02d}"
+
+
+def test_clicking_list_labels_does_not_jump(long_list):
+    long_list.on_list_click(
+        _mouse(long_list, "button_press_event", 0.3, 0.99, button=1)
+    )
+    assert _shown(long_list)[0] == "s15"
+
+
+def test_submitting_scan_id_scrolls_it_into_view(long_list):
+    long_list.submit_scan("s02")
+    assert "s02" in _shown(long_list)
+
+
+# --- Scrollable channel lists ---------------------------------------------------
+
+
+@pytest.fixture
+def many_channels():
+    """One scan with 20 channels: 21 X options, 20 Y channels."""
+    return {"s": {f"ch{i:02d}": [1.0, 2.0, 3.0] for i in range(20)}}
+
+
+@pytest.fixture
+def channel_window(many_channels):
+    return InteractivePlotWindow(many_channels)
+
+
+def _labels(win: InteractivePlotWindow, key: str) -> list[str]:
+    return [t.get_text() for t in win.widgets[key].labels]
+
+
+@pytest.mark.parametrize(
+    "key, first, last",
+    [("radio_x", "Point number", "ch06"), ("check_y", "ch00", "ch07")],
+)
+def test_channel_lists_show_first_rows(channel_window, key, first, last):
+    labels = _labels(channel_window, key)
+    assert (len(labels), labels[0], labels[-1]) == (8, first, last)
+
+
+@pytest.mark.parametrize(
+    "name, key, rows, first",
+    [
+        ("x", "radio_x", 3, "ch02"),
+        ("x", "radio_x", 100, "ch12"),
+        ("y", "check_y", 2, "ch02"),
+        ("y", "check_y", 100, "ch12"),
+        ("y", "check_y", -5, "ch00"),
+    ],
+)
+def test_scroll_channel_list_moves_and_clamps(channel_window, name, key, rows, first):
+    channel_window.scroll_list(name, rows)
+    assert _labels(channel_window, key)[0] == first
+
+
+@pytest.mark.parametrize(
+    "name, header",
+    [
+        ("x", "X AXIS  1\u20138/21"),
+        ("y", "Y CHANNELS  1\u20138/20"),
+    ],
+)
+def test_channel_list_header_shows_position(channel_window, name, header):
+    assert channel_window._list_axes()[name].get_title(loc="left") == header
+
+
+def test_short_channel_lists_not_scrollable(window):
+    assert (window.ax_x.get_title(loc="left"), len(window.ax_y.patches)) == (
+        "X AXIS",
+        0,
+    )
+
+
+@pytest.mark.parametrize("name", ["x", "y"])
+def test_long_channel_lists_draw_scrollbar(channel_window, name):
+    assert len(channel_window._list_axes()[name].patches) == 2
+
+
+def test_selected_x_kept_when_scrolled_away(channel_window):
+    channel_window.scroll_list("x", 5)
+    channel_window.on_x_change("ch10")
+    channel_window.scroll_list("x", -100)
+    channel_window.draw_plot()
+    assert channel_window.ax.get_xlabel() == "ch10"
+
+
+def test_selected_x_named_in_header_when_scrolled_away(channel_window):
+    channel_window.scroll_list("x", 5)
+    channel_window.on_x_change("ch10")
+    channel_window.scroll_list("x", -100)
+    assert channel_window.ax_x.get_title(loc="left").endswith("\u00b7 ch10")
+
+
+def test_no_x_button_selected_when_selection_scrolled_away(channel_window):
+    channel_window.scroll_list("x", 5)
+    facecolours = channel_window.widgets["radio_x"]._buttons.get_facecolor()
+    assert all(alpha == 0 for *_, alpha in facecolours)
+
+
+def test_ticked_y_kept_when_scrolled_away(channel_window):
+    channel_window.scroll_list("y", 100)
+    channel_window.draw_plot()
+    assert [ln.get_label() for ln in channel_window.ax.lines] == ["s: ch00"]
+
+
+def test_hidden_ticked_y_counted_in_header(channel_window):
+    channel_window.scroll_list("y", 100)
+    assert channel_window.ax_y.get_title(loc="left").endswith("\u00b7 +1 ticked")
+
+
+def test_tick_y_after_scrolling(channel_window):
+    channel_window.scroll_list("y", 100)
+    channel_window.on_y_toggle("ch19")
+    assert channel_window.active_y_states["ch19"] is True
+
+
+def test_channel_scroll_position_survives_new_points(many_channels, channel_window):
+    channel_window.scroll_list("y", 4)
+    for column in many_channels["s"].values():
+        column.append(4.0)
+    channel_window.update_plot()
+    assert _labels(channel_window, "check_y")[0] == "ch04"
+
+
+@pytest.mark.parametrize("name", ["x", "y", "z"])
+def test_2d_lists_scroll(many_channels, name):
+    win = InteractivePlotWindow(many_channels)
+    win.on_mode_change(PlotMode.GRID_2D)
+    win.scroll_list(name, 100)
+    assert _labels(win, f"radio_{name}")[-1] == "ch19"
+
+
+def test_2d_selection_named_in_header_when_scrolled_away(many_channels):
+    win = InteractivePlotWindow(many_channels)
+    win.on_mode_change(PlotMode.GRID_2D)
+    win.scroll_list("z", 100)
+    assert win.ax_z.get_title(loc="left").endswith("\u00b7 ch02")
+
+
+@pytest.mark.parametrize("name", ["x", "y"])
+def test_mouse_wheel_scrolls_channel_list(channel_window, name):
+    from matplotlib.backend_bases import MouseEvent
+
+    ax = channel_window._list_axes()[name]
+    px, py = ax.transAxes.transform((0.5, 0.5))
+    channel_window.on_scroll(
+        MouseEvent(
+            "scroll_event", channel_window.fig.canvas, px, py, button="down", step=-1
+        )
+    )
+    assert channel_window._list_offset(name) == 1
+
+
+def test_clicking_channel_scroll_track_jumps(channel_window):
+    from matplotlib.backend_bases import MouseEvent
+
+    px, py = channel_window.ax_y.transAxes.transform((0.97, 0.01))
+    channel_window.on_list_click(
+        MouseEvent("button_press_event", channel_window.fig.canvas, px, py, button=1)
+    )
+    assert _labels(channel_window, "check_y")[-1] == "ch19"
